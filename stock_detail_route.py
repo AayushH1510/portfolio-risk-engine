@@ -1,0 +1,70 @@
+# Add this to your api.py (or as a separate router file)
+# Requires: yfinance (already in your requirements), fastapi
+
+import yfinance as yf
+from fastapi import APIRouter, HTTPException
+from typing import Optional
+
+router = APIRouter()  # or use your existing `app` directly
+
+
+@router.get("/stock-detail/{ticker}")
+async def stock_detail(ticker: str):
+    """
+    Returns current price, daily change, 30-day sparkline,
+    and key fundamentals for a single ticker.
+    """
+    try:
+        t = ticker.upper().strip()
+        stock = yf.Ticker(t)
+        info  = stock.info
+
+        # Validate ticker
+        if not info or info.get("regularMarketPrice") is None:
+            raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
+
+        # 30-day price history for sparkline
+        hist = stock.history(period="1mo")
+        sparkline = []
+        if not hist.empty:
+            sparkline = [round(float(v), 4) for v in hist["Close"].tolist()]
+
+        price      = info.get("regularMarketPrice") or info.get("currentPrice")
+        prev_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
+        change     = round(price - prev_close, 4) if price and prev_close else None
+        change_pct = round(change / prev_close, 6) if change and prev_close else None
+
+        return {
+            "ticker":         t,
+            "company_name":   info.get("longName") or info.get("shortName"),
+            "sector":         info.get("sector"),
+            "price":          round(price, 2) if price else None,
+            "change":         change,
+            "change_pct":     change_pct,
+            "sparkline":      sparkline,
+            "market_cap":     info.get("marketCap"),
+            "pe_ratio":       info.get("trailingPE") or info.get("forwardPE"),
+            "eps":            info.get("trailingEps"),
+            "week_52_high":   info.get("fiftyTwoWeekHigh"),
+            "week_52_low":    info.get("fiftyTwoWeekLow"),
+            "beta":           info.get("beta"),
+            "dividend_yield": info.get("dividendYield"),
+            "avg_volume":     info.get("averageVolume"),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────
+# HOW TO WIRE THIS UP IN YOUR api.py:
+#
+# Option A — if you're using a router:
+#   from stock_detail_route import router as stock_router
+#   app.include_router(stock_router)
+#
+# Option B — paste the @router.get(...) function
+#   directly into api.py, replacing `router` with `app`
+# ─────────────────────────────────────────────

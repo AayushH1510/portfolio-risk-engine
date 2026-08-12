@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"http://localhost:5173/src/components/SectorChart.jsx\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/recharts/package.json'\\).version\\)\")",
+      "Bash(chromium-cli --session sectorchart)",
+      "Bash(npx playwright *)",
+      "Bash(node _verify_sector_chart.mjs)"
+    ]
+  }
+}

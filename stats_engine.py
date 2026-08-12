@@ -12,6 +12,7 @@ Metrics implemented:
   Market     — Beta, Alpha (Jensen's)                    ← Tier 2
   Frontier   — Efficient Frontier (Markowitz)            ← Tier 3
   Matrix     — covariance matrix, correlation matrix
+  Portfolio  — diversification score
 """
 
 import numpy as np
@@ -97,6 +98,11 @@ METRIC_TOOLTIPS = {
         "Each dot is a possible portfolio — a different combination of your stocks. "
         "The curve along the top-left edge shows the best possible return for each level of risk. "
         "The star marks the single optimal portfolio with the highest risk-adjusted return."
+    ),
+    "diversification_score": (
+        "How spread out your risk is across your assets. "
+        "Derived from the average pairwise correlation between your stocks. "
+        "100 = perfectly uncorrelated (ideal). 0 = all stocks move in lockstep (concentrated risk)."
     ),
 }
 
@@ -291,7 +297,59 @@ def compute_beta_alpha(
     }
 
 
-# ─── NEW Tier 3: Efficient Frontier ───────────────────────────────────────────
+# ─── Step 13: Diversification score ──────────────────────────────────────────
+
+def compute_diversification_score(corr_matrix: pd.DataFrame) -> dict:
+    """
+    Portfolio diversification score on a 0–100 scale.
+
+    HOW IT WORKS:
+    1. Extract the upper-triangle off-diagonal elements of the correlation matrix
+       (these are the pairwise correlations between each pair of assets).
+    2. Compute their average — this is the mean pairwise correlation.
+    3. Map to a score: score = (1 − avg_pairwise_corr) × 100
+       - avg_corr = 1.0  → score =   0  (all assets move in lockstep)
+       - avg_corr = 0.0  → score = 100  (uncorrelated — ideal diversification)
+       - avg_corr = −1.0 → score = 100+ (clamped to 100)
+    4. Clamp to [0, 100].
+
+    For a single asset there are no pairs, so we return 100 (N/A).
+
+    LABELS:
+      ≥ 70  — Well diversified
+      40–69 — Moderate
+      < 40  — Concentrated
+    """
+    n = len(corr_matrix)
+
+    if n <= 1:
+        return {
+            "score":            100,
+            "avg_pairwise_corr": 0.0,
+            "label":            "Single asset",
+        }
+
+    # Upper triangle (k=1 skips the diagonal)
+    mask      = np.triu(np.ones((n, n), dtype=bool), k=1)
+    off_diag  = corr_matrix.values[mask]
+    avg_corr  = float(off_diag.mean())
+    score     = int(round(max(0, min(100, (1 - avg_corr) * 100))))
+
+    if score >= 70:
+        label = "Well diversified"
+    elif score >= 40:
+        label = "Moderate"
+    else:
+        label = "Concentrated"
+
+    return {
+        "score":             score,
+        "avg_pairwise_corr": round(avg_corr, 4),
+        "label":             label,
+    }
+
+
+# ─── Tier 3: Efficient Frontier ───────────────────────────────────────────────
 
 def compute_efficient_frontier(
     returns: pd.DataFrame,
@@ -300,152 +358,93 @@ def compute_efficient_frontier(
 ) -> dict:
     """
     Markowitz Efficient Frontier via Monte Carlo simulation.
-
-    Generates n_portfolios random weight combinations and computes
-    the return and volatility for each. The cloud of dots forms the
-    opportunity set — the frontier is the top-left edge of that cloud.
-
-    How random weights are generated:
-      1. Draw n random numbers from a uniform distribution.
-      2. Divide each by the sum so they add up to exactly 1.0.
-      This is called a Dirichlet-like normalisation — it ensures weights
-      are always positive and always sum to 1 without any loops.
-
-    What we return:
-      - vols, returns, sharpes : arrays of length n_portfolios (one per dot)
-      - max_sharpe_weights     : the weights that maximise Sharpe ratio
-      - max_sharpe_idx         : index into the arrays for the best portfolio
-      - min_vol_idx            : index for the minimum volatility portfolio
-
-    The Streamlit chart uses these arrays directly with Plotly scatter.
-
-    Why 5,000?
-      Enough to trace a smooth frontier curve visually.
-      Runs in under a second with numpy vectorisation.
-      You could go to 10,000 without noticeable slowdown.
+    Uses CAGR (geometric/compound annualisation). Fully vectorised.
     """
-    n_assets = returns.shape[1]
+    n_assets  = returns.shape[1]
+    n_obs     = len(returns)
+    tickers   = returns.columns.tolist()
 
-    # Annualised covariance matrix — computed once, reused for all portfolios
-    cov_matrix   = returns.cov() * TRADING_DAYS
-    mean_returns = returns.mean() * TRADING_DAYS   # annualised mean return per asset
+    cov_matrix  = returns.cov() * TRADING_DAYS
+    raw_weights = np.random.random((n_portfolios, n_assets))
+    all_weights = raw_weights / raw_weights.sum(axis=1, keepdims=True)
 
-    # Pre-allocate result arrays — faster than appending in a loop
-    all_returns = np.zeros(n_portfolios)
-    all_vols    = np.zeros(n_portfolios)
-    all_sharpes = np.zeros(n_portfolios)
-    all_weights = np.zeros((n_portfolios, n_assets))
+    log_rets      = np.log1p(returns.values)
+    port_log_rets = log_rets @ all_weights.T
+    log_sums      = port_log_rets.sum(axis=0)
+    all_returns   = np.exp(log_sums * (TRADING_DAYS / n_obs)) - 1
 
-    for i in range(n_portfolios):
-        # Step 1: generate random weights that sum to 1
-        raw     = np.random.random(n_assets)
-        weights = raw / raw.sum()
+    temp        = all_weights @ cov_matrix.values
+    all_vols    = np.sqrt((temp * all_weights).sum(axis=1))
+    all_sharpes = (all_returns - risk_free_rate) / np.where(all_vols > 0, all_vols, np.inf)
 
-        # Step 2: portfolio annualised return = weighted sum of asset returns
-        port_return = np.dot(weights, mean_returns)
-
-        # Step 3: portfolio volatility via covariance matrix
-        port_vol = np.sqrt(weights.T @ cov_matrix.values @ weights)
-
-        # Step 4: Sharpe ratio
-        port_sharpe = (port_return - risk_free_rate) / port_vol
-
-        # Store results
-        all_returns[i] = port_return
-        all_vols[i]    = port_vol
-        all_sharpes[i] = port_sharpe
-        all_weights[i] = weights
-
-    # Find the special portfolios
-    max_sharpe_idx = np.argmax(all_sharpes)    # highest Sharpe — optimal portfolio
-    min_vol_idx    = np.argmin(all_vols)       # lowest volatility — safest portfolio
-
-    max_sharpe_weights = all_weights[max_sharpe_idx]
-    min_vol_weights    = all_weights[min_vol_idx]
-
-    # Build a readable weights dict for display
-    tickers = returns.columns.tolist()
+    max_sharpe_idx = int(np.argmax(all_sharpes))
+    min_vol_idx    = int(np.argmin(all_vols))
 
     def weights_to_dict(w):
         return {ticker: round(float(w[i]), 4) for i, ticker in enumerate(tickers)}
 
     return {
-        # Arrays for the scatter plot (one entry per simulated portfolio)
         "vols":    all_vols,
         "returns": all_returns,
         "sharpes": all_sharpes,
 
-        # Optimal portfolio (max Sharpe)
         "max_sharpe_idx":     max_sharpe_idx,
-        "max_sharpe_return":  all_returns[max_sharpe_idx],
-        "max_sharpe_vol":     all_vols[max_sharpe_idx],
-        "max_sharpe_sharpe":  all_sharpes[max_sharpe_idx],
-        "max_sharpe_weights": weights_to_dict(max_sharpe_weights),
+        "max_sharpe_return":  float(all_returns[max_sharpe_idx]),
+        "max_sharpe_vol":     float(all_vols[max_sharpe_idx]),
+        "max_sharpe_sharpe":  float(all_sharpes[max_sharpe_idx]),
+        "max_sharpe_weights": weights_to_dict(all_weights[max_sharpe_idx]),
 
-        # Minimum volatility portfolio
         "min_vol_idx":        min_vol_idx,
-        "min_vol_return":     all_returns[min_vol_idx],
-        "min_vol_vol":        all_vols[min_vol_idx],
-        "min_vol_weights":    weights_to_dict(min_vol_weights),
+        "min_vol_return":     float(all_returns[min_vol_idx]),
+        "min_vol_vol":        float(all_vols[min_vol_idx]),
+        "min_vol_weights":    weights_to_dict(all_weights[min_vol_idx]),
 
-        "n_portfolios":       n_portfolios,
-        "tickers":            tickers,
+        "n_portfolios": n_portfolios,
+        "tickers":      tickers,
     }
 
 
-
-# ─── Monte Carlo simulation ───────────────────────────────────────────────────
+# ─── Monte Carlo simulation — with Cholesky decomposition ────────────────────
 
 def compute_monte_carlo(
     portfolio_returns: pd.Series,
+    asset_returns: pd.DataFrame,
+    weights: list[float],
     portfolio_value: float = 10_000,
     n_simulations: int = 1_000,
     n_days: int = 252,
-    risk_free_rate: float = RISK_FREE_RATE,
 ) -> dict:
     """
-    Simulate n_simulations possible futures for the portfolio over n_days trading days.
-
-    How it works:
-      1. Compute the portfolio's historical daily mean return and daily std.
-      2. For each simulation, draw n_days random returns from a normal distribution
-         using those two parameters (this assumes returns are roughly normally distributed).
-      3. Compound those returns into a final portfolio value.
-      4. Repeat n_simulations times.
-
-    The result is a distribution of possible outcomes — not a prediction,
-    but an honest range of where the portfolio could end up.
-
-    Key outputs:
-      - all_paths        : (n_days+1) × n_simulations array — every daily value for every sim
-      - final_values     : array of n_simulations end-of-year portfolio values
-      - percentile_5     : 5th percentile path  (bad scenario)
-      - percentile_50    : median path           (middle scenario)
-      - percentile_95    : 95th percentile path  (good scenario)
-      - prob_profit      : probability of ending above starting value
-      - prob_loss_10pct  : probability of losing more than 10%
+    Simulate correlated asset price paths using Cholesky decomposition.
+    Falls back to univariate normal if Cholesky fails.
     """
-    daily_mean = portfolio_returns.mean()
-    daily_std  = portfolio_returns.std()
+    n_assets       = asset_returns.shape[1]
+    w              = np.array(weights)
+    daily_mean_vec = asset_returns.mean().values
+    cov_daily      = asset_returns.cov().values
 
-    # Matrix of random daily returns: shape (n_days, n_simulations)
-    # Each column is one simulation's year of daily returns
-    random_returns = np.random.normal(
-        loc=daily_mean,
-        scale=daily_std,
-        size=(n_days, n_simulations),
-    )
+    try:
+        L = np.linalg.cholesky(cov_daily)
+        price_paths    = np.zeros((n_days + 1, n_simulations))
+        price_paths[0] = portfolio_value
+        for day in range(1, n_days + 1):
+            Z              = np.random.standard_normal((n_simulations, n_assets))
+            day_asset_rets = daily_mean_vec + Z @ L.T
+            day_port_rets  = day_asset_rets @ w
+            price_paths[day] = price_paths[day - 1] * (1 + day_port_rets)
+        method = "cholesky"
 
-    # Build price paths: start every simulation at portfolio_value
-    # Shape: (n_days+1, n_simulations) — row 0 is the starting value
-    price_paths      = np.zeros((n_days + 1, n_simulations))
-    price_paths[0]   = portfolio_value
-    for day in range(1, n_days + 1):
-        price_paths[day] = price_paths[day - 1] * (1 + random_returns[day - 1])
+    except np.linalg.LinAlgError:
+        daily_mean     = portfolio_returns.mean()
+        daily_std      = portfolio_returns.std()
+        random_returns = np.random.normal(daily_mean, daily_std, (n_days, n_simulations))
+        price_paths    = np.zeros((n_days + 1, n_simulations))
+        price_paths[0] = portfolio_value
+        for day in range(1, n_days + 1):
+            price_paths[day] = price_paths[day - 1] * (1 + random_returns[day - 1])
+        method = "fallback_univariate"
 
-    final_values = price_paths[-1]   # end-of-year values for all simulations
-
-    # Percentile paths — take the path whose final value is at each percentile
+    final_values = price_paths[-1]
     p5_idx  = np.argsort(final_values)[int(0.05 * n_simulations)]
     p50_idx = np.argsort(final_values)[int(0.50 * n_simulations)]
     p95_idx = np.argsort(final_values)[int(0.95 * n_simulations)]
@@ -456,16 +455,17 @@ def compute_monte_carlo(
         "percentile_5":    price_paths[:, p5_idx],
         "percentile_50":   price_paths[:, p50_idx],
         "percentile_95":   price_paths[:, p95_idx],
-        "p5_final":        final_values[p5_idx],
-        "p50_final":       final_values[p50_idx],
-        "p95_final":       final_values[p95_idx],
+        "p5_final":        float(final_values[p5_idx]),
+        "p50_final":       float(final_values[p50_idx]),
+        "p95_final":       float(final_values[p95_idx]),
         "prob_profit":     float(np.mean(final_values > portfolio_value)),
         "prob_loss_10pct": float(np.mean(final_values < portfolio_value * 0.9)),
         "n_simulations":   n_simulations,
         "n_days":          n_days,
         "portfolio_value": portfolio_value,
-        "daily_mean":      daily_mean,
-        "daily_std":       daily_std,
+        "daily_mean":      float(portfolio_returns.mean()),
+        "daily_std":       float(portfolio_returns.std()),
+        "method":          method,
     }
 
 
@@ -480,18 +480,25 @@ def compute_all_metrics(
     n_frontier_portfolios: int = 5000,
     n_mc_simulations: int = 1_000,
 ) -> dict:
-    """
-    Full pipeline: prices → returns → all metrics.
-    This is the single function the Streamlit app will call.
-    """
+    """Full pipeline: prices → returns → all metrics."""
     returns           = compute_returns(prices)
     portfolio_returns = compute_portfolio_returns(returns, weights)
     cov_matrix        = compute_volatility_matrix(returns)
-    risk_result       = compute_cvar(portfolio_returns, portfolio_value=portfolio_value)
+    corr_matrix       = compute_correlation_matrix(returns)
     drawdown_result   = compute_max_drawdown(portfolio_returns)
     rolling           = compute_rolling_metrics(portfolio_returns, window=rolling_window)
     frontier          = compute_efficient_frontier(returns, n_portfolios=n_frontier_portfolios)
-    monte_carlo       = compute_monte_carlo(portfolio_returns, portfolio_value=portfolio_value, n_simulations=n_mc_simulations)
+    monte_carlo       = compute_monte_carlo(
+        portfolio_returns=portfolio_returns,
+        asset_returns=returns,
+        weights=weights,
+        portfolio_value=portfolio_value,
+        n_simulations=n_mc_simulations,
+    )
+
+    risk_95 = compute_cvar(portfolio_returns, confidence=0.95, portfolio_value=portfolio_value)
+    risk_99 = compute_cvar(portfolio_returns, confidence=0.99, portfolio_value=portfolio_value)
+    div_score = compute_diversification_score(corr_matrix)
 
     result = {
         "period":                compute_period(prices),
@@ -499,16 +506,18 @@ def compute_all_metrics(
         "annualised_volatility": compute_volatility_from_cov(weights, cov_matrix),
         "sharpe_ratio":          compute_sharpe_ratio(portfolio_returns),
         "sortino_ratio":         compute_sortino_ratio(portfolio_returns),
-        "var_cvar":              risk_result,
+        "var_cvar":              risk_95,
+        "var_cvar_99":           risk_99,
         "max_drawdown":          drawdown_result,
         "rolling":               rolling,
         "efficient_frontier":    frontier,
         "monte_carlo":           monte_carlo,
-        "correlation_matrix":    compute_correlation_matrix(returns),
+        "correlation_matrix":    corr_matrix,
         "cov_matrix":            cov_matrix,
         "returns":               returns,
         "portfolio_returns":     portfolio_returns,
         "drawdown_series":       drawdown_result["drawdown_series"],
+        "diversification_score": div_score,
         "tooltips":              METRIC_TOOLTIPS,
     }
 
@@ -533,99 +542,14 @@ if __name__ == "__main__":
     )
 
     weights = [1/3, 1/3, 1/3]
-
-    print("Computing metrics...\n")
-    m = compute_all_metrics(
-        prices=portfolio_prices,
-        weights=weights,
-        portfolio_value=10_000,
-        benchmark_prices=benchmark_prices,
-    )
-
-    t  = m["tooltips"]
-    p  = m["period"]
-    f  = m["efficient_frontier"]
-    ba = m["beta_alpha"]
-    r  = m["rolling"]
+    m  = compute_all_metrics(prices=portfolio_prices, weights=weights, portfolio_value=10_000, benchmark_prices=benchmark_prices)
     vc = m["var_cvar"]
+    v9 = m["var_cvar_99"]
+    ds = m["diversification_score"]
 
-    print("─" * 55)
-    print("  PERIOD")
-    print("─" * 55)
-    print(f"\n  {p['start']} → {p['end']}")
-    print(f"  {p['n_days']} trading days  ({p['n_years']} years)")
-
-    print()
-    print("─" * 55)
-    print("  PERFORMANCE")
-    print("─" * 55)
-    print(f"\n  Annualised return:      {m['annualised_return']:.1%}")
-    print(f"  Annualised volatility:  {m['annualised_volatility']:.1%}")
-
-    print()
-    print("─" * 55)
-    print("  RISK-ADJUSTED RATIOS")
-    print("─" * 55)
-    print(f"\n  Sharpe ratio:   {m['sharpe_ratio']:.2f}")
-    print(f"  Sortino ratio:  {m['sortino_ratio']:.2f}")
-
-    print()
-    print("─" * 55)
-    print("  DOWNSIDE RISK  (on a $10,000 portfolio)")
-    print("─" * 55)
-    print(f"\n  VaR  95%:  {vc['var_pct']:.2%} per day  →  -${abs(vc['var_dollar']):,.0f}")
-    print(f"  CVaR 95%:  {vc['cvar_pct']:.2%} per day  →  -${abs(vc['cvar_dollar']):,.0f}")
-    print(f"  (averaging the worst {vc['n_tail_days']} days)")
-
-    print()
-    print("─" * 55)
-    print("  DRAWDOWN")
-    print("─" * 55)
-    print(f"\n  Max drawdown:  {m['max_drawdown']['max_drawdown']:.1%}")
-
-    print()
-    print("─" * 55)
-    print("  ROLLING METRICS  (30-day window)")
-    print("─" * 55)
-    print(f"\n  Rolling volatility:  {r['rolling_volatility'].dropna().iloc[-1]:.1%}")
-    print(f"  Rolling Sharpe:      {r['rolling_sharpe'].dropna().iloc[-1]:.2f}")
-
-    print()
-    print("─" * 55)
-    print("  BETA & ALPHA  (vs S&P 500)")
-    print("─" * 55)
-    print(f"\n  Beta:   {ba['beta']:.2f}")
-    print(f"  Alpha:  {ba['alpha']:.2%}  (annualised)")
-    print(f"\n  S&P 500 return:       {ba['benchmark_return']:.1%}")
-    print(f"  CAPM expected:        {ba['capm_expected']:.1%}")
-    print(f"  Your actual return:   {m['annualised_return']:.1%}")
-    print(f"  → Alpha gap:          {m['annualised_return'] - ba['capm_expected']:.1%}")
-
-    print()
-    print("─" * 55)
-    print("  EFFICIENT FRONTIER  (5,000 simulated portfolios)")
-    print("─" * 55)
-    print(f"\n  Simulated {f['n_portfolios']:,} random weight combinations")
-
-    print(f"\n  ★  Max Sharpe portfolio (Sharpe: {f['max_sharpe_sharpe']:.2f})")
-    print(f"     Return: {f['max_sharpe_return']:.1%}  |  Volatility: {f['max_sharpe_vol']:.1%}")
-    print(f"     Weights: ", end="")
-    for ticker, w in f["max_sharpe_weights"].items():
-        print(f"{ticker} {w:.0%}", end="  ")
-
-    print(f"\n\n  ◆  Min Volatility portfolio (Vol: {f['min_vol_vol']:.1%})")
-    print(f"     Return: {f['min_vol_return']:.1%}  |  Sharpe: {f['min_vol_vol']:.2f}")
-    print(f"     Weights: ", end="")
-    for ticker, w in f["min_vol_weights"].items():
-        print(f"{ticker} {w:.0%}", end="  ")
-
-    print(f"\n\n  Your current portfolio (equal weight):")
-    print(f"     Return: {m['annualised_return']:.1%}  |  Volatility: {m['annualised_volatility']:.1%}  |  Sharpe: {m['sharpe_ratio']:.2f}")
-
-    print()
-    print("─" * 55)
-    print("  CORRELATION MATRIX")
-    print("─" * 55)
-    print()
-    print(m["correlation_matrix"].round(2))
-    print()
+    print(f"\n  VaR  95%:  {vc['var_pct']:.2%}  →  -${abs(vc['var_dollar']):,.0f}")
+    print(f"  CVaR 95%:  {vc['cvar_pct']:.2%}  →  -${abs(vc['cvar_dollar']):,.0f}")
+    print(f"  VaR  99%:  {v9['var_pct']:.2%}  →  -${abs(v9['var_dollar']):,.0f}")
+    print(f"  CVaR 99%:  {v9['cvar_pct']:.2%}  →  -${abs(v9['cvar_dollar']):,.0f}")
+    print(f"\n  Diversification score: {ds['score']}/100 — {ds['label']}")
+    print(f"  Avg pairwise correlation: {ds['avg_pairwise_corr']:.4f}")

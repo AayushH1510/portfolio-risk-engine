@@ -10,9 +10,14 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 
+from cache import cached
+
+DAY = 60 * 60 * 24
+
 
 # ─── Main function ────────────────────────────────────────────────────────────
 
+@cached(ttl=DAY, prefix="fetch_closing_prices")
 def fetch_closing_prices(
     tickers: list[str],
     start_date: str,
@@ -115,6 +120,7 @@ def validate_tickers(tickers: list[str]) -> tuple[list[str], list[str]]:
 
 # ─── Convenience wrapper ──────────────────────────────────────────────────────
 
+@cached(ttl=DAY, prefix="fetch_with_benchmark")
 def fetch_with_benchmark(
     tickers: list[str],
     start_date: str,
