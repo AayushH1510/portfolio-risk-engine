@@ -9,15 +9,22 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import date, timedelta
 import pandas as pd
 import numpy as np
 
-from data_fetcher import fetch_with_benchmark, validate_tickers
-from stats_engine import compute_all_metrics
+from data_fetcher import fetch_with_benchmark, fetch_closing_prices, validate_tickers
+from stats_engine import compute_all_metrics, compute_stress_scenario
 from stock_detail_route import router as stock_router
 from cache import cached
 
 HOUR = 60 * 60
+
+STRESS_SCENARIOS = [
+    {"name": "2008 Financial Crisis", "start": "2008-09-01", "end": "2009-03-31"},
+    {"name": "COVID Crash",           "start": "2020-02-01", "end": "2020-03-31"},
+    {"name": "2022 Rate Shock",       "start": "2022-01-01", "end": "2022-12-31"},
+]
 
 app = FastAPI(title="Portfolio Risk Engine API", version="1.0.0")
 
@@ -44,6 +51,12 @@ class AnalyseRequest(BaseModel):
 
 class ValidateRequest(BaseModel):
     tickers: List[str]
+
+
+class StressTestRequest(BaseModel):
+    tickers: List[str]
+    weights: List[float]
+    portfolio_value: float = 10_000
 
 
 @app.get("/api/health")
@@ -193,6 +206,57 @@ async def fundamentals(tickers: str):
 
         results.sort(key=lambda r: (r.get("vg_score") is None, r.get("vg_score") or 999))
         return { "tickers": results }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/stress-test")
+async def stress_test(req: StressTestRequest):
+    try:
+        tickers = [t.strip().upper() for t in req.tickers]
+        scenarios = []
+
+        for scenario in STRESS_SCENARIOS:
+            start = scenario["start"]
+            crash_end = scenario["end"]
+            # Search up to 5 years past the crash for recovery — comfortably
+            # covers all three scenarios, capped at today for recent ones.
+            extended_end = min(
+                date.today(),
+                date.fromisoformat(start) + timedelta(days=5 * 365),
+            ).isoformat()
+
+            prices = fetch_closing_prices(tickers, start_date=start, end_date=extended_end)
+            result = compute_stress_scenario(
+                prices=prices,
+                crash_start=start,
+                crash_end=crash_end,
+                tickers=tickers,
+                weights=req.weights,
+            )
+
+            if result is None:
+                scenarios.append({
+                    "name":             scenario["name"],
+                    "period":           f"{start} to {crash_end}",
+                    "portfolio_return": None,
+                    "worst_day":        None,
+                    "recovery_days":    None,
+                    "excluded_tickers": tickers,
+                })
+                continue
+
+            scenarios.append({
+                "name":             scenario["name"],
+                "period":           f"{start} to {crash_end}",
+                "portfolio_return": round(result["portfolio_return"], 4),
+                "worst_day":        round(result["worst_day"], 4),
+                "recovery_days":    result["recovery_days"],
+                "excluded_tickers": result["excluded_tickers"],
+            })
+
+        return { "scenarios": scenarios, "portfolio_value": req.portfolio_value }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

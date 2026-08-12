@@ -13,6 +13,7 @@ Metrics implemented:
   Frontier   — Efficient Frontier (Markowitz)            ← Tier 3
   Matrix     — covariance matrix, correlation matrix
   Portfolio  — diversification score
+  Stress     — historical crash scenario testing            ← Tier 4
 """
 
 import numpy as np
@@ -466,6 +467,71 @@ def compute_monte_carlo(
         "daily_mean":      float(portfolio_returns.mean()),
         "daily_std":       float(portfolio_returns.std()),
         "method":          method,
+    }
+
+
+# ─── Tier 4: Stress testing ────────────────────────────────────────────────────
+
+def compute_stress_scenario(
+    prices: pd.DataFrame,
+    crash_start: str,
+    crash_end: str,
+    tickers: list[str],
+    weights: list[float],
+) -> dict | None:
+    """
+    Applies portfolio weights to one historical crash window.
+
+    `prices` must span from crash_start through a recovery-search period well
+    past crash_end — the crash-window stats (return, worst day) only look at
+    [crash_start, crash_end], but recovery_days searches forward through the
+    rest of `prices` for when the portfolio gets back to its pre-crash peak.
+
+    Tickers with no data during the crash window are dropped and the
+    remaining weights are reweighted proportionally to sum to 1 (their
+    weight isn't redistributed to cash — it just isn't tracked in this
+    scenario). Returns None if none of the requested tickers have data for
+    the window at all.
+    """
+    crash_prices = prices.loc[crash_start:crash_end]
+
+    valid = [t for t in tickers if t in crash_prices.columns and crash_prices[t].notna().sum() >= 2]
+    if not valid:
+        return None
+
+    valid_weights_raw = [weights[tickers.index(t)] for t in valid]
+    total_w = sum(valid_weights_raw)
+    valid_weights = np.array([w / total_w for w in valid_weights_raw])
+
+    # Crash-window stats
+    crash_returns       = crash_prices[valid].dropna().pct_change().dropna()
+    port_crash_returns  = crash_returns.dot(valid_weights)
+    portfolio_return     = float((1 + port_crash_returns).prod() - 1)
+    worst_day             = float(port_crash_returns.min())
+
+    # Recovery — same tickers/weights, full extended series
+    full_returns      = prices[valid].dropna().pct_change().dropna()
+    port_full_returns = full_returns.dot(valid_weights)
+    wealth_index      = (1 + port_full_returns).cumprod()
+
+    crash_wealth = wealth_index.loc[crash_start:crash_end]
+    trough_date  = crash_wealth.idxmin()
+    peak_value   = wealth_index.loc[:trough_date].max()
+
+    recovery_days = None
+    after_trough  = wealth_index.loc[trough_date:]
+    recovered     = after_trough[after_trough >= peak_value]
+    if len(recovered) > 0:
+        recovery_days = int(
+            wealth_index.index.get_loc(recovered.index[0])
+            - wealth_index.index.get_loc(trough_date)
+        )
+
+    return {
+        "portfolio_return": portfolio_return,
+        "worst_day":        worst_day,
+        "recovery_days":    recovery_days,
+        "excluded_tickers": [t for t in tickers if t not in valid],
     }
 
 

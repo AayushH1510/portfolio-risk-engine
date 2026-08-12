@@ -249,7 +249,7 @@ export default function App() {
           {!loading && (hasRun || activeTab === 'learn' || activeTab === 'valuation') && (
             <div style={{ height: '100%' }} className="fade-up">
               {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} />}
-              {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} onTickerClick={openDrawer} />}
+              {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} />}
               {activeTab === 'montecarlo' && <MonteCarlo  data={data} />}
               {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} />}
               {activeTab === 'valuation'  && <Valuation   tickers={tickers} onTickerClick={openDrawer} />}
