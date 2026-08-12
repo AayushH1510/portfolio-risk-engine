@@ -4,3 +4,4 @@ __pycache__/
 .env
 app_phase3_backup.py
 app.py
+portfolio-risk-ui/dist/
