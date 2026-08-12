@@ -298,6 +298,37 @@ def compute_beta_alpha(
     }
 
 
+def compute_treynor_ratio(
+    portfolio_returns: pd.Series,
+    benchmark_returns: pd.Series,
+    risk_free_rate: float = RISK_FREE_RATE,
+) -> float:
+    """Excess return per unit of systematic (market) risk — annualised return over beta."""
+    beta = compute_beta_alpha(portfolio_returns, benchmark_returns, risk_free_rate)["beta"]
+    if beta == 0:
+        return 0.0
+
+    annualised_return = compute_annualised_return(portfolio_returns)
+    return (annualised_return - risk_free_rate) / beta
+
+
+def compute_information_ratio(
+    portfolio_returns: pd.Series,
+    benchmark_returns: pd.Series,
+) -> float:
+    """Active return per unit of tracking risk vs the benchmark."""
+    aligned = pd.concat(
+        [portfolio_returns, benchmark_returns], axis=1, join="inner"
+    ).dropna()
+    active_returns = aligned.iloc[:, 0] - aligned.iloc[:, 1]
+
+    std = active_returns.std()
+    if std == 0:
+        return 0.0
+
+    return (active_returns.mean() / std) * np.sqrt(TRADING_DAYS)
+
+
 # ─── Step 13: Diversification score ──────────────────────────────────────────
 
 def compute_diversification_score(corr_matrix: pd.DataFrame) -> dict:
@@ -609,10 +640,14 @@ def compute_all_metrics(
     }
 
     if benchmark_prices is not None:
-        benchmark_returns    = compute_returns(benchmark_prices).iloc[:, 0]
-        result["beta_alpha"] = compute_beta_alpha(portfolio_returns, benchmark_returns)
+        benchmark_returns           = compute_returns(benchmark_prices).iloc[:, 0]
+        result["beta_alpha"]        = compute_beta_alpha(portfolio_returns, benchmark_returns)
+        result["treynor_ratio"]     = compute_treynor_ratio(portfolio_returns, benchmark_returns)
+        result["information_ratio"] = compute_information_ratio(portfolio_returns, benchmark_returns)
     else:
-        result["beta_alpha"] = None
+        result["beta_alpha"]        = None
+        result["treynor_ratio"]     = None
+        result["information_ratio"] = None
 
     return result
 
