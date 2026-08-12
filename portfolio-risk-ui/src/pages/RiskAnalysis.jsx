@@ -3,6 +3,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import ReturnHistogram from '../components/ReturnHistogram'
+import StressTest from '../components/StressTest'
 
 const fmt  = v => `${(v * 100).toFixed(2)}%`
 const fmtS = v => `${(v * 100).toFixed(1)}%`
@@ -132,7 +133,7 @@ function CorrMatrix({ corr }) {
   )
 }
 
-export default function RiskAnalysis({ data, tickers, onTickerClick }) {
+export default function RiskAnalysis({ data, tickers, weights, portfolioValue, onTickerClick }) {
   if (!data) return null
 
   const {
@@ -310,6 +311,9 @@ export default function RiskAnalysis({ data, tickers, onTickerClick }) {
           />
         </div>
       )}
+
+      {/* Row 4: Stress test */}
+      <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
 
     </div>
   )
