@@ -1,0 +1,18 @@
+Live URL: https://portfolio-risk-engine.streamlit.app
+
+What it does:
+~ Fetches real market data via yFinance for any stock tickers
+~ Computes annualised return, volatility, Sharpe, Sortino, VaR, CVaR, max drawdown, Beta, Alpha, rolling metrics
+~ Efficient Frontier with 5,000 simulated portfolios
+~ Monte Carlo simulation with 1,000 future paths
+~ Correlation heatmap, allocation pie, cumulative returns vs S&P 500
+~ Plain-English insight boxes for every metric
+~ Full Learn tab explaining every concept from scratch
+~ % slider and $ amount portfolio modes
+~ Professional dark Bloomberg-style theme
+
+Resume bullet point:
+
+Built and deployed a portfolio risk analytics platform (Python, yFinance, Streamlit) computing VaR, CVaR,
+Sharpe/Sortino ratios, Monte Carlo simulations, and Efficient Frontier optimisation for user-defined stock
+portfolios — live at portfolio-risk-engine.streamlit.app

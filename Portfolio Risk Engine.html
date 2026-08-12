@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<!-- saved from url=(0022)http://localhost:5173/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="./Portfolio Risk Engine_files/client"></script>
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Risk Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./Portfolio Risk Engine_files/css2" rel="stylesheet">
+  <style type="text/css" data-vite-dev-id="C:/Users/aayus/Desktop/Career/Portfolio Risk Analysis Engine/portfolio-risk-ui/src/index.css">/*! tailwindcss v4.2.2 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    --spacing: 0.25rem;
+    --radius-sm: 0.25rem;
+    --default-transition-duration: 150ms;
+    --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+    font-feature-settings: var(--default-font-feature-settings, normal);
+    font-variation-settings: var(--default-font-variation-settings, normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+  abbr:where([title]) {
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline dotted;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  b, strong {
+    font-weight: bolder;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  :-moz-focusring {
+    outline: auto;
+  }
+  progress {
+    vertical-align: baseline;
+  }
+  summary {
+    display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
+  }
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+  :where(select:is([multiple], [size])) optgroup {
+    font-weight: bolder;
+  }
+  :where(select:is([multiple], [size])) optgroup option {
+    padding-inline-start: 20px;
+  }
+  ::file-selector-button {
+    margin-inline-end: 4px;
+  }
+  ::placeholder {
+    opacity: 1;
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  ::-webkit-date-and-time-value {
+    min-height: 1lh;
+    text-align: inherit;
+  }
+  ::-webkit-datetime-edit {
+    display: inline-flex;
+  }
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+    padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
+  }
+  :-moz-ui-invalid {
+    box-shadow: none;
+  }
+  button, input:where([type="button"], [type="reset"], [type="submit"]), ::file-selector-button {
+    appearance: button;
+  }
+  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+    height: auto;
+  }
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .collapse {
+    visibility: collapse;
+  }
+  .visible {
+    visibility: visible;
+  }
+  .absolute {
+    position: absolute;
+  }
+  .fixed {
+    position: fixed;
+  }
+  .relative {
+    position: relative;
+  }
+  .start {
+    inset-inline-start: var(--spacing);
+  }
+  .end {
+    inset-inline-end: var(--spacing);
+  }
+  .block {
+    display: block;
+  }
+  .flex {
+    display: flex;
+  }
+  .grid {
+    display: grid;
+  }
+  .hidden {
+    display: none;
+  }
+  .inline-block {
+    display: inline-block;
+  }
+  .inline-flex {
+    display: inline-flex;
+  }
+  .table {
+    display: table;
+  }
+  .transform {
+    transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
+  }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .uppercase {
+    text-transform: uppercase;
+  }
+  .italic {
+    font-style: italic;
+  }
+  .ring {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .outline {
+    outline-style: var(--tw-outline-style);
+    outline-width: 1px;
+  }
+  .transition {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
+    transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+    transition-duration: var(--tw-duration, var(--default-transition-duration));
+  }
+}
+:root {
+  --bg: #d8e8d8;
+  --bg-deep: #ccdccc;
+  --card: #1e2420;
+  --card-2: #252c25;
+  --card-3: #2c342c;
+  --accent: #52b788;
+  --accent-dark: #2d6a4f;
+  --accent-light: #b7e4c7;
+  --text-primary: #eef2ee;
+  --text-secondary: #8aaa8a;
+  --text-muted: #5a7a5a;
+  --text-dark: #1a241a;
+  --border: rgba(255,255,255,0.07);
+  --border-light: rgba(0,0,0,0.08);
+  --positive: #52b788;
+  --negative: #e05c5c;
+  --warning: #e09a30;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+body {
+  background: var(--bg);
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 2px;
+}
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.card-light {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+}
+.mono {
+  font-family: 'IBM Plex Mono', 'Roboto Mono', monospace;
+}
+.positive {
+  color: var(--positive);
+}
+.negative {
+  color: var(--negative);
+}
+.warning {
+  color: var(--warning);
+}
+input, select {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+input:focus, select:focus {
+  border-color: var(--accent);
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  background: var(--card-3);
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: none;
+  outline: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: opacity 0.15s;
+  width: 100%;
+}
+.btn-primary:hover {
+  opacity: 0.88;
+}
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-up {
+  animation: fadeUp 0.3s ease forwards;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+@property --tw-rotate-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-rotate-z {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-x {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-skew-y {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-inset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-ring-inset {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-offset-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tw-ring-offset-color {
+  syntax: "*";
+  inherits: false;
+  initial-value: #fff;
+}
+@property --tw-ring-offset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-outline-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-rotate-x: initial;
+      --tw-rotate-y: initial;
+      --tw-rotate-z: initial;
+      --tw-skew-x: initial;
+      --tw-skew-y: initial;
+      --tw-border-style: solid;
+      --tw-shadow: 0 0 #0000;
+      --tw-shadow-color: initial;
+      --tw-shadow-alpha: 100%;
+      --tw-inset-shadow: 0 0 #0000;
+      --tw-inset-shadow-color: initial;
+      --tw-inset-shadow-alpha: 100%;
+      --tw-ring-color: initial;
+      --tw-ring-shadow: 0 0 #0000;
+      --tw-inset-ring-color: initial;
+      --tw-inset-ring-shadow: 0 0 #0000;
+      --tw-ring-inset: initial;
+      --tw-ring-offset-width: 0px;
+      --tw-ring-offset-color: #fff;
+      --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-outline-style: solid;
+    }
+  }
+}
+</style></head>
+  <body>
+    <div id="root"><div style="display: flex; height: 100vh; overflow: hidden; background: var(--bg);"><aside style="width: 240px; min-width: 240px; height: 100%; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;"><div style="padding: 18px 16px 14px; border-bottom: 1px solid var(--border);"><div style="display: flex; align-items: center; gap: 8px;"><div style="width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="#1e2420"></path></svg></div><div><div style="font-size: 12px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em;">Risk Engine</div><div style="font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em;">v1.0</div></div></div></div><div style="flex: 1 1 0%; overflow-y: auto; padding: 14px 14px 0px;"><div style="margin-bottom: 18px;"><div style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 8px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Saved portfolios<span style="margin-left: 6px; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: rgba(82, 183, 136, 0.15); color: var(--accent);">2</span></div><span style="font-size: 9px; color: var(--text-muted); transition: transform 0.15s; display: inline-block; transform: rotate(180deg);">▼</span></div><button style="width: 100%; padding: 6px 0px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; background: transparent; border: 1px dashed rgba(82, 183, 136, 0.4); color: var(--accent); cursor: pointer; margin-bottom: 8px; transition: 0.15s;">+ Save current portfolio</button><div style="background: var(--card-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; transition: border-color 0.12s;"><div style="display: flex; justify-content: space-between; align-items: flex-start;"><div style="flex: 1 1 0%; min-width: 0px;"><div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">p2</div><div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">MSFT, AMD, CJ6.F · 1Y</div><div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;"></div></div><button title="Delete" style="font-size: 11px; padding: 0px 4px; background: transparent; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; color: var(--text-muted); cursor: pointer; flex-shrink: 0; line-height: 1; margin-left: 6px;">×</button></div></div><div style="background: var(--card-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; transition: border-color 0.12s;"><div style="display: flex; justify-content: space-between; align-items: flex-start;"><div style="flex: 1 1 0%; min-width: 0px;"><div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">p1</div><div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">MU, ASML, IONQ · 1Y</div><div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;"></div></div><button title="Delete" style="font-size: 11px; padding: 0px 4px; background: transparent; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; color: var(--text-muted); cursor: pointer; flex-shrink: 0; line-height: 1; margin-left: 6px;">×</button></div></div></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">1. Stocks</div><input placeholder="AAPL, MSFT, GOOGL" value="AAPL, MSFT, GOOGL" style="font-family: monospace; font-size: 12px;"><div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Yahoo Finance symbols, comma separated · max 5</div></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">2. Portfolio value</div><div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 13px; color: var(--text-muted);">$</span><input type="number" min="1" value="10000" style="font-family: monospace;"></div></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">3. Weights</div><div style="display: flex; gap: 6px; margin-bottom: 10px;"><button style="flex: 1 1 0%; padding: 5px 0px; border-radius: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: var(--accent); color: var(--card); border: 1px solid var(--border); transition: 0.15s;">% Split</button><button style="flex: 1 1 0%; padding: 5px 0px; border-radius: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">$ Amount</button></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 600; color: var(--text-primary); font-family: monospace;">AAPL</span><span style="font-size: 11px; font-weight: 600; font-family: monospace; color: var(--accent);">34%</span></div><input type="range" min="0" max="100" value="34" style="width: 100%;"></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 600; color: var(--text-primary); font-family: monospace;">MSFT</span><span style="font-size: 11px; font-weight: 600; font-family: monospace; color: var(--accent);">33%</span></div><input type="range" min="0" max="100" value="33" style="width: 100%;"></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 600; color: var(--text-primary); font-family: monospace;">GOOGL</span><span style="font-size: 11px; font-weight: 600; font-family: monospace; color: var(--text-muted);">33%<span style="font-size: 9px; margin-left: 4px; color: var(--text-muted);">auto</span></span></div><div style="height: 4px; background: var(--card-3); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: 33%; background: var(--text-muted); border-radius: 2px; opacity: 0.5;"></div></div></div><div style="font-size: 10px; color: var(--accent); margin-top: 2px;">100% allocated</div></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">4. Period</div><div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px;"><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">1M</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">3M</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">6M</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--accent); color: var(--card); border: 1px solid var(--border); transition: 0.15s;">1Y</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">3Y</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">5Y</button><button style="padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s;">Max</button></div><button style="width: 100%; padding: 5px 0px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--card-2); color: var(--text-muted); border: 1px solid var(--border); transition: 0.15s; margin-bottom: 0px;">Custom dates</button></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">5. Risk window</div><select><option value="20">20d — reactive</option><option value="30">30d — standard</option><option value="60">60d — smooth</option><option value="90">90d — long term</option></select></div><div style="margin-bottom: 18px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">6. Benchmark</div><div style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 7px 10px; border-radius: 6px; background: rgba(82, 183, 136, 0.12); border: 1px solid var(--accent); transition: 0.15s;"><div style="width: 16px; height: 16px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; transition: 0.15s;"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#1e2420" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><span style="font-size: 11px; color: var(--text-primary); font-weight: 500;">Compare vs S&amp;P 500</span></div></div></div><div style="padding: 14px; border-top: 1px solid var(--border);"><button class="btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 8px;">Run Analysis</button></div></aside><div style="flex: 1 1 0%; display: flex; flex-direction: column; overflow: hidden; min-width: 0px;"><header style="display: flex; align-items: center; justify-content: space-between; padding: 0px 12px; height: 48px; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border-light); flex-shrink: 0; min-width: 0px; overflow: hidden;"><nav style="display: flex; gap: 0px; height: 100%; align-items: stretch; overflow-x: auto; flex-shrink: 1; min-width: 0px;"><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-top-width: medium; border-right-width: medium; border-bottom: 2px solid var(--accent-dark); border-left-width: medium; border-top-style: none; border-right-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-left-color: currentcolor; border-image: initial; color: var(--accent-dark); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Dashboard</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Risk Analysis</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Monte Carlo</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Efficient Frontier</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Valuation</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Compare</button><button style="padding: 0px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; background: transparent; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; color: rgb(58, 74, 58); cursor: pointer; transition: 0.15s; white-space: nowrap; flex-shrink: 0;">Learn</button></nav><div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 8px;"><div style="font-size: 11px; font-weight: 600; font-family: monospace; background: rgba(255, 255, 255, 0.5); border: 1px solid var(--border-light); border-radius: 20px; padding: 4px 12px; color: var(--accent-dark);">S&amp;P 500 +27.1%</div><div style="display: none;"><div style="display: none; z-index: -1; position: absolute; left: -9999px; top: 0px;"><div style="width: 900px; background: rgb(240, 244, 240); font-family: Inter, -apple-system, sans-serif; font-size: 13px; color: rgb(26, 42, 26); padding: 0px;"><div style="background: rgb(30, 36, 32); padding: 28px 36px 24px; display: flex; justify-content: space-between; align-items: flex-start;"><div><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;"><div style="width: 32px; height: 32px; background: rgb(82, 183, 136); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: rgb(30, 36, 32); font-size: 16px;">V</div><div><div style="font-size: 20px; font-weight: 700; color: rgb(255, 255, 255); letter-spacing: -0.02em;">varense</div><div style="font-size: 11px; color: rgb(82, 183, 136); letter-spacing: 0.05em;">variance, made sense of</div></div></div><div style="display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap;"><div style="background: rgba(82, 183, 136, 0.15); border: 1px solid rgba(82, 183, 136, 0.3); border-radius: 5px; padding: 3px 10px; font-size: 12px; font-weight: 700; color: rgb(82, 183, 136); font-family: monospace;">AAPL 34%</div><div style="background: rgba(82, 183, 136, 0.15); border: 1px solid rgba(82, 183, 136, 0.3); border-radius: 5px; padding: 3px 10px; font-size: 12px; font-weight: 700; color: rgb(82, 183, 136); font-family: monospace;">MSFT 33%</div><div style="background: rgba(82, 183, 136, 0.15); border: 1px solid rgba(82, 183, 136, 0.3); border-radius: 5px; padding: 3px 10px; font-size: 12px; font-weight: 700; color: rgb(82, 183, 136); font-family: monospace;">GOOGL 33%</div></div></div><div style="text-align: right;"><div style="font-size: 18px; font-weight: 700; color: rgb(255, 255, 255);">Portfolio Risk Report</div><div style="font-size: 12px; color: rgb(138, 170, 138); margin-top: 4px;">2 May 2026</div><div style="font-size: 11px; color: rgb(90, 122, 90); margin-top: 6px; font-family: monospace;">2025-05-02 — 2026-05-01 · 251 trading days</div></div></div><div style="padding: 24px 36px; display: flex; flex-direction: column; gap: 20px;"><div><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 10px;">Key Metrics</div><div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Annual Return</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">48.8%</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Volatility</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">17.6%</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Sharpe Ratio</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">2.52</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Sortino Ratio</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">4.36</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(224, 92, 92); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Max Drawdown</div><div style="font-size: 18px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-17.6%</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(224, 92, 92); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">VaR 95%</div><div style="font-size: 18px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-1.5%</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(224, 92, 92); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">CVaR 95%</div><div style="font-size: 18px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-2.1%</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Beta</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">1.06</div></div><div style="background: rgb(255, 255, 255); border-radius: 8px; padding: 12px 14px; border-top: 3px solid rgb(82, 183, 136); box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgb(138, 170, 138); margin-bottom: 5px;">Alpha</div><div style="font-size: 18px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">14.8%</div></div></div></div><div><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 10px;">Portfolio Growth</div><div style="background: rgb(255, 255, 255); border-radius: 10px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px;"><span style="color: rgb(138, 170, 138);">Cumulative return from 2025-05-02</span><span style="font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">48.4% total</span></div><div class="recharts-responsive-container" style="width: 100%; height: 180px; min-width: 0px;"></div></div></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;"><div style="background: rgb(255, 255, 255); border-radius: 10px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 12px;">Allocation</div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 12px; font-weight: 700; font-family: monospace; color: rgb(26, 42, 26);">AAPL</span><span style="font-size: 12px; font-weight: 700; color: rgb(45, 106, 79);">34%</span></div><div style="height: 6px; background: rgb(240, 244, 240); border-radius: 3px;"><div style="height: 100%; width: 34%; background: rgb(45, 106, 79); border-radius: 3px;"></div></div></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 12px; font-weight: 700; font-family: monospace; color: rgb(26, 42, 26);">MSFT</span><span style="font-size: 12px; font-weight: 700; color: rgb(45, 106, 79);">33%</span></div><div style="height: 6px; background: rgb(240, 244, 240); border-radius: 3px;"><div style="height: 100%; width: 33%; background: rgb(82, 183, 136); border-radius: 3px;"></div></div></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 12px; font-weight: 700; font-family: monospace; color: rgb(26, 42, 26);">GOOGL</span><span style="font-size: 12px; font-weight: 700; color: rgb(45, 106, 79);">33%</span></div><div style="height: 6px; background: rgb(240, 244, 240); border-radius: 3px;"><div style="height: 100%; width: 33%; background: rgb(116, 198, 157); border-radius: 3px;"></div></div></div></div><div style="background: rgb(255, 255, 255); border-radius: 10px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 12px;">Monte Carlo — 1 Year Outlook</div><div class="recharts-responsive-container" style="width: 100%; height: 100px; min-width: 0px;"></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px;"><div style="background: rgb(248, 250, 248); border-radius: 6px; padding: 7px 10px;"><div style="font-size: 10px; color: rgb(138, 170, 138); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Median</div><div style="font-size: 14px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">$14,832</div></div><div style="background: rgb(248, 250, 248); border-radius: 6px; padding: 7px 10px;"><div style="font-size: 10px; color: rgb(138, 170, 138); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Good year</div><div style="font-size: 14px; font-weight: 700; color: rgb(82, 183, 136); font-family: monospace;">$19,869</div></div><div style="background: rgb(248, 250, 248); border-radius: 6px; padding: 7px 10px;"><div style="font-size: 10px; color: rgb(138, 170, 138); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Bad year</div><div style="font-size: 14px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">$10,969</div></div><div style="background: rgb(248, 250, 248); border-radius: 6px; padding: 7px 10px;"><div style="font-size: 10px; color: rgb(138, 170, 138); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Profit chance</div><div style="font-size: 14px; font-weight: 700; color: rgb(45, 106, 79); font-family: monospace;">99%</div></div></div></div></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;"><div style="background: rgb(255, 255, 255); border-radius: 10px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 12px;">Downside Risk</div><div style="display: flex; justify-content: space-between; padding: 7px 0px; border-bottom: 1px solid rgb(240, 244, 240);"><span style="font-size: 12px; color: rgb(90, 122, 90);">VaR 95%</span><div style="text-align: right;"><div style="font-size: 12px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-1.5%</div><div style="font-size: 10px; color: rgb(138, 170, 138);">$148/day</div></div></div><div style="display: flex; justify-content: space-between; padding: 7px 0px; border-bottom: 1px solid rgb(240, 244, 240);"><span style="font-size: 12px; color: rgb(90, 122, 90);">CVaR 95%</span><div style="text-align: right;"><div style="font-size: 12px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-2.1%</div><div style="font-size: 10px; color: rgb(138, 170, 138);">$209 avg</div></div></div><div style="display: flex; justify-content: space-between; padding: 7px 0px; border-bottom: 1px solid rgb(240, 244, 240);"><span style="font-size: 12px; color: rgb(90, 122, 90);">Max Drawdown</span><div style="text-align: right;"><div style="font-size: 12px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">-17.6%</div><div style="font-size: 10px; color: rgb(138, 170, 138);">peak to trough</div></div></div><div style="display: flex; justify-content: space-between; padding: 7px 0px; border-bottom: 1px solid rgb(240, 244, 240);"><span style="font-size: 12px; color: rgb(90, 122, 90);">Beta</span><div style="text-align: right;"><div style="font-size: 12px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">1.06</div><div style="font-size: 10px; color: rgb(138, 170, 138);">vs S&amp;P 500</div></div></div><div style="display: flex; justify-content: space-between; padding: 7px 0px; border-bottom: 1px solid rgb(240, 244, 240);"><span style="font-size: 12px; color: rgb(90, 122, 90);">Alpha</span><div style="text-align: right;"><div style="font-size: 12px; font-weight: 700; color: rgb(192, 57, 43); font-family: monospace;">14.8%</div><div style="font-size: 10px; color: rgb(138, 170, 138);">Jensen's</div></div></div></div><div style="background: rgb(255, 255, 255); border-radius: 10px; padding: 16px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 3px;"><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(90, 122, 90); margin-bottom: 12px;">Correlation Matrix</div><table style="width: 100%; border-collapse: separate; border-spacing: 3px;"><thead><tr><th style="width: 50px;"></th><th style="font-size: 10px; color: rgb(138, 170, 138); text-align: center; font-family: monospace; font-weight: 700;">AAPL</th><th style="font-size: 10px; color: rgb(138, 170, 138); text-align: center; font-family: monospace; font-weight: 700;">MSFT</th><th style="font-size: 10px; color: rgb(138, 170, 138); text-align: center; font-family: monospace; font-weight: 700;">GOOGL</th></tr></thead><tbody><tr><td style="font-size: 10px; color: rgb(138, 170, 138); font-family: monospace; text-align: right; padding-right: 6px;">AAPL</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(248, 215, 215); color: rgb(26, 42, 26);">1.00</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.16</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.32</td></tr><tr><td style="font-size: 10px; color: rgb(138, 170, 138); font-family: monospace; text-align: right; padding-right: 6px;">MSFT</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.16</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(248, 215, 215); color: rgb(26, 42, 26);">1.00</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.11</td></tr><tr><td style="font-size: 10px; color: rgb(138, 170, 138); font-family: monospace; text-align: right; padding-right: 6px;">GOOGL</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.32</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(232, 245, 238); color: rgb(26, 42, 26);">0.11</td><td style="text-align: center; font-size: 11px; font-family: monospace; font-weight: 600; padding: 6px 4px; border-radius: 4px; background: rgb(248, 215, 215); color: rgb(26, 42, 26);">1.00</td></tr></tbody></table></div></div><div style="text-align: center; padding: 8px 0px;"><div style="display: inline-block; border: 1px solid rgb(200, 216, 200); border-radius: 6px; padding: 5px 16px; font-size: 11px; color: rgb(138, 170, 138);">Generated by <strong style="color: rgb(45, 106, 79);">varense</strong> · Free tier report</div></div></div><div style="background: rgb(30, 36, 32); padding: 14px 36px; display: flex; justify-content: space-between; align-items: center;"><div style="font-size: 11px; color: rgb(90, 122, 90);">This report is for educational purposes only and does not constitute financial advice.<br>Past performance does not guarantee future results. Always do your own research.</div><div style="font-size: 12px; font-weight: 700; color: rgb(82, 183, 136);">varense.com</div></div></div></div></div><button style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 6px; border-color: var(--border-light); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; background: rgba(255, 255, 255, 0.5); color: rgb(45, 106, 79); cursor: pointer; transition: 0.15s; letter-spacing: 0.03em;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export PDF</button><div style="display: flex; align-items: center; gap: 8px;"><div style="font-size: 11px; color: rgb(58, 74, 58); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">aayushhariharan</div><button style="font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-light); background: transparent; color: rgb(90, 122, 90); cursor: pointer;">Sign out</button></div><div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dark); border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: rgb(255, 255, 255);">AA</div></div></header><main style="flex: 1 1 0%; overflow: hidden; padding: 16px; min-height: 0px;"><div class="fade-up" style="height: 100%;"><div style="display: flex; flex-direction: column; gap: 12px; height: 100%;"><div style="display: flex; gap: 8px; align-items: center;"><div style="font-size: 10px; font-weight: 600; letter-spacing: 0.05em; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-muted); font-family: monospace;">2025-05-02</div><div style="font-size: 10px; font-weight: 600; letter-spacing: 0.05em; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-muted); font-family: monospace;">2026-05-01</div><div style="font-size: 10px; font-weight: 600; letter-spacing: 0.05em; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-muted); font-family: monospace;">251 days</div><div style="font-size: 10px; font-weight: 600; letter-spacing: 0.05em; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-muted); font-family: monospace;">1yr</div></div><div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;"><div class="card" style="padding: 14px 16px; border-top: 2px solid var(--positive); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Annual Return</div><div style="font-size: 22px; font-weight: 700; color: var(--positive); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">48.8%</div><div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">14.8% alpha</div></div><div class="card" style="padding: 14px 16px; border-top: 2px solid var(--positive); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Volatility</div><div style="font-size: 22px; font-weight: 700; color: var(--positive); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">17.6%</div></div><div class="card" style="padding: 14px 16px; border-top: 2px solid var(--positive); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Sharpe Ratio</div><div style="font-size: 22px; font-weight: 700; color: var(--positive); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">2.52</div><div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">above 1.0 is good</div></div><div class="card" style="padding: 14px 16px; border-top: 2px solid var(--positive); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Sortino Ratio</div><div style="font-size: 22px; font-weight: 700; color: var(--positive); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">4.36</div></div><div class="card" style="padding: 14px 16px; border-top: 2px solid var(--warning); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Max Drawdown</div><div style="font-size: 22px; font-weight: 700; color: var(--warning); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">-17.6%</div></div></div><div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;"><div class="card" style="padding: 12px 14px; border-top: 2px solid var(--negative); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">VaR 95%</div><div style="font-size: 18px; font-weight: 700; color: var(--negative); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">-$148</div></div><div class="card" style="padding: 12px 14px; border-top: 2px solid var(--negative); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">CVaR 95%</div><div style="font-size: 18px; font-weight: 700; color: var(--negative); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">-$209</div></div><div class="card" style="padding: 12px 14px; border-top: 2px solid var(--accent); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Beta</div><div style="font-size: 18px; font-weight: 700; color: var(--text-primary); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">1.06</div></div><div class="card" style="padding: 12px 14px; border-top: 2px solid var(--positive); display: flex; flex-direction: column; gap: 4px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Alpha</div><div style="font-size: 18px; font-weight: 700; color: var(--positive); font-family: monospace; letter-spacing: -0.02em; line-height: 1.1;">14.8%</div></div></div><div style="display: grid; grid-template-columns: 1fr 220px; gap: 10px; flex: 1 1 0%; min-height: 0px;"><div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; min-height: 0px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary);">Portfolio growth</div><div style="display: flex; gap: 10px; font-size: 10px;"><span style="display: flex; align-items: center; gap: 4px; color: var(--text-muted);"><span style="width: 20px; height: 2px; background: var(--accent); display: inline-block; border-radius: 1px;"></span>Your portfolio</span><span style="display: flex; align-items: center; gap: 4px; color: var(--text-muted);"><span style="width: 20px; height: 2px; display: inline-block; border-radius: 1px; opacity: 0.6; border-bottom: 2px dashed rgb(90, 122, 90);"></span>S&amp;P 500</span></div></div><div style="flex: 1 1 0%; min-height: 0px;"><div class="recharts-responsive-container" style="width: 100%; height: 100%; min-width: 0px;"><div class="recharts-wrapper" style="position: relative; cursor: default; width: 100%; height: 100%; max-height: 298px; max-width: 817px; background: transparent; font-size: 11px; font-family: monospace;"><svg class="recharts-surface" width="817" height="298" viewBox="0 0 817 298" style="width: 100%; height: 100%;"><title></title><desc></desc><defs><clippath id="recharts6-clip"><rect x="42" y="4" height="264" width="771"></rect></clippath></defs><defs><lineargradient id="gPort" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stop-color="#52b788" stop-opacity="0.25"></stop><stop offset="95%" stop-color="#52b788" stop-opacity="0"></stop></lineargradient></defs><g class="recharts-layer recharts-cartesian-axis recharts-xAxis xAxis"><g class="recharts-cartesian-axis-ticks"><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="42" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="42" dy="0.71em">05-05</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="76.06024096385542" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="76.06024096385542" dy="0.71em">05-20</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="113.21686746987952" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="113.21686746987952" dy="0.71em">06-06</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="150.3734939759036" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="150.3734939759036" dy="0.71em">06-25</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="184.43373493975903" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="184.43373493975903" dy="0.71em">07-11</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="218.49397590361446" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="218.49397590361446" dy="0.71em">07-28</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="252.55421686746988" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="252.55421686746988" dy="0.71em">08-12</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="286.6144578313253" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="286.6144578313253" dy="0.71em">08-27</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="320.6746987951807" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="320.6746987951807" dy="0.71em">09-12</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="354.73493975903614" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="354.73493975903614" dy="0.71em">09-29</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="388.79518072289153" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="388.79518072289153" dy="0.71em">10-14</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="422.855421686747" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="422.855421686747" dy="0.71em">10-29</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="453.8192771084337" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="453.8192771084337" dy="0.71em">11-12</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="484.78313253012044" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="484.78313253012044" dy="0.71em">11-26</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="515.7469879518072" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="515.7469879518072" dy="0.71em">12-11</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="546.710843373494" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="546.710843373494" dy="0.71em">12-26</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="577.6746987951807" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="577.6746987951807" dy="0.71em">01-12</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="608.6385542168674" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="608.6385542168674" dy="0.71em">01-27</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="642.6987951807229" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="642.6987951807229" dy="0.71em">02-11</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="676.7590361445783" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="676.7590361445783" dy="0.71em">02-27</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="710.8192771084337" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="710.8192771084337" dy="0.71em">03-16</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="744.8795180722891" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="744.8795180722891" dy="0.71em">03-31</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="bottom" width="771" height="30" stroke="none" font-size="10" x="803.38636302948" y="276" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="middle" fill="var(--text-muted)"><tspan x="803.38636302948" dy="0.71em">05-01</tspan></text></g></g></g><g class="recharts-layer recharts-cartesian-axis recharts-yAxis yAxis"><g class="recharts-cartesian-axis-ticks"><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="left" width="42" height="264" stroke="none" font-size="10" x="34" y="268" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--text-muted)"><tspan x="34" dy="0.355em">-20%</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="left" width="42" height="264" stroke="none" font-size="10" x="34" y="202" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--text-muted)"><tspan x="34" dy="0.355em">0%</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="left" width="42" height="264" stroke="none" font-size="10" x="34" y="136" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--text-muted)"><tspan x="34" dy="0.355em">20%</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="left" width="42" height="264" stroke="none" font-size="10" x="34" y="69.99999999999997" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--text-muted)"><tspan x="34" dy="0.355em">40%</tspan></text></g><g class="recharts-layer recharts-cartesian-axis-tick"><text orientation="left" width="42" height="264" stroke="none" font-size="10" x="34" y="7.5" class="recharts-text recharts-cartesian-axis-tick-value" text-anchor="end" fill="var(--text-muted)"><tspan x="34" dy="0.355em">60%</tspan></text></g></g></g><g class="recharts-layer recharts-reference-line"><line y="0" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4 4" fill="none" fill-opacity="1" stroke-width="1" x1="42" y1="202" x2="813" y2="202" class="recharts-reference-line-line"></line></g><g class="recharts-layer recharts-area"><g class="recharts-layer"><path stroke-width="2" fill="url(#gPort)" name="Portfolio" fill-opacity="0.6" width="771" height="264" stroke="none" class="recharts-curve recharts-area-area" d="M42,205.187C43.032,205.448,44.064,205.709,45.096,206.751C46.129,207.793,47.161,215.792,48.193,215.792C49.225,215.792,50.257,211.953,51.289,211.953C52.321,211.953,53.353,212.292,54.386,212.292C55.418,212.292,56.45,200.194,57.482,198.952C58.514,197.71,59.546,198.177,60.578,197.09C61.61,196.003,62.643,192.43,63.675,192.43C64.707,192.43,65.739,193.611,66.771,193.611C67.803,193.611,68.835,191.924,69.867,191.914C70.9,191.904,71.932,191.899,72.964,191.899C73.996,191.899,75.028,194.262,76.06,194.859C77.092,195.456,78.124,195.754,79.157,195.754C80.189,195.754,81.221,194.085,82.253,194.085C83.285,194.085,84.317,200.273,85.349,200.273C86.382,200.273,87.414,191.986,88.446,191.986C89.478,191.986,90.51,192.845,91.542,193.026C92.574,193.208,93.606,193.298,94.639,193.298C95.671,193.298,96.703,192.448,97.735,192.448C98.767,192.448,99.799,193.064,100.831,193.336C101.863,193.608,102.896,194.082,103.928,194.082C104.96,194.082,105.992,192.865,107.024,192.865C108.056,192.865,109.088,193.084,110.12,193.084C111.153,193.084,112.185,187.494,113.217,186.912C114.249,186.33,115.281,186.501,116.313,186.04C117.345,185.578,118.378,184.142,119.41,184.142C120.442,184.142,121.474,186.801,122.506,186.801C123.538,186.801,124.57,186.106,125.602,186.106C126.635,186.106,127.667,189.331,128.699,189.331C129.731,189.331,130.763,185.808,131.795,185.808C132.827,185.808,133.859,187.841,134.892,188.249C135.924,188.657,136.956,188.453,137.988,188.861C139.02,189.269,140.052,191.272,141.084,191.272C142.116,191.272,143.149,190.383,144.181,189.937C145.213,189.49,146.245,189.467,147.277,188.595C148.309,187.723,149.341,185.819,150.373,184.704C151.406,183.589,152.438,182.875,153.47,181.906C154.502,180.936,155.534,179.605,156.566,178.887C157.598,178.17,158.631,177.625,159.663,177.601C160.695,177.576,161.727,177.588,162.759,177.564C163.791,177.539,164.823,174.485,165.855,173.25C166.888,172.016,167.92,170.155,168.952,170.155C169.984,170.155,171.016,173.317,172.048,174.32C173.08,175.322,174.112,176.168,175.145,176.168C176.177,176.168,177.209,172.985,178.241,172.366C179.273,171.747,180.305,171.831,181.337,171.437C182.369,171.043,183.402,170,184.434,170C185.466,170,186.498,170.644,187.53,170.644C188.562,170.644,189.594,169.811,190.627,169.402C191.659,168.994,192.691,168.688,193.723,168.193C194.755,167.698,195.787,166.937,196.819,166.431C197.851,165.926,198.884,166.008,199.916,165.161C200.948,164.314,201.98,161.62,203.012,161.094C204.044,160.568,205.076,160.305,206.108,160.305C207.141,160.305,208.173,161.019,209.205,161.019C210.237,161.019,211.269,159.393,212.301,158.788C213.333,158.182,214.365,157.387,215.398,157.387C216.43,157.387,217.462,157.961,218.494,157.961C219.526,157.961,220.558,157.564,221.59,157.564C222.622,157.564,223.655,158.248,224.687,158.248C225.719,158.248,226.751,157.184,227.783,157.184C228.815,157.184,229.847,164.333,230.88,164.333C231.912,164.333,232.944,157.273,233.976,157.273C235.008,157.273,236.04,159.599,237.072,159.599C238.104,159.599,239.137,154.592,240.169,152.911C241.201,151.231,242.233,151.573,243.265,149.516C244.297,147.459,245.329,140.57,246.361,140.57C247.394,140.57,248.426,142.016,249.458,142.016C250.49,142.016,251.522,137.233,252.554,137.233C253.586,137.233,254.618,138.098,255.651,138.098C256.683,138.098,257.715,137.309,258.747,137.309C259.779,137.309,260.811,137.609,261.843,137.954C262.876,138.3,263.908,138.601,264.94,139.382C265.972,140.162,267.004,141.251,268.036,142.638C269.068,144.025,270.1,147.352,271.133,147.706C272.165,148.06,273.197,148.237,274.229,148.237C275.261,148.237,276.293,142.072,277.325,141.807C278.357,141.543,279.39,141.411,280.422,141.411C281.454,141.411,282.486,141.556,283.518,141.556C284.55,141.556,285.582,140.562,286.614,139.455C287.647,138.349,288.679,134.918,289.711,134.918C290.743,134.918,291.775,134.99,292.807,135.134C293.839,135.278,294.871,137.906,295.904,137.906C296.936,137.906,297.968,122.485,299,120.861C300.032,119.237,301.064,118.425,302.096,118.425C303.129,118.425,304.161,119.968,305.193,120.376C306.225,120.785,307.257,120.989,308.289,120.989C309.321,120.989,310.353,119.766,311.386,119.766C312.418,119.766,313.45,124.014,314.482,124.014C315.514,124.014,316.546,122.506,317.578,121.184C318.61,119.863,319.643,118.47,320.675,116.083C321.707,113.696,322.739,106.863,323.771,106.863C324.803,106.863,325.835,107.862,326.867,107.949C327.9,108.036,328.932,108.079,329.964,108.079C330.996,108.079,332.028,107.978,333.06,107.777C334.092,107.576,335.124,101.2,336.157,99.053C337.189,96.906,338.221,94.898,339.253,94.898C340.285,94.898,341.317,96.738,342.349,97.815C343.382,98.892,344.414,101.36,345.446,101.36C346.478,101.36,347.51,100.672,348.542,100.359C349.574,100.047,350.606,99.486,351.639,99.486C352.671,99.486,353.703,100.644,354.735,100.644C355.767,100.644,356.799,100.481,357.831,100.156C358.863,99.831,359.896,98.369,360.928,98.144C361.96,97.918,362.992,97.989,364.024,97.805C365.056,97.622,366.088,97.552,367.12,97.045C368.153,96.539,369.185,91.723,370.217,91.723C371.249,91.723,372.281,95.817,373.313,95.817C374.345,95.817,375.378,95.332,376.41,95.332C377.442,95.332,378.474,97.484,379.506,100.137C380.538,102.791,381.57,111.254,382.602,111.254C383.635,111.254,384.667,105.027,385.699,104.571C386.731,104.116,387.763,104.344,388.795,103.888C389.827,103.432,390.859,99.792,391.892,99.792C392.924,99.792,393.956,101.167,394.988,101.167C396.02,101.167,397.052,98.886,398.084,96.714C399.116,94.542,400.149,88.136,401.181,88.136C402.213,88.136,403.245,90.435,404.277,91.062C405.309,91.689,406.341,92.002,407.373,92.002C408.406,92.002,409.438,91.515,410.47,90.541C411.502,89.567,412.534,86.825,413.566,83.877C414.598,80.928,415.631,74.254,416.663,72.851C417.695,71.447,418.727,71.813,419.759,70.745C420.791,69.678,421.823,66.699,422.855,66.443C423.888,66.187,424.92,66.058,425.952,66.058C426.984,66.058,428.016,69.143,429.048,69.143C430.08,69.143,431.112,68.767,432.145,68.767C433.177,68.767,434.209,72.316,435.241,72.316C436.273,72.316,437.305,70.672,438.337,70.672C439.369,70.672,440.402,72.508,441.434,73.671C442.466,74.835,443.498,77.652,444.53,77.652C445.562,77.652,446.594,70.517,447.627,68.118C448.659,65.72,449.691,63.262,450.723,63.262C451.755,63.262,452.787,64.362,453.819,65.988C454.851,67.613,455.884,73.017,456.916,73.017C457.948,73.017,458.98,72.705,460.012,72.426C461.044,72.147,462.076,71.341,463.108,71.341C464.141,71.341,465.173,75.851,466.205,75.851C467.237,75.851,468.269,72.718,469.301,72.718C470.333,72.718,471.365,78.226,472.398,78.226C473.43,78.226,474.462,75.064,475.494,71.882C476.526,68.701,477.558,61.79,478.59,59.138C479.622,56.487,480.655,56.066,481.687,55.162C482.719,54.257,483.751,54.453,484.783,53.713C485.815,52.972,486.847,50.721,487.88,50.721C488.912,50.721,489.944,52.552,490.976,52.552C492.008,52.552,493.04,49.251,494.072,49.251C495.104,49.251,496.137,51.621,497.169,52.483C498.201,53.346,499.233,54.428,500.265,54.428C501.297,54.428,502.329,52.967,503.361,52.967C504.394,52.967,505.426,54.529,506.458,54.529C507.49,54.529,508.522,52.936,509.554,52.936C510.586,52.936,511.618,54.014,512.651,54.76C513.683,55.505,514.715,56.461,515.747,57.407C516.779,58.353,517.811,59.24,518.843,60.436C519.876,61.632,520.908,64.566,521.94,64.583C522.972,64.601,524.004,64.592,525.036,64.609C526.068,64.626,527.1,71.255,528.133,71.255C529.165,71.255,530.197,67.189,531.229,65.602C532.261,64.015,533.293,61.732,534.325,61.732C535.357,61.732,536.39,62.304,537.422,62.304C538.454,62.304,539.486,59.317,540.518,58.582C541.55,57.846,542.582,57.478,543.614,57.478C544.647,57.478,545.679,58.109,546.711,58.109C547.743,58.109,548.775,58.067,549.807,58.067C550.839,58.067,551.871,58.112,552.904,58.201C553.936,58.29,554.968,59.707,556,60.582C557.032,61.457,558.064,62.714,559.096,63.45C560.129,64.187,561.161,64.387,562.193,65.002C563.225,65.617,564.257,67.14,565.289,67.14C566.321,67.14,567.353,63.044,568.386,63.044C569.418,63.044,570.45,63.886,571.482,63.886C572.514,63.886,573.546,62.4,574.578,61.82C575.61,61.24,576.643,60.602,577.675,60.404C578.707,60.206,579.739,60.107,580.771,60.107C581.803,60.107,582.835,63.263,583.867,64.572C584.9,65.881,585.932,67.089,586.964,67.961C587.996,68.833,589.028,68.575,590.06,69.805C591.092,71.034,592.124,80.704,593.157,80.704C594.189,80.704,595.221,80.66,596.253,80.573C597.285,80.486,598.317,78.022,599.349,76.801C600.382,75.58,601.414,75.258,602.446,73.249C603.478,71.24,604.51,67.123,605.542,64.747C606.574,62.372,607.606,58.994,608.639,58.994C609.671,58.994,610.703,59.034,611.735,59.112C612.767,59.19,613.799,72.173,614.831,72.512C615.863,72.852,616.896,73.021,617.928,73.021C618.96,73.021,619.992,66.575,621.024,66.575C622.056,66.575,623.088,73.075,624.12,73.075C625.153,73.075,626.185,70.892,627.217,70.892C628.249,70.892,629.281,79.578,630.313,79.578C631.345,79.578,632.378,79.483,633.41,79.294C634.442,79.105,635.474,75.773,636.506,75.773C637.538,75.773,638.57,77.574,639.602,79.089C640.635,80.603,641.667,82.321,642.699,84.858C643.731,87.395,644.763,91.884,645.795,94.31C646.827,96.736,647.859,99.413,648.892,99.413C649.924,99.413,650.956,98.606,651.988,98.07C653.02,97.534,654.052,96.197,655.084,96.197C656.116,96.197,657.149,98.621,658.181,98.621C659.213,98.621,660.245,91.072,661.277,91.072C662.309,91.072,663.341,96.452,664.373,96.452C665.406,96.452,666.438,93.574,667.47,91.715C668.502,89.856,669.534,85.298,670.566,85.298C671.598,85.298,672.631,86.706,673.663,88.195C674.695,89.684,675.727,94.231,676.759,94.231C677.791,94.231,678.823,94.223,679.855,94.217C680.888,94.212,681.92,94.198,682.952,94.198C683.984,94.198,685.016,94.513,686.048,94.652C687.08,94.792,688.112,94.78,689.145,95.035C690.177,95.29,691.209,98.385,692.241,98.385C693.273,98.385,694.305,92.981,695.337,92.981C696.369,92.981,697.402,93.405,698.434,93.405C699.466,93.405,700.498,92.948,701.53,92.948C702.562,92.948,703.594,97.257,704.627,99.336C705.659,101.415,706.691,105.419,707.723,105.419C708.755,105.419,709.787,102.057,710.819,100.76C711.851,99.463,712.884,97.638,713.916,97.638C714.948,97.638,715.98,103.137,717.012,104.354C718.044,105.571,719.076,104.962,720.108,106.179C721.141,107.395,722.173,112.13,723.205,112.13C724.237,112.13,725.269,109.218,726.301,109.218C727.333,109.218,728.365,118.236,729.398,118.236C730.43,118.236,731.462,118.081,732.494,118.081C733.526,118.081,734.558,121.965,735.59,124.497C736.622,127.028,737.655,132.75,738.687,133.268C739.719,133.786,740.751,134.045,741.783,134.045C742.815,134.045,743.847,122.625,744.88,119.265C745.912,115.905,746.944,114.511,747.976,113.886C749.008,113.261,750.04,113.574,751.072,112.949C752.104,112.323,753.137,109.553,754.169,109.553C755.201,109.553,756.233,110.206,757.265,110.206C758.297,110.206,759.329,101.615,760.361,100.984C761.394,100.354,762.426,100.039,763.458,100.039C764.49,100.039,765.522,101.444,766.554,101.444C767.586,101.444,768.618,97.593,769.651,95.169C770.683,92.744,771.715,90.455,772.747,86.899C773.779,83.342,774.811,74.537,775.843,73.831C776.876,73.125,777.908,73.478,778.94,72.772C779.972,72.066,781.004,65.259,782.036,65.259C783.068,65.259,784.1,66.232,785.133,67.242C786.165,68.253,787.197,71.321,788.229,71.321C789.261,71.321,790.293,60.846,791.325,60.846C792.357,60.846,793.39,67.057,794.422,67.057C795.454,67.057,796.486,63.135,797.518,62.659C798.55,62.184,799.582,62.422,800.614,61.946C801.647,61.471,802.679,58.725,803.711,58.725C804.743,58.725,805.775,60.718,806.807,60.718C807.839,60.718,808.871,53.694,809.904,50.637C810.936,47.579,811.968,44.976,813,42.373L813,202C811.968,202,810.936,202,809.904,202C808.871,202,807.839,202,806.807,202C805.775,202,804.743,202,803.711,202C802.679,202,801.647,202,800.614,202C799.582,202,798.55,202,797.518,202C796.486,202,795.454,202,794.422,202C793.39,202,792.357,202,791.325,202C790.293,202,789.261,202,788.229,202C787.197,202,786.165,202,785.133,202C784.1,202,783.068,202,782.036,202C781.004,202,779.972,202,778.94,202C777.908,202,776.876,202,775.843,202C774.811,202,773.779,202,772.747,202C771.715,202,770.683,202,769.651,202C768.618,202,767.586,202,766.554,202C765.522,202,764.49,202,763.458,202C762.426,202,761.394,202,760.361,202C759.329,202,758.297,202,757.265,202C756.233,202,755.201,202,754.169,202C753.137,202,752.104,202,751.072,202C750.04,202,749.008,202,747.976,202C746.944,202,745.912,202,744.88,202C743.847,202,742.815,202,741.783,202C740.751,202,739.719,202,738.687,202C737.655,202,736.622,202,735.59,202C734.558,202,733.526,202,732.494,202C731.462,202,730.43,202,729.398,202C728.365,202,727.333,202,726.301,202C725.269,202,724.237,202,723.205,202C722.173,202,721.141,202,720.108,202C719.076,202,718.044,202,717.012,202C715.98,202,714.948,202,713.916,202C712.884,202,711.851,202,710.819,202C709.787,202,708.755,202,707.723,202C706.691,202,705.659,202,704.627,202C703.594,202,702.562,202,701.53,202C700.498,202,699.466,202,698.434,202C697.402,202,696.369,202,695.337,202C694.305,202,693.273,202,692.241,202C691.209,202,690.177,202,689.145,202C688.112,202,687.08,202,686.048,202C685.016,202,683.984,202,682.952,202C681.92,202,680.888,202,679.855,202C678.823,202,677.791,202,676.759,202C675.727,202,674.695,202,673.663,202C672.631,202,671.598,202,670.566,202C669.534,202,668.502,202,667.47,202C666.438,202,665.406,202,664.373,202C663.341,202,662.309,202,661.277,202C660.245,202,659.213,202,658.181,202C657.149,202,656.116,202,655.084,202C654.052,202,653.02,202,651.988,202C650.956,202,649.924,202,648.892,202C647.859,202,646.827,202,645.795,202C644.763,202,643.731,202,642.699,202C641.667,202,640.635,202,639.602,202C638.57,202,637.538,202,636.506,202C635.474,202,634.442,202,633.41,202C632.378,202,631.345,202,630.313,202C629.281,202,628.249,202,627.217,202C626.185,202,625.153,202,624.12,202C623.088,202,622.056,202,621.024,202C619.992,202,618.96,202,617.928,202C616.896,202,615.863,202,614.831,202C613.799,202,612.767,202,611.735,202C610.703,202,609.671,202,608.639,202C607.606,202,606.574,202,605.542,202C604.51,202,603.478,202,602.446,202C601.414,202,600.382,202,599.349,202C598.317,202,597.285,202,596.253,202C595.221,202,594.189,202,593.157,202C592.124,202,591.092,202,590.06,202C589.028,202,587.996,202,586.964,202C585.932,202,584.9,202,583.867,202C582.835,202,581.803,202,580.771,202C579.739,202,578.707,202,577.675,202C576.643,202,575.61,202,574.578,202C573.546,202,572.514,202,571.482,202C570.45,202,569.418,202,568.386,202C567.353,202,566.321,202,565.289,202C564.257,202,563.225,202,562.193,202C561.161,202,560.129,202,559.096,202C558.064,202,557.032,202,556,202C554.968,202,553.936,202,552.904,202C551.871,202,550.839,202,549.807,202C548.775,202,547.743,202,546.711,202C545.679,202,544.647,202,543.614,202C542.582,202,541.55,202,540.518,202C539.486,202,538.454,202,537.422,202C536.39,202,535.357,202,534.325,202C533.293,202,532.261,202,531.229,202C530.197,202,529.165,202,528.133,202C527.1,202,526.068,202,525.036,202C524.004,202,522.972,202,521.94,202C520.908,202,519.876,202,518.843,202C517.811,202,516.779,202,515.747,202C514.715,202,513.683,202,512.651,202C511.618,202,510.586,202,509.554,202C508.522,202,507.49,202,506.458,202C505.426,202,504.394,202,503.361,202C502.329,202,501.297,202,500.265,202C499.233,202,498.201,202,497.169,202C496.137,202,495.104,202,494.072,202C493.04,202,492.008,202,490.976,202C489.944,202,488.912,202,487.88,202C486.847,202,485.815,202,484.783,202C483.751,202,482.719,202,481.687,202C480.655,202,479.622,202,478.59,202C477.558,202,476.526,202,475.494,202C474.462,202,473.43,202,472.398,202C471.365,202,470.333,202,469.301,202C468.269,202,467.237,202,466.205,202C465.173,202,464.141,202,463.108,202C462.076,202,461.044,202,460.012,202C458.98,202,457.948,202,456.916,202C455.884,202,454.851,202,453.819,202C452.787,202,451.755,202,450.723,202C449.691,202,448.659,202,447.627,202C446.594,202,445.562,202,444.53,202C443.498,202,442.466,202,441.434,202C440.402,202,439.369,202,438.337,202C437.305,202,436.273,202,435.241,202C434.209,202,433.177,202,432.145,202C431.112,202,430.08,202,429.048,202C428.016,202,426.984,202,425.952,202C424.92,202,423.888,202,422.855,202C421.823,202,420.791,202,419.759,202C418.727,202,417.695,202,416.663,202C415.631,202,414.598,202,413.566,202C412.534,202,411.502,202,410.47,202C409.438,202,408.406,202,407.373,202C406.341,202,405.309,202,404.277,202C403.245,202,402.213,202,401.181,202C400.149,202,399.116,202,398.084,202C397.052,202,396.02,202,394.988,202C393.956,202,392.924,202,391.892,202C390.859,202,389.827,202,388.795,202C387.763,202,386.731,202,385.699,202C384.667,202,383.635,202,382.602,202C381.57,202,380.538,202,379.506,202C378.474,202,377.442,202,376.41,202C375.378,202,374.345,202,373.313,202C372.281,202,371.249,202,370.217,202C369.185,202,368.153,202,367.12,202C366.088,202,365.056,202,364.024,202C362.992,202,361.96,202,360.928,202C359.896,202,358.863,202,357.831,202C356.799,202,355.767,202,354.735,202C353.703,202,352.671,202,351.639,202C350.606,202,349.574,202,348.542,202C347.51,202,346.478,202,345.446,202C344.414,202,343.382,202,342.349,202C341.317,202,340.285,202,339.253,202C338.221,202,337.189,202,336.157,202C335.124,202,334.092,202,333.06,202C332.028,202,330.996,202,329.964,202C328.932,202,327.9,202,326.867,202C325.835,202,324.803,202,323.771,202C322.739,202,321.707,202,320.675,202C319.643,202,318.61,202,317.578,202C316.546,202,315.514,202,314.482,202C313.45,202,312.418,202,311.386,202C310.353,202,309.321,202,308.289,202C307.257,202,306.225,202,305.193,202C304.161,202,303.129,202,302.096,202C301.064,202,300.032,202,299,202C297.968,202,296.936,202,295.904,202C294.871,202,293.839,202,292.807,202C291.775,202,290.743,202,289.711,202C288.679,202,287.647,202,286.614,202C285.582,202,284.55,202,283.518,202C282.486,202,281.454,202,280.422,202C279.39,202,278.357,202,277.325,202C276.293,202,275.261,202,274.229,202C273.197,202,272.165,202,271.133,202C270.1,202,269.068,202,268.036,202C267.004,202,265.972,202,264.94,202C263.908,202,262.876,202,261.843,202C260.811,202,259.779,202,258.747,202C257.715,202,256.683,202,255.651,202C254.618,202,253.586,202,252.554,202C251.522,202,250.49,202,249.458,202C248.426,202,247.394,202,246.361,202C245.329,202,244.297,202,243.265,202C242.233,202,241.201,202,240.169,202C239.137,202,238.104,202,237.072,202C236.04,202,235.008,202,233.976,202C232.944,202,231.912,202,230.88,202C229.847,202,228.815,202,227.783,202C226.751,202,225.719,202,224.687,202C223.655,202,222.622,202,221.59,202C220.558,202,219.526,202,218.494,202C217.462,202,216.43,202,215.398,202C214.365,202,213.333,202,212.301,202C211.269,202,210.237,202,209.205,202C208.173,202,207.141,202,206.108,202C205.076,202,204.044,202,203.012,202C201.98,202,200.948,202,199.916,202C198.884,202,197.851,202,196.819,202C195.787,202,194.755,202,193.723,202C192.691,202,191.659,202,190.627,202C189.594,202,188.562,202,187.53,202C186.498,202,185.466,202,184.434,202C183.402,202,182.369,202,181.337,202C180.305,202,179.273,202,178.241,202C177.209,202,176.177,202,175.145,202C174.112,202,173.08,202,172.048,202C171.016,202,169.984,202,168.952,202C167.92,202,166.888,202,165.855,202C164.823,202,163.791,202,162.759,202C161.727,202,160.695,202,159.663,202C158.631,202,157.598,202,156.566,202C155.534,202,154.502,202,153.47,202C152.438,202,151.406,202,150.373,202C149.341,202,148.309,202,147.277,202C146.245,202,145.213,202,144.181,202C143.149,202,142.116,202,141.084,202C140.052,202,139.02,202,137.988,202C136.956,202,135.924,202,134.892,202C133.859,202,132.827,202,131.795,202C130.763,202,129.731,202,128.699,202C127.667,202,126.635,202,125.602,202C124.57,202,123.538,202,122.506,202C121.474,202,120.442,202,119.41,202C118.378,202,117.345,202,116.313,202C115.281,202,114.249,202,113.217,202C112.185,202,111.153,202,110.12,202C109.088,202,108.056,202,107.024,202C105.992,202,104.96,202,103.928,202C102.896,202,101.863,202,100.831,202C99.799,202,98.767,202,97.735,202C96.703,202,95.671,202,94.639,202C93.606,202,92.574,202,91.542,202C90.51,202,89.478,202,88.446,202C87.414,202,86.382,202,85.349,202C84.317,202,83.285,202,82.253,202C81.221,202,80.189,202,79.157,202C78.124,202,77.092,202,76.06,202C75.028,202,73.996,202,72.964,202C71.932,202,70.9,202,69.867,202C68.835,202,67.803,202,66.771,202C65.739,202,64.707,202,63.675,202C62.643,202,61.61,202,60.578,202C59.546,202,58.514,202,57.482,202C56.45,202,55.418,202,54.386,202C53.353,202,52.321,202,51.289,202C50.257,202,49.225,202,48.193,202C47.161,202,46.129,202,45.096,202C44.064,202,43.032,202,42,202Z"></path><path stroke="#52b788" stroke-width="2" fill="none" name="Portfolio" fill-opacity="0.6" width="771" height="264" class="recharts-curve recharts-area-curve" d="M42,205.187C43.032,205.448,44.064,205.709,45.096,206.751C46.129,207.793,47.161,215.792,48.193,215.792C49.225,215.792,50.257,211.953,51.289,211.953C52.321,211.953,53.353,212.292,54.386,212.292C55.418,212.292,56.45,200.194,57.482,198.952C58.514,197.71,59.546,198.177,60.578,197.09C61.61,196.003,62.643,192.43,63.675,192.43C64.707,192.43,65.739,193.611,66.771,193.611C67.803,193.611,68.835,191.924,69.867,191.914C70.9,191.904,71.932,191.899,72.964,191.899C73.996,191.899,75.028,194.262,76.06,194.859C77.092,195.456,78.124,195.754,79.157,195.754C80.189,195.754,81.221,194.085,82.253,194.085C83.285,194.085,84.317,200.273,85.349,200.273C86.382,200.273,87.414,191.986,88.446,191.986C89.478,191.986,90.51,192.845,91.542,193.026C92.574,193.208,93.606,193.298,94.639,193.298C95.671,193.298,96.703,192.448,97.735,192.448C98.767,192.448,99.799,193.064,100.831,193.336C101.863,193.608,102.896,194.082,103.928,194.082C104.96,194.082,105.992,192.865,107.024,192.865C108.056,192.865,109.088,193.084,110.12,193.084C111.153,193.084,112.185,187.494,113.217,186.912C114.249,186.33,115.281,186.501,116.313,186.04C117.345,185.578,118.378,184.142,119.41,184.142C120.442,184.142,121.474,186.801,122.506,186.801C123.538,186.801,124.57,186.106,125.602,186.106C126.635,186.106,127.667,189.331,128.699,189.331C129.731,189.331,130.763,185.808,131.795,185.808C132.827,185.808,133.859,187.841,134.892,188.249C135.924,188.657,136.956,188.453,137.988,188.861C139.02,189.269,140.052,191.272,141.084,191.272C142.116,191.272,143.149,190.383,144.181,189.937C145.213,189.49,146.245,189.467,147.277,188.595C148.309,187.723,149.341,185.819,150.373,184.704C151.406,183.589,152.438,182.875,153.47,181.906C154.502,180.936,155.534,179.605,156.566,178.887C157.598,178.17,158.631,177.625,159.663,177.601C160.695,177.576,161.727,177.588,162.759,177.564C163.791,177.539,164.823,174.485,165.855,173.25C166.888,172.016,167.92,170.155,168.952,170.155C169.984,170.155,171.016,173.317,172.048,174.32C173.08,175.322,174.112,176.168,175.145,176.168C176.177,176.168,177.209,172.985,178.241,172.366C179.273,171.747,180.305,171.831,181.337,171.437C182.369,171.043,183.402,170,184.434,170C185.466,170,186.498,170.644,187.53,170.644C188.562,170.644,189.594,169.811,190.627,169.402C191.659,168.994,192.691,168.688,193.723,168.193C194.755,167.698,195.787,166.937,196.819,166.431C197.851,165.926,198.884,166.008,199.916,165.161C200.948,164.314,201.98,161.62,203.012,161.094C204.044,160.568,205.076,160.305,206.108,160.305C207.141,160.305,208.173,161.019,209.205,161.019C210.237,161.019,211.269,159.393,212.301,158.788C213.333,158.182,214.365,157.387,215.398,157.387C216.43,157.387,217.462,157.961,218.494,157.961C219.526,157.961,220.558,157.564,221.59,157.564C222.622,157.564,223.655,158.248,224.687,158.248C225.719,158.248,226.751,157.184,227.783,157.184C228.815,157.184,229.847,164.333,230.88,164.333C231.912,164.333,232.944,157.273,233.976,157.273C235.008,157.273,236.04,159.599,237.072,159.599C238.104,159.599,239.137,154.592,240.169,152.911C241.201,151.231,242.233,151.573,243.265,149.516C244.297,147.459,245.329,140.57,246.361,140.57C247.394,140.57,248.426,142.016,249.458,142.016C250.49,142.016,251.522,137.233,252.554,137.233C253.586,137.233,254.618,138.098,255.651,138.098C256.683,138.098,257.715,137.309,258.747,137.309C259.779,137.309,260.811,137.609,261.843,137.954C262.876,138.3,263.908,138.601,264.94,139.382C265.972,140.162,267.004,141.251,268.036,142.638C269.068,144.025,270.1,147.352,271.133,147.706C272.165,148.06,273.197,148.237,274.229,148.237C275.261,148.237,276.293,142.072,277.325,141.807C278.357,141.543,279.39,141.411,280.422,141.411C281.454,141.411,282.486,141.556,283.518,141.556C284.55,141.556,285.582,140.562,286.614,139.455C287.647,138.349,288.679,134.918,289.711,134.918C290.743,134.918,291.775,134.99,292.807,135.134C293.839,135.278,294.871,137.906,295.904,137.906C296.936,137.906,297.968,122.485,299,120.861C300.032,119.237,301.064,118.425,302.096,118.425C303.129,118.425,304.161,119.968,305.193,120.376C306.225,120.785,307.257,120.989,308.289,120.989C309.321,120.989,310.353,119.766,311.386,119.766C312.418,119.766,313.45,124.014,314.482,124.014C315.514,124.014,316.546,122.506,317.578,121.184C318.61,119.863,319.643,118.47,320.675,116.083C321.707,113.696,322.739,106.863,323.771,106.863C324.803,106.863,325.835,107.862,326.867,107.949C327.9,108.036,328.932,108.079,329.964,108.079C330.996,108.079,332.028,107.978,333.06,107.777C334.092,107.576,335.124,101.2,336.157,99.053C337.189,96.906,338.221,94.898,339.253,94.898C340.285,94.898,341.317,96.738,342.349,97.815C343.382,98.892,344.414,101.36,345.446,101.36C346.478,101.36,347.51,100.672,348.542,100.359C349.574,100.047,350.606,99.486,351.639,99.486C352.671,99.486,353.703,100.644,354.735,100.644C355.767,100.644,356.799,100.481,357.831,100.156C358.863,99.831,359.896,98.369,360.928,98.144C361.96,97.918,362.992,97.989,364.024,97.805C365.056,97.622,366.088,97.552,367.12,97.045C368.153,96.539,369.185,91.723,370.217,91.723C371.249,91.723,372.281,95.817,373.313,95.817C374.345,95.817,375.378,95.332,376.41,95.332C377.442,95.332,378.474,97.484,379.506,100.137C380.538,102.791,381.57,111.254,382.602,111.254C383.635,111.254,384.667,105.027,385.699,104.571C386.731,104.116,387.763,104.344,388.795,103.888C389.827,103.432,390.859,99.792,391.892,99.792C392.924,99.792,393.956,101.167,394.988,101.167C396.02,101.167,397.052,98.886,398.084,96.714C399.116,94.542,400.149,88.136,401.181,88.136C402.213,88.136,403.245,90.435,404.277,91.062C405.309,91.689,406.341,92.002,407.373,92.002C408.406,92.002,409.438,91.515,410.47,90.541C411.502,89.567,412.534,86.825,413.566,83.877C414.598,80.928,415.631,74.254,416.663,72.851C417.695,71.447,418.727,71.813,419.759,70.745C420.791,69.678,421.823,66.699,422.855,66.443C423.888,66.187,424.92,66.058,425.952,66.058C426.984,66.058,428.016,69.143,429.048,69.143C430.08,69.143,431.112,68.767,432.145,68.767C433.177,68.767,434.209,72.316,435.241,72.316C436.273,72.316,437.305,70.672,438.337,70.672C439.369,70.672,440.402,72.508,441.434,73.671C442.466,74.835,443.498,77.652,444.53,77.652C445.562,77.652,446.594,70.517,447.627,68.118C448.659,65.72,449.691,63.262,450.723,63.262C451.755,63.262,452.787,64.362,453.819,65.988C454.851,67.613,455.884,73.017,456.916,73.017C457.948,73.017,458.98,72.705,460.012,72.426C461.044,72.147,462.076,71.341,463.108,71.341C464.141,71.341,465.173,75.851,466.205,75.851C467.237,75.851,468.269,72.718,469.301,72.718C470.333,72.718,471.365,78.226,472.398,78.226C473.43,78.226,474.462,75.064,475.494,71.882C476.526,68.701,477.558,61.79,478.59,59.138C479.622,56.487,480.655,56.066,481.687,55.162C482.719,54.257,483.751,54.453,484.783,53.713C485.815,52.972,486.847,50.721,487.88,50.721C488.912,50.721,489.944,52.552,490.976,52.552C492.008,52.552,493.04,49.251,494.072,49.251C495.104,49.251,496.137,51.621,497.169,52.483C498.201,53.346,499.233,54.428,500.265,54.428C501.297,54.428,502.329,52.967,503.361,52.967C504.394,52.967,505.426,54.529,506.458,54.529C507.49,54.529,508.522,52.936,509.554,52.936C510.586,52.936,511.618,54.014,512.651,54.76C513.683,55.505,514.715,56.461,515.747,57.407C516.779,58.353,517.811,59.24,518.843,60.436C519.876,61.632,520.908,64.566,521.94,64.583C522.972,64.601,524.004,64.592,525.036,64.609C526.068,64.626,527.1,71.255,528.133,71.255C529.165,71.255,530.197,67.189,531.229,65.602C532.261,64.015,533.293,61.732,534.325,61.732C535.357,61.732,536.39,62.304,537.422,62.304C538.454,62.304,539.486,59.317,540.518,58.582C541.55,57.846,542.582,57.478,543.614,57.478C544.647,57.478,545.679,58.109,546.711,58.109C547.743,58.109,548.775,58.067,549.807,58.067C550.839,58.067,551.871,58.112,552.904,58.201C553.936,58.29,554.968,59.707,556,60.582C557.032,61.457,558.064,62.714,559.096,63.45C560.129,64.187,561.161,64.387,562.193,65.002C563.225,65.617,564.257,67.14,565.289,67.14C566.321,67.14,567.353,63.044,568.386,63.044C569.418,63.044,570.45,63.886,571.482,63.886C572.514,63.886,573.546,62.4,574.578,61.82C575.61,61.24,576.643,60.602,577.675,60.404C578.707,60.206,579.739,60.107,580.771,60.107C581.803,60.107,582.835,63.263,583.867,64.572C584.9,65.881,585.932,67.089,586.964,67.961C587.996,68.833,589.028,68.575,590.06,69.805C591.092,71.034,592.124,80.704,593.157,80.704C594.189,80.704,595.221,80.66,596.253,80.573C597.285,80.486,598.317,78.022,599.349,76.801C600.382,75.58,601.414,75.258,602.446,73.249C603.478,71.24,604.51,67.123,605.542,64.747C606.574,62.372,607.606,58.994,608.639,58.994C609.671,58.994,610.703,59.034,611.735,59.112C612.767,59.19,613.799,72.173,614.831,72.512C615.863,72.852,616.896,73.021,617.928,73.021C618.96,73.021,619.992,66.575,621.024,66.575C622.056,66.575,623.088,73.075,624.12,73.075C625.153,73.075,626.185,70.892,627.217,70.892C628.249,70.892,629.281,79.578,630.313,79.578C631.345,79.578,632.378,79.483,633.41,79.294C634.442,79.105,635.474,75.773,636.506,75.773C637.538,75.773,638.57,77.574,639.602,79.089C640.635,80.603,641.667,82.321,642.699,84.858C643.731,87.395,644.763,91.884,645.795,94.31C646.827,96.736,647.859,99.413,648.892,99.413C649.924,99.413,650.956,98.606,651.988,98.07C653.02,97.534,654.052,96.197,655.084,96.197C656.116,96.197,657.149,98.621,658.181,98.621C659.213,98.621,660.245,91.072,661.277,91.072C662.309,91.072,663.341,96.452,664.373,96.452C665.406,96.452,666.438,93.574,667.47,91.715C668.502,89.856,669.534,85.298,670.566,85.298C671.598,85.298,672.631,86.706,673.663,88.195C674.695,89.684,675.727,94.231,676.759,94.231C677.791,94.231,678.823,94.223,679.855,94.217C680.888,94.212,681.92,94.198,682.952,94.198C683.984,94.198,685.016,94.513,686.048,94.652C687.08,94.792,688.112,94.78,689.145,95.035C690.177,95.29,691.209,98.385,692.241,98.385C693.273,98.385,694.305,92.981,695.337,92.981C696.369,92.981,697.402,93.405,698.434,93.405C699.466,93.405,700.498,92.948,701.53,92.948C702.562,92.948,703.594,97.257,704.627,99.336C705.659,101.415,706.691,105.419,707.723,105.419C708.755,105.419,709.787,102.057,710.819,100.76C711.851,99.463,712.884,97.638,713.916,97.638C714.948,97.638,715.98,103.137,717.012,104.354C718.044,105.571,719.076,104.962,720.108,106.179C721.141,107.395,722.173,112.13,723.205,112.13C724.237,112.13,725.269,109.218,726.301,109.218C727.333,109.218,728.365,118.236,729.398,118.236C730.43,118.236,731.462,118.081,732.494,118.081C733.526,118.081,734.558,121.965,735.59,124.497C736.622,127.028,737.655,132.75,738.687,133.268C739.719,133.786,740.751,134.045,741.783,134.045C742.815,134.045,743.847,122.625,744.88,119.265C745.912,115.905,746.944,114.511,747.976,113.886C749.008,113.261,750.04,113.574,751.072,112.949C752.104,112.323,753.137,109.553,754.169,109.553C755.201,109.553,756.233,110.206,757.265,110.206C758.297,110.206,759.329,101.615,760.361,100.984C761.394,100.354,762.426,100.039,763.458,100.039C764.49,100.039,765.522,101.444,766.554,101.444C767.586,101.444,768.618,97.593,769.651,95.169C770.683,92.744,771.715,90.455,772.747,86.899C773.779,83.342,774.811,74.537,775.843,73.831C776.876,73.125,777.908,73.478,778.94,72.772C779.972,72.066,781.004,65.259,782.036,65.259C783.068,65.259,784.1,66.232,785.133,67.242C786.165,68.253,787.197,71.321,788.229,71.321C789.261,71.321,790.293,60.846,791.325,60.846C792.357,60.846,793.39,67.057,794.422,67.057C795.454,67.057,796.486,63.135,797.518,62.659C798.55,62.184,799.582,62.422,800.614,61.946C801.647,61.471,802.679,58.725,803.711,58.725C804.743,58.725,805.775,60.718,806.807,60.718C807.839,60.718,808.871,53.694,809.904,50.637C810.936,47.579,811.968,44.976,813,42.373"></path></g></g></svg><div tabindex="-1" class="recharts-tooltip-wrapper recharts-tooltip-wrapper-left recharts-tooltip-wrapper-bottom" style="visibility: hidden; pointer-events: none; position: absolute; top: 0px; left: 0px; transform: translate(594.085px, 99.0495px);"></div></div></div></div><div style="border-left: 3px solid var(--positive); background: rgba(255, 255, 255, 0.03); border-radius: 0px 6px 6px 0px; padding: 10px 14px; margin-top: 8px;"><div style="font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--positive); margin-bottom: 5px;">Return</div><div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">Portfolio grew at <strong>48.8%/yr</strong>. Beat the S&amp;P 500 by <strong>21.5%</strong>. Median 1-year projection: <strong>$14,832</strong> (99% chance of profit).</div></div></div><div style="display: flex; flex-direction: column; gap: 10px; min-height: 0px;"><div style="display: flex; flex-direction: column;"><div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px;">Risk Gauge</div><div style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.06); transition: border-color 0.2s; background: var(--card);"><canvas style="width: 100%; aspect-ratio: 1.4 / 1; display: block;" width="301" height="214"></canvas></div></div><div class="card" style="padding: 14px 16px;"><div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 12px;">Allocation</div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: monospace;">AAPL</span><span style="font-size: 11px; color: var(--accent); font-weight: 600;">34%</span></div><div style="height: 4px; background: var(--card-3); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: 34%; background: rgb(82, 183, 136); border-radius: 2px; transition: width 0.5s;"></div></div></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: monospace;">MSFT</span><span style="font-size: 11px; color: var(--accent); font-weight: 600;">33%</span></div><div style="height: 4px; background: var(--card-3); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: 33%; background: rgb(45, 106, 79); border-radius: 2px; transition: width 0.5s;"></div></div></div><div style="margin-bottom: 10px;"><div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span style="font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: monospace;">GOOGL</span><span style="font-size: 11px; color: var(--accent); font-weight: 600;">33%</span></div><div style="height: 4px; background: var(--card-3); border-radius: 2px; overflow: hidden;"><div style="height: 100%; width: 33%; background: rgb(149, 213, 178); border-radius: 2px; transition: width 0.5s;"></div></div></div></div><div class="card" style="padding: 14px 16px; flex: 1 1 0%; min-height: 0px; display: flex; flex-direction: column;"><div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 10px;">Drawdown</div><div style="flex: 1 1 0%; min-height: 0px;"><div class="recharts-responsive-container" style="width: 100%; height: 100%; min-width: 0px;"></div></div><div style="font-size: 11px; margin-top: 8px;"><span style="color: var(--text-muted);">Worst drop: </span><span style="color: var(--negative); font-weight: 600; font-family: monospace;">-17.6%</span></div></div></div></div></div></div></main><div style="padding: 6px 20px; font-size: 10px; color: rgb(138, 170, 138); border-top: 1px solid var(--border-light); background: rgba(255, 255, 255, 0.3); flex-shrink: 0;">Portfolio Risk Analysis Engine — educational tool only. Not financial advice. Past performance does not guarantee future results.</div></div></div></div>
+    <script type="module" src="./Portfolio Risk Engine_files/main.jsx"></script>
+  
+<span id="recharts_measurement_span" aria-hidden="true" style="position: absolute; top: -20000px; left: 0px; padding: 0px; margin: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; white-space: pre; font-size: 10px; letter-spacing: normal;">-20%</span></body></html>
