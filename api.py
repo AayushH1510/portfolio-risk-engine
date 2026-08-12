@@ -329,6 +329,8 @@ async def analyse(req: AnalyseRequest):
             "var_cvar_99":           _serialize_var_cvar(m["var_cvar_99"]),
             "max_drawdown":          round(m["max_drawdown"]["max_drawdown"], 6),
             "beta_alpha":            m["beta_alpha"],
+            "treynor_ratio":         round(m["treynor_ratio"], 4)     if m["treynor_ratio"]     is not None else None,
+            "information_ratio":     round(m["information_ratio"], 4) if m["information_ratio"] is not None else None,
             "diversification_score": {
                 "score":             ds["score"],
                 "avg_pairwise_corr": ds["avg_pairwise_corr"],

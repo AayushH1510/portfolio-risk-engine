@@ -140,7 +140,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
     rolling_volatility: rv, rolling_sharpe: rs,
     correlation_matrix: corr, var_cvar, var_cvar_99,
     annualised_volatility: vol, sharpe_ratio: sharpe,
-    portfolio_returns,
+    portfolio_returns, treynor_ratio: treynor, information_ratio: infoRatio,
   } = data
 
   const rvData = rv.dates.map((d, i) => ({ date: d.slice(5), vol: rv.values[i] }))
@@ -149,6 +149,10 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
   const recentVol    = rv.values[rv.values.length - 1]
   const recentSharpe = rs.values[rs.values.length - 1]
   const riskRising   = recentVol > vol
+
+  const toneColor = { good: 'var(--positive)', warning: 'var(--warning)', bad: 'var(--negative)' }
+  const treynorTone   = treynor   > 1   ? 'good' : treynor   > 0 ? 'warning' : 'bad'
+  const infoRatioTone = infoRatio > 0.5 ? 'good' : infoRatio > 0 ? 'warning' : 'bad'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
@@ -210,6 +214,28 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           </div>
         </div>
       </div>
+
+      {/* Row 1.5: Benchmark-relative ratios */}
+      {(treynor != null || infoRatio != null) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+          {treynor != null && (
+            <MetricPill
+              label="Treynor ratio"
+              value={treynor.toFixed(2)}
+              color={toneColor[treynorTone]}
+              sub="return per unit of market risk"
+            />
+          )}
+          {infoRatio != null && (
+            <MetricPill
+              label="Information ratio"
+              value={infoRatio.toFixed(2)}
+              color={toneColor[infoRatioTone]}
+              sub="active return per unit of tracking risk"
+            />
+          )}
+        </div>
+      )}
 
       {/* Row 2: VaR + Correlation */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
