@@ -407,6 +407,16 @@ def compute_efficient_frontier(
 
 # ─── Monte Carlo simulation — with Cholesky decomposition ────────────────────
 
+# Per-day drift adjustment applied to simulated returns before the Cholesky
+# step — bear/bull assume a ±10%/yr headwind/tailwind on top of historical
+# drift; base leaves historical drift untouched.
+MC_SCENARIO_DRIFT = {
+    "bear": -0.10 / 252,
+    "base": 0.0,
+    "bull":  0.10 / 252,
+}
+
+
 def compute_monte_carlo(
     portfolio_returns: pd.Series,
     asset_returns: pd.DataFrame,
@@ -414,14 +424,24 @@ def compute_monte_carlo(
     portfolio_value: float = 10_000,
     n_simulations: int = 1_000,
     n_days: int = 252,
+    scenario: str = "base",
 ) -> dict:
     """
     Simulate correlated asset price paths using Cholesky decomposition.
     Falls back to univariate normal if Cholesky fails.
+
+    `scenario` shifts the daily drift used in the simulation — "bear"
+    (-10%/yr headwind), "base" (historical drift, unchanged, default), or
+    "bull" (+10%/yr tailwind). The drift shift is applied on top of each
+    asset's own historical mean daily return, not in place of it.
     """
+    if scenario not in MC_SCENARIO_DRIFT:
+        raise ValueError(f"Unknown scenario {scenario!r}. Expected one of {list(MC_SCENARIO_DRIFT)}.")
+    drift = MC_SCENARIO_DRIFT[scenario]
+
     n_assets       = asset_returns.shape[1]
     w              = np.array(weights)
-    daily_mean_vec = asset_returns.mean().values
+    daily_mean_vec = asset_returns.mean().values + drift
     cov_daily      = asset_returns.cov().values
 
     try:
@@ -436,7 +456,7 @@ def compute_monte_carlo(
         method = "cholesky"
 
     except np.linalg.LinAlgError:
-        daily_mean     = portfolio_returns.mean()
+        daily_mean     = portfolio_returns.mean() + drift
         daily_std      = portfolio_returns.std()
         random_returns = np.random.normal(daily_mean, daily_std, (n_days, n_simulations))
         price_paths    = np.zeros((n_days + 1, n_simulations))
@@ -464,9 +484,10 @@ def compute_monte_carlo(
         "n_simulations":   n_simulations,
         "n_days":          n_days,
         "portfolio_value": portfolio_value,
-        "daily_mean":      float(portfolio_returns.mean()),
+        "daily_mean":      float(portfolio_returns.mean() + drift),
         "daily_std":       float(portfolio_returns.std()),
         "method":          method,
+        "scenario":        scenario,
     }
 
 

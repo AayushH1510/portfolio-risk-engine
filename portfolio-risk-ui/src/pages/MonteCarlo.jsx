@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, Customized,
@@ -7,6 +7,43 @@ import MetricCard from '../components/MetricCard'
 import InsightBox from '../components/InsightBox'
 
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+
+const SCENARIOS = [
+  { key: 'bear', label: 'Bear', color: '#e05c5c', sub: '−10%/yr headwind' },
+  { key: 'base', label: 'Base', color: '#52b788', sub: 'historical drift' },
+  { key: 'bull', label: 'Bull', color: '#b7e4c7', sub: '+10%/yr tailwind' },
+]
+
+function ScenarioToggle({ scenario, onChange }) {
+  return (
+    <div className="card" style={{ display: 'flex', gap: 8, padding: 8, flexShrink: 0 }}>
+      {SCENARIOS.map(s => {
+        const active = scenario === s.key
+        return (
+          <button
+            key={s.key}
+            onClick={() => onChange(s.key)}
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              padding: '8px 0', borderRadius: 8,
+              border: `1px solid ${active ? s.color : 'var(--border)'}`,
+              background: active ? `${s.color}22` : 'rgba(255,255,255,0.03)',
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
+            <span style={{
+              fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+              color: active ? s.color : 'var(--text-muted)',
+            }}>
+              {s.label}
+            </span>
+            <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{s.sub}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 // Canvas layer that draws the 1,000 faint grey paths
 // Custom Recharts layer — renders sampled paths using the chart's own coordinate system
@@ -39,9 +76,11 @@ function SimulatedPaths({ allPaths, xAxisMap, yAxisMap }) {
 }
 
 export default function MonteCarlo({ data }) {
+  const [scenario, setScenario] = useState('base')
+
   if (!data) return null
 
-  const mc = data.monte_carlo
+  const mc = data[`monte_carlo_${scenario}`] || data.monte_carlo
   const {
     percentile_5: p5, percentile_50: p50, percentile_95: p95,
     p5_final, p50_final, p95_final,
@@ -59,6 +98,9 @@ export default function MonteCarlo({ data }) {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12, height:'100%' }}>
+
+      {/* Scenario toggle */}
+      <ScenarioToggle scenario={scenario} onChange={setScenario} />
 
       {/* Metrics row */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, flexShrink:0 }}>
