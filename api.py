@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 from data_fetcher import fetch_with_benchmark, fetch_closing_prices, validate_tickers
-from stats_engine import compute_all_metrics, compute_stress_scenario
+from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router
 from cache import cached
 
@@ -273,6 +273,23 @@ def _serialize_var_cvar(vc: dict) -> dict:
     }
 
 
+def _serialize_monte_carlo(mc: dict) -> dict:
+    return {
+        "all_paths":       [[round(v, 2) for v in mc["all_paths"][:, i].tolist()] for i in range(min(300, mc["all_paths"].shape[1]))],
+        "percentile_5":    [round(v, 2) for v in mc["percentile_5"].tolist()],
+        "percentile_50":   [round(v, 2) for v in mc["percentile_50"].tolist()],
+        "percentile_95":   [round(v, 2) for v in mc["percentile_95"].tolist()],
+        "p5_final":        round(mc["p5_final"], 2),
+        "p50_final":       round(mc["p50_final"], 2),
+        "p95_final":       round(mc["p95_final"], 2),
+        "prob_profit":     round(mc["prob_profit"], 4),
+        "prob_loss_10pct": round(mc["prob_loss_10pct"], 4),
+        "portfolio_value": mc["portfolio_value"],
+        "n_simulations":   mc["n_simulations"],
+        "scenario":        mc["scenario"],
+    }
+
+
 @app.post("/api/analyse")
 async def analyse(req: AnalyseRequest):
     try:
@@ -351,19 +368,24 @@ async def analyse(req: AnalyseRequest):
                 "min_vol_return":     round(ef["min_vol_return"], 6),
                 "min_vol_weights":    ef["min_vol_weights"],
             },
-            "monte_carlo": {
-                "all_paths":       [[round(v, 2) for v in mc["all_paths"][:, i].tolist()] for i in range(min(300, mc["all_paths"].shape[1]))],
-                "percentile_5":    [round(v, 2) for v in mc["percentile_5"].tolist()],
-                "percentile_50":   [round(v, 2) for v in mc["percentile_50"].tolist()],
-                "percentile_95":   [round(v, 2) for v in mc["percentile_95"].tolist()],
-                "p5_final":        round(mc["p5_final"], 2),
-                "p50_final":       round(mc["p50_final"], 2),
-                "p95_final":       round(mc["p95_final"], 2),
-                "prob_profit":     round(mc["prob_profit"], 4),
-                "prob_loss_10pct": round(mc["prob_loss_10pct"], 4),
-                "portfolio_value": mc["portfolio_value"],
-                "n_simulations":   mc["n_simulations"],
-            },
+            "monte_carlo":      _serialize_monte_carlo(mc),
+            "monte_carlo_base": _serialize_monte_carlo(mc),
+            "monte_carlo_bear": _serialize_monte_carlo(compute_monte_carlo(
+                portfolio_returns=port_rets,
+                asset_returns=m["returns"],
+                weights=req.weights,
+                portfolio_value=req.portfolio_value,
+                n_simulations=mc["n_simulations"],
+                scenario="bear",
+            )),
+            "monte_carlo_bull": _serialize_monte_carlo(compute_monte_carlo(
+                portfolio_returns=port_rets,
+                asset_returns=m["returns"],
+                weights=req.weights,
+                portfolio_value=req.portfolio_value,
+                n_simulations=mc["n_simulations"],
+                scenario="bull",
+            )),
         }
 
         if req.show_benchmark and benchmark_prices is not None:
