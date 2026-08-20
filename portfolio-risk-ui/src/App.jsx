@@ -18,6 +18,8 @@ import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
 import { useAuth } from './hooks/useAuth'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const TABS = [
   { id: 'dashboard',  label: 'Dashboard' },
   { id: 'risk',       label: 'Risk Analysis' },
@@ -48,7 +50,7 @@ export default function App() {
       return
     }
     let cancelled = false
-    axios.get(`/api/fundamentals?tickers=${tickers.join(',')}`)
+    axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
       .then(res => {
         if (cancelled) return
         const sectorByTicker = {}

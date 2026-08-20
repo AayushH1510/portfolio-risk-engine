@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const fmtPct    = v => v == null ? '—' : `${(v * 100).toFixed(1)}%`
 const fmtDollar = v => v == null ? '—' : `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
@@ -78,7 +80,7 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
     if (!tickers?.length) return
     setLoading(true)
     setError(null)
-    axios.post('/api/stress-test', { tickers, weights, portfolio_value: portfolioValue })
+    axios.post(`${API}/api/stress-test`, { tickers, weights, portfolio_value: portfolioValue })
       .then(res => setScenarios(res.data.scenarios))
       .catch(e => setError(e.response?.data?.detail || 'Failed to load stress test scenarios'))
       .finally(() => setLoading(false))

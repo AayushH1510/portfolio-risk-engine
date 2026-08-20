@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, timedelta
+import os
 import pandas as pd
 import numpy as np
 
@@ -28,9 +29,11 @@ STRESS_SCENARIOS = [
 
 app = FastAPI(title="Portfolio Risk Engine API", version="1.0.0")
 
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_origins=origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

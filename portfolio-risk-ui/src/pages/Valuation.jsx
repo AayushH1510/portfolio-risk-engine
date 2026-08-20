@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const fmtPct  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 
 const COLUMNS = [
@@ -79,7 +81,7 @@ export default function Valuation({ tickers }) {
     setLoading(true)
     setError(null)
     setSelected(null)
-    axios.get(`/api/fundamentals?tickers=${tickers.join(',')}`)
+    axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
       .then(r => { setData(r.data.tickers); setSelected(r.data.tickers[0]?.ticker) })
       .catch(e => setError(e.response?.data?.detail || 'Failed to load fundamentals'))
       .finally(() => setLoading(false))
