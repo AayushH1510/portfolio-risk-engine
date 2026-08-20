@@ -1,5 +1,5 @@
 import {
-  AreaChart, Area, LineChart, Line,
+  Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 
@@ -96,7 +96,7 @@ function ReportTemplate({ data, tickers, weights }) {
               </span>
             </div>
             <ResponsiveContainer width="100%" height={160}>
-              <AreaChart data={growthData} margin={{ top:4, right:4, bottom:0, left:40 }}>
+              <ComposedChart data={growthData} margin={{ top:4, right:4, bottom:0, left:40 }}>
                 <defs>
                   <linearGradient id="rg1" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#52b788" stopOpacity={0.2}/>
@@ -108,7 +108,7 @@ function ReportTemplate({ data, tickers, weights }) {
                 <ReferenceLine y={0} stroke="#e0e8e0" strokeDasharray="4 4" />
                 <Area type="monotone" dataKey="portfolio" stroke="#52b788" strokeWidth={2} fill="url(#rg1)" dot={false} name="Portfolio" />
                 {bench && <Line type="monotone" dataKey="benchmark" stroke="#8aaa8a" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
-              </AreaChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </div>
