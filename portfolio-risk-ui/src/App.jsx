@@ -236,7 +236,7 @@ export default function App() {
                 </svg>
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 6 }}>Portfolio Risk Analysis Engine</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 6 }}>Varense</div>
                 <div style={{ fontSize: 13, color: '#5a7a5a', maxWidth: 380, lineHeight: 1.6 }}>
                   Configure your portfolio in the sidebar — add tickers, set weights, choose a time period — then click Run Analysis.
                   {!user && <span> <span style={{ color: 'var(--accent-dark)', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAuth(true)}>Sign in</span> to save your portfolios.</span>}
@@ -272,7 +272,7 @@ export default function App() {
         </main>
 
         <div style={{ padding: '6px 20px', fontSize: 10, color: '#8aaa8a', borderTop: '1px solid var(--border-light)', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
-          Portfolio Risk Analysis Engine — educational tool only. Not financial advice. Past performance does not guarantee future results.
+          Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
         </div>
       </div>
     </div>

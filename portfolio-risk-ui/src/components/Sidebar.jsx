@@ -131,7 +131,7 @@ export default function Sidebar({
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Risk Engine</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Varense</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>v1.0</div>
           </div>
         </div>
