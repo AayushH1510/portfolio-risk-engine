@@ -62,7 +62,7 @@ function ReportTemplate({ data, tickers, weights }) {
           </div>
         </div>
         <div style={{ textAlign:'right' }}>
-          <div style={{ fontSize:16, fontWeight:700, color:'#fff' }}>Portfolio Risk Report</div>
+          <div style={{ fontSize:16, fontWeight:700, color:'#fff' }}>Varense Portfolio Report</div>
           <div style={{ fontSize:11, color:'#8aaa8a', marginTop:3 }}>{date}</div>
           <div style={{ fontSize:10, color:'#5a7a5a', marginTop:5, fontFamily:'monospace' }}>
             {data.period.start} — {data.period.end} · {data.period.n_days} days
@@ -347,7 +347,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
           <div>${tickerPills}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:#fff">Portfolio Risk Report</div>
+          <div style="font-size:18px;font-weight:700;color:#fff">Varense Portfolio Report</div>
           <div style="font-size:12px;color:#8aaa8a;margin-top:4px">${date}</div>
           <div style="font-size:11px;color:#5a7a5a;margin-top:5px;font-family:monospace">${d.period.start} — ${d.period.end} · ${d.period.n_days} days</div>
         </div>

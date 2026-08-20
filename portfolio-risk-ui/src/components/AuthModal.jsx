@@ -45,7 +45,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Portfolio Risk Engine</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Varense</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{mode === 'signin' ? 'Sign in to your account' : 'Create your account'}</div>
           </div>
         </div>
