@@ -290,6 +290,29 @@ def _serialize_monte_carlo(mc: dict) -> dict:
     }
 
 
+def _serialize_backtest_strategy(s: dict) -> dict:
+    return {
+        "cumulative_returns": {
+            "dates":  s["cumulative_returns"]["dates"],
+            "values": [round(v, 6) for v in s["cumulative_returns"]["values"]],
+        },
+        "annualised_return":     round(s["annualised_return"], 6),
+        "annualised_volatility": round(s["annualised_volatility"], 6),
+        "sharpe_ratio":          round(s["sharpe_ratio"], 6),
+        "max_drawdown":          round(s["max_drawdown"], 6),
+        "annual_returns":        {y: round(v, 6) for y, v in s["annual_returns"].items()},
+    }
+
+
+def _serialize_backtest(bt: dict) -> dict:
+    return {
+        "your_portfolio": _serialize_backtest_strategy(bt["your_portfolio"]),
+        "equal_weight":   _serialize_backtest_strategy(bt["equal_weight"]),
+        "sp500":          _serialize_backtest_strategy(bt["sp500"]),
+        "period":         bt["period"],
+    }
+
+
 @app.post("/api/analyse")
 async def analyse(req: AnalyseRequest):
     try:
@@ -331,6 +354,7 @@ async def analyse(req: AnalyseRequest):
             "beta_alpha":            m["beta_alpha"],
             "treynor_ratio":         round(m["treynor_ratio"], 4)     if m["treynor_ratio"]     is not None else None,
             "information_ratio":     round(m["information_ratio"], 4) if m["information_ratio"] is not None else None,
+            "backtest":              _serialize_backtest(m["backtest"]) if m["backtest"] is not None else None,
             "diversification_score": {
                 "score":             ds["score"],
                 "avg_pairwise_corr": ds["avg_pairwise_corr"],

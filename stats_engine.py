@@ -587,6 +587,65 @@ def compute_stress_scenario(
     }
 
 
+# ─── Tier 5: Backtesting ───────────────────────────────────────────────────────
+
+def compute_backtest(
+    returns: pd.DataFrame,
+    weights: list[float],
+    benchmark_returns: pd.Series,
+) -> dict:
+    """
+    Runs three strategies through the same historical period so they're
+    directly comparable: the user's portfolio (fixed weights from day 1,
+    compounded daily), an equal-weight split across the same tickers, and
+    the S&P 500 benchmark. All three are aligned to their common trading
+    days first — a strategy can't be compared to a day it has no return for.
+    """
+    n_assets      = returns.shape[1]
+    equal_weights = np.array([1.0 / n_assets] * n_assets)
+
+    your_returns  = compute_portfolio_returns(returns, weights)
+    equal_returns = returns.dot(equal_weights)
+
+    aligned = pd.concat(
+        [your_returns, equal_returns, benchmark_returns], axis=1, join="inner"
+    ).dropna()
+    aligned.columns = ["your_portfolio", "equal_weight", "sp500"]
+
+    def _strategy_stats(rets: pd.Series) -> dict:
+        cum_returns = (1 + rets).cumprod() - 1
+        drawdown    = compute_max_drawdown(rets)
+
+        annual_returns = {}
+        for year in sorted(set(rets.index.year)):
+            year_rets = rets[rets.index.year == year]
+            annual_returns[str(year)] = float((1 + year_rets).prod() - 1)
+
+        return {
+            "cumulative_returns": {
+                "dates":  cum_returns.index.strftime("%Y-%m-%d").tolist(),
+                "values": cum_returns.values.tolist(),
+            },
+            "annualised_return":     float(compute_annualised_return(rets)),
+            "annualised_volatility": float(compute_volatility(rets)),
+            "sharpe_ratio":          float(compute_sharpe_ratio(rets)),
+            "max_drawdown":          float(drawdown["max_drawdown"]),
+            "annual_returns":        annual_returns,
+        }
+
+    return {
+        "your_portfolio": _strategy_stats(aligned["your_portfolio"]),
+        "equal_weight":   _strategy_stats(aligned["equal_weight"]),
+        "sp500":          _strategy_stats(aligned["sp500"]),
+        "period": {
+            "start":   aligned.index[0].strftime("%Y-%m-%d"),
+            "end":     aligned.index[-1].strftime("%Y-%m-%d"),
+            "n_days":  len(aligned),
+            "n_years": round(len(aligned) / TRADING_DAYS, 1),
+        },
+    }
+
+
 # ─── Master function ──────────────────────────────────────────────────────────
 
 def compute_all_metrics(
@@ -644,10 +703,12 @@ def compute_all_metrics(
         result["beta_alpha"]        = compute_beta_alpha(portfolio_returns, benchmark_returns)
         result["treynor_ratio"]     = compute_treynor_ratio(portfolio_returns, benchmark_returns)
         result["information_ratio"] = compute_information_ratio(portfolio_returns, benchmark_returns)
+        result["backtest"]          = compute_backtest(returns, weights, benchmark_returns)
     else:
         result["beta_alpha"]        = None
         result["treynor_ratio"]     = None
         result["information_ratio"] = None
+        result["backtest"]          = None
 
     return result
 

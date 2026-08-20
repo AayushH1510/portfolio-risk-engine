@@ -6,6 +6,7 @@ import RiskAnalysis from './pages/RiskAnalysis'
 import MonteCarlo from './pages/MonteCarlo'
 import Frontier from './pages/Frontier'
 import Valuation from './pages/Valuation'
+import Backtest from './pages/Backtest'
 import Learn from './pages/Learn'
 import AuthModal from './components/AuthModal'
 import ExportPDF from './components/ExportPDF'
@@ -23,6 +24,7 @@ const TABS = [
   { id: 'frontier',   label: 'Efficient Frontier' },
   { id: 'valuation',  label: 'Valuation' },
   { id: 'compare',    label: 'Compare' },
+  { id: 'backtest',   label: 'Backtest' },
   { id: 'learn',      label: 'Learn' },
 ]
 
@@ -259,6 +261,7 @@ export default function App() {
                   compB={compB} portfolios={portfolios}
                 />
               )}
+              {activeTab === 'backtest'   && <Backtest data={data} tickers={tickers} weights={weights} />}
               {activeTab === 'learn' && <Learn />}
             </div>
           )}
