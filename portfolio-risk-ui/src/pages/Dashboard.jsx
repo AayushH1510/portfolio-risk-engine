@@ -1,5 +1,5 @@
 import {
-  AreaChart, Area, LineChart, Line,
+  AreaChart, Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import MetricCard from '../components/MetricCard'
@@ -148,7 +148,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="gPort" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#52b788" stopOpacity={0.25}/>
@@ -161,7 +161,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                 <Tooltip content={<CustomTooltip pct />} />
                 <Area type="monotone" dataKey="portfolio" stroke="#52b788" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
                 {bench && <Line type="monotone" dataKey="benchmark" stroke="#5a7a5a" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
-              </AreaChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
 
