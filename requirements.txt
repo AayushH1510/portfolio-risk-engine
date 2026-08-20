@@ -28,7 +28,6 @@ hyperframe==6.1.0
 idna==3.11
 Jinja2==3.1.6
 jsonschema==4.26.0
-jsonschema-specification==2025.9.1
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
