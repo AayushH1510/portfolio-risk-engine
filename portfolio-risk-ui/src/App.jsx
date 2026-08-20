@@ -10,6 +10,7 @@ import Backtest from './pages/Backtest'
 import Learn from './pages/Learn'
 import AuthModal from './components/AuthModal'
 import ExportPDF from './components/ExportPDF'
+import ExportCSV from './components/ExportCSV'
 import CompareWrapper from './components/CompareWrapper'
 import StockDrawer from './components/StockDrawer'
 import { useComparison } from './hooks/useComparison'
@@ -155,7 +156,10 @@ export default function App() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
             {hasRun && (
-              <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} />
+              <>
+                <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} />
+                <ExportCSV data={data} tickers={tickers} weights={weights} />
+              </>
             )}
 
             {authLoading ? null : user ? (
