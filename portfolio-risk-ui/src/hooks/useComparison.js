@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import axios from 'axios'
 import { format, subMonths, subYears } from 'date-fns'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 const periodMap = {
   '1M':  () => subMonths(new Date(), 1),
   '3M':  () => subMonths(new Date(), 3),
@@ -44,7 +46,7 @@ export function useComparison() {
       const total = weights.reduce((a, b) => a + b, 0)
       const normWeights = weights.map(w => w / total)
 
-      const res = await axios.post('/api/analyse', {
+      const res = await axios.post(`${API}/api/analyse`, {
         tickers,
         weights: normWeights,
         start_date:      startDate,
