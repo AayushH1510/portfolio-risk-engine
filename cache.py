@@ -67,11 +67,16 @@ def cache_set(key: str, value, ttl: int) -> None:
         pass
 
 
-def cached(ttl: int, prefix: str | None = None):
+def cached(ttl: int, prefix: str | None = None, should_cache=None):
     """
     Decorator that caches a function's return value in Redis (pickled),
     keyed on its arguments. No-ops transparently whenever Redis is
     unavailable, so the decorated function just runs normally.
+
+    `should_cache`, if given, is called with the function's result — the
+    result is only cached if it returns True. Lets a caller skip caching a
+    bad or partial result (e.g. too few rows from a rate-limited fetch) so
+    a transient failure can't poison the cache for the full TTL.
     """
     def decorator(func):
         key_prefix = prefix or func.__name__
@@ -83,7 +88,8 @@ def cached(ttl: int, prefix: str | None = None):
             if cached_value is not None:
                 return cached_value
             result = func(*args, **kwargs)
-            cache_set(key, result, ttl)
+            if should_cache is None or should_cache(result):
+                cache_set(key, result, ttl)
             return result
 
         return wrapper
