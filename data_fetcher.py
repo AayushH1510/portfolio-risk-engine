@@ -14,10 +14,16 @@ from cache import cached
 
 DAY = 60 * 60 * 24
 
+# A rate-limited or otherwise failed yfinance call can still return a
+# DataFrame instead of raising — just a near-empty one. Below this many rows
+# there isn't enough data for a real analysis, so don't cache it: better to
+# retry on the next request than serve that failure for a full day.
+MIN_ROWS_TO_CACHE = 5
+
 
 # ─── Main function ────────────────────────────────────────────────────────────
 
-@cached(ttl=DAY, prefix="fetch_closing_prices")
+@cached(ttl=DAY, prefix="fetch_closing_prices", should_cache=lambda df: len(df) >= MIN_ROWS_TO_CACHE)
 def fetch_closing_prices(
     tickers: list[str],
     start_date: str,
@@ -120,7 +126,7 @@ def validate_tickers(tickers: list[str]) -> tuple[list[str], list[str]]:
 
 # ─── Convenience wrapper ──────────────────────────────────────────────────────
 
-@cached(ttl=DAY, prefix="fetch_with_benchmark")
+@cached(ttl=DAY, prefix="fetch_with_benchmark", should_cache=lambda result: len(result[0]) >= MIN_ROWS_TO_CACHE)
 def fetch_with_benchmark(
     tickers: list[str],
     start_date: str,

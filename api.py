@@ -14,7 +14,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from data_fetcher import fetch_with_benchmark, fetch_closing_prices, validate_tickers
+from data_fetcher import fetch_with_benchmark, fetch_closing_prices, validate_tickers, MIN_ROWS_TO_CACHE
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router
 from cache import cached
@@ -325,8 +325,11 @@ async def analyse(req: AnalyseRequest):
             end_date=req.end_date,
         )
 
-        if portfolio_prices.empty:
-            raise HTTPException(status_code=400, detail="No data returned. Check tickers and date range.")
+        if len(portfolio_prices) < MIN_ROWS_TO_CACHE:
+            raise HTTPException(
+                status_code=400,
+                detail="Insufficient price data for the selected period — try a wider date range.",
+            )
 
         m = compute_all_metrics(
             prices=portfolio_prices,
