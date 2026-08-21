@@ -5,3 +5,4 @@ __pycache__/
 app_phase3_backup.py
 app.py
 portfolio-risk-ui/dist/
+portfolio-risk-ui/node_modules/
