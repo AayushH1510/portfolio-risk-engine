@@ -14,7 +14,10 @@ import os
 import pandas as pd
 import numpy as np
 
-from data_fetcher import fetch_with_benchmark, fetch_closing_prices, validate_tickers, MIN_ROWS_TO_CACHE
+from data_fetcher import (
+    fetch_with_benchmark, fetch_closing_prices, validate_tickers,
+    MIN_ROWS_TO_CACHE, YFinanceRateLimitError,
+)
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router
 from cache import cached
@@ -434,5 +437,13 @@ async def analyse(req: AnalyseRequest):
 
     except HTTPException:
         raise
+    except YFinanceRateLimitError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
+                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
+            ),
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
