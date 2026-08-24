@@ -13,6 +13,7 @@ import ExportPDF from './components/ExportPDF'
 import ExportCSV from './components/ExportCSV'
 import CompareWrapper from './components/CompareWrapper'
 import StockDrawer from './components/StockDrawer'
+import OnboardingTour from './components/OnboardingTour'
 import { useComparison } from './hooks/useComparison'
 import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
@@ -109,6 +110,8 @@ export default function App() {
         weight={drawerWeight}
         onClose={closeDrawer}
       />
+
+      <OnboardingTour />
 
       <Sidebar
         {...analysis}
@@ -240,7 +243,7 @@ export default function App() {
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 6 }}>Varense</div>
                 <div style={{ fontSize: 13, color: '#5a7a5a', maxWidth: 380, lineHeight: 1.6 }}>
-                  Configure your portfolio in the sidebar — add tickers, set weights, choose a time period — then click Run Analysis.
+                  Your portfolio's already loaded with three tech stocks. Hit Run Analysis to see what your risk actually looks like.
                   {!user && <span> <span style={{ color: 'var(--accent-dark)', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAuth(true)}>Sign in</span> to save your portfolios.</span>}
                 </div>
               </div>
