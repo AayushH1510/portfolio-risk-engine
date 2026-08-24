@@ -115,6 +115,9 @@ export default function FeedbackButton({ user }) {
                   style={{
                     width: '100%', resize: 'vertical', fontFamily: 'inherit',
                     fontSize: 12, marginBottom: 10,
+                    color: '#ffffff', background: 'var(--card-2)',
+                    border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+                    padding: '7px 10px', outline: 'none',
                   }}
                 />
 
