@@ -6,6 +6,7 @@ import MetricCard from '../components/MetricCard'
 import RiskGauge from '../components/RiskGauge'
 import InsightBox from '../components/InsightBox'
 import SectorChart from '../components/SectorChart'
+import FirstResultCallout from '../components/FirstResultCallout'
 
 const fmt  = v => `${(v * 100).toFixed(1)}%`
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
@@ -84,6 +85,8 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
 
+      <FirstResultCallout />
+
       {/* Period pills */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
@@ -102,7 +105,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
         <MetricCard label="Annual Return"  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} />
         <MetricCard label="Volatility"     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} />
-        <MetricCard label="Sharpe Ratio"   value={sharpe.toFixed(2)}  tone={sharpeColor} sub="above 1.0 is good" />
+        <div data-tour="sharpe-card">
+          <MetricCard label="Sharpe Ratio" value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" />
+        </div>
         <MetricCard label="Sortino Ratio"  value={sortino.toFixed(2)} tone={sharpeColor} />
         <MetricCard label="Max Drawdown"   value={fmt(dd)}            tone={ddColor} />
       </div>

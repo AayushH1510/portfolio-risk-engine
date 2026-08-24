@@ -152,7 +152,7 @@ export default function Sidebar({
         />
 
         {/* 1. Stocks */}
-        <Section label="1. Stocks">
+        <Section label="1. Stocks" tourId="stocks">
           <input
             value={tickerInput}
             onChange={e => setTickerInput(e.target.value)}
@@ -179,7 +179,7 @@ export default function Sidebar({
         </Section>
 
         {/* 3. Weights */}
-        <Section label="3. Weights">
+        <Section label="3. Weights" tourId="weights">
 
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {['pct', 'dollar'].map(m => (
@@ -281,7 +281,7 @@ export default function Sidebar({
         </Section>
 
         {/* 4. Period */}
-        <Section label="4. Period">
+        <Section label="4. Period" tourId="period">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 8 }}>
             {PERIODS.map(p => (
               <button key={p} onClick={() => { setPeriod(p); setUseCustomDate(false) }} style={{
@@ -378,6 +378,7 @@ export default function Sidebar({
       {/* Run button */}
       <div style={{ padding: 14, borderTop: '1px solid var(--border)' }}>
         <button
+          data-tour="run-analysis"
           className="btn-primary"
           onClick={() => onRun(useCustomDate ? {
             start: `${customStart.year}-${customStart.month}-${customStart.day}`,
@@ -400,9 +401,9 @@ export default function Sidebar({
   )
 }
 
-function Section({ label, children }) {
+function Section({ label, children, tourId }) {
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div style={{ marginBottom: 18 }} data-tour={tourId}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
         {label}
       </div>
