@@ -136,7 +136,46 @@ export function LandingFooter() {
       textAlign: 'center', padding: '24px 24px', fontSize: 11, color: 'var(--text-muted)',
       borderTop: '1px solid var(--border)', marginTop: 'auto', flexShrink: 0,
     }}>
-      Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
+      <div style={{ marginBottom: 8 }}>
+        Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
+      </div>
+      <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+        <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
+        <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>
+      </div>
     </footer>
+  )
+}
+
+// ─── Shared layout for Privacy / Terms ─────────────────────────────────────
+
+export function TrustPage({ title, updated, children }) {
+  return (
+    <LandingPage>
+      <LandingHeader crossLinkLabel="← Back to Varense" crossLinkTo="/" />
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 24px 80px', width: '100%', flex: 1 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: '0 0 6px' }}>
+          {title}
+        </h1>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 36 }}>
+          Last updated {updated}
+        </div>
+        {children}
+      </div>
+      <LandingFooter />
+    </LandingPage>
+  )
+}
+
+export function TrustSection({ heading, children }) {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)', letterSpacing: '-0.01em', margin: '0 0 10px' }}>
+        {heading}
+      </h2>
+      <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+        {children}
+      </div>
+    </div>
   )
 }
