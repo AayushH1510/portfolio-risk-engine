@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
@@ -14,6 +15,7 @@ import ExportCSV from './components/ExportCSV'
 import CompareWrapper from './components/CompareWrapper'
 import StockDrawer from './components/StockDrawer'
 import OnboardingTour from './components/OnboardingTour'
+import FeedbackButton from './components/FeedbackButton'
 import { useComparison } from './hooks/useComparison'
 import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
@@ -112,6 +114,7 @@ export default function App() {
       />
 
       <OnboardingTour />
+      <FeedbackButton user={user} />
 
       <Sidebar
         {...analysis}
@@ -276,8 +279,16 @@ export default function App() {
           )}
         </main>
 
-        <div style={{ padding: '6px 20px', fontSize: 10, color: '#8aaa8a', borderTop: '1px solid var(--border-light)', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
-          Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 20px', fontSize: 10, color: '#8aaa8a',
+          borderTop: '1px solid var(--border-light)', background: 'rgba(255,255,255,0.3)', flexShrink: 0,
+        }}>
+          <span>Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
+          <span style={{ display: 'flex', gap: 12, flexShrink: 0, marginLeft: 12 }}>
+            <Link to="/privacy" style={{ color: '#8aaa8a', textDecoration: 'none' }}>Privacy</Link>
+            <Link to="/terms" style={{ color: '#8aaa8a', textDecoration: 'none' }}>Terms</Link>
+          </span>
         </div>
       </div>
     </div>
