@@ -1,6 +1,8 @@
 # Add this to your api.py (or as a separate router file)
 # Requires: yfinance (already in your requirements), fastapi
 
+from datetime import datetime, timedelta
+
 import yfinance as yf
 from fastapi import APIRouter, HTTPException
 from typing import Optional
@@ -21,9 +23,23 @@ async def stock_detail(ticker: str):
         stock = yf.Ticker(t)
         info  = with_yfinance_retry(lambda: stock.info, [t])
 
-        # Validate ticker
+        # info can come back near-empty (e.g. just {"trailingPegRatio": None})
+        # both for a genuinely invalid ticker AND for a rate-limited/degraded
+        # response that never raised YFRateLimitError — yfinance makes the two
+        # indistinguishable at this point. Cross-check with a short yf.download(),
+        # a different endpoint than .info: if it also has no data, the ticker is
+        # genuinely invalid (404); if it succeeds with data, .info's failure was
+        # a rate-limit/degradation specific to that endpoint, not a bad ticker.
         if not info or info.get("regularMarketPrice") is None:
-            raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
+            end = datetime.today().strftime("%Y-%m-%d")
+            start = (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
+            probe = with_yfinance_retry(
+                lambda: yf.download(t, start=start, end=end, auto_adjust=True, progress=False),
+                [t],
+            )
+            if probe.empty:
+                raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
+            raise YFinanceRateLimitError([t])
 
         # 30-day price history for sparkline
         hist = with_yfinance_retry(lambda: stock.history(period="1mo"), [t])
