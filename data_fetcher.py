@@ -6,39 +6,14 @@ This is your "data layer" — the rest of the app never touches yfinance directl
 it just calls these functions.
 """
 
-import time
-
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-from yfinance.exceptions import YFRateLimitError
 
 from cache import cached
+from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
 
 DAY = 60 * 60 * 24
-
-# yf.download() can raise YFRateLimitError outright, or — more insidiously —
-# return normally with one ticker's column silently missing or all-NaN.
-# Render's IP gets rate-limited by Yahoo more aggressively than local dev,
-# so this needs its own retry + a clean, specific error.
-RATE_LIMIT_RETRIES  = 1
-RATE_LIMIT_BACKOFF_SECONDS = 2
-
-
-class YFinanceRateLimitError(Exception):
-    """
-    Raised when yfinance can't get real data for one or more requested
-    tickers — either yf.download() raised YFRateLimitError directly, or it
-    returned a DataFrame missing (or all-NaN for) one of the tickers we
-    asked for. Both usually mean Yahoo Finance is rate-limiting this
-    server's IP.
-    """
-    def __init__(self, failed_tickers: list[str]):
-        self.failed_tickers = failed_tickers
-        super().__init__(
-            f"Unable to fetch data for: {', '.join(failed_tickers)}. "
-            "Yahoo Finance may be rate-limiting this server."
-        )
 
 # A rate-limited or otherwise failed yfinance call can still return a
 # DataFrame instead of raising — just a near-empty one. Below this many rows
@@ -93,24 +68,16 @@ def fetch_closing_prices(
     # yf.download() is the core call.
     # auto_adjust=True means we get adjusted prices (corrected for
     # stock splits and dividends) — always use this for return calculations.
-    #
-    # Yahoo rate-limits are transient — retry once after a short backoff
-    # before giving up, since a single retry often succeeds.
-    for attempt in range(RATE_LIMIT_RETRIES + 1):
-        try:
-            raw = yf.download(
-                tickers=tickers,
-                start=start_date,
-                end=end_date,
-                auto_adjust=True,
-                progress=False,   # suppress the yfinance download bar
-            )
-            break
-        except YFRateLimitError:
-            if attempt < RATE_LIMIT_RETRIES:
-                time.sleep(RATE_LIMIT_BACKOFF_SECONDS)
-                continue
-            raise YFinanceRateLimitError(tickers)
+    raw = with_yfinance_retry(
+        lambda: yf.download(
+            tickers=tickers,
+            start=start_date,
+            end=end_date,
+            auto_adjust=True,
+            progress=False,   # suppress the yfinance download bar
+        ),
+        tickers,
+    )
 
     # yf.download returns a multi-level column index like:
     #   ("Close", "AAPL"), ("Close", "MSFT"), ("Open", "AAPL"), ...

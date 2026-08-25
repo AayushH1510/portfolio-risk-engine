@@ -5,6 +5,8 @@ import yfinance as yf
 from fastapi import APIRouter, HTTPException
 from typing import Optional
 
+from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
+
 router = APIRouter()  # or use your existing `app` directly
 
 
@@ -17,14 +19,14 @@ async def stock_detail(ticker: str):
     try:
         t = ticker.upper().strip()
         stock = yf.Ticker(t)
-        info  = stock.info
+        info  = with_yfinance_retry(lambda: stock.info, [t])
 
         # Validate ticker
         if not info or info.get("regularMarketPrice") is None:
             raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
 
         # 30-day price history for sparkline
-        hist = stock.history(period="1mo")
+        hist = with_yfinance_retry(lambda: stock.history(period="1mo"), [t])
         sparkline = []
         if not hist.empty:
             sparkline = [round(float(v), 4) for v in hist["Close"].tolist()]
@@ -54,6 +56,14 @@ async def stock_detail(ticker: str):
 
     except HTTPException:
         raise
+    except YFinanceRateLimitError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
+                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
+            ),
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
