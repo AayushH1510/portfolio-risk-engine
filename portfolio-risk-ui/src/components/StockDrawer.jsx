@@ -97,9 +97,18 @@ export default function StockDrawer({ ticker, weight, onClose }) {
     setError(null)
     setStock(null)
     fetch(`${API}/stock-detail/${ticker}`)
-      .then(r => r.json())
-      .then(d => { setStock(d); setLoading(false) })
-      .catch(() => { setError('Could not load data'); setLoading(false) })
+      .then(async r => {
+        const d = await r.json()
+        if (!r.ok) {
+          const message = r.status === 503
+            ? 'Yahoo Finance is rate-limiting right now, try again in a moment'
+            : (d.detail || 'Could not load data')
+          throw new Error(message)
+        }
+        setStock(d)
+        setLoading(false)
+      })
+      .catch(e => { setError(e.message || 'Could not load data'); setLoading(false) })
   }, [ticker])
 
   // Close on Escape

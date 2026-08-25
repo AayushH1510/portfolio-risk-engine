@@ -184,7 +184,7 @@ export default function Valuation({ tickers }) {
 
                   {hasError ? (
                     <td colSpan={6} style={{ padding:'12px 14px', color:'var(--negative)', fontSize:11 }}>
-                      Could not load data
+                      {stock.error || 'Could not load data'}
                     </td>
                   ) : (
                     <>

@@ -14,13 +14,16 @@ import os
 import pandas as pd
 import numpy as np
 
+import yfinance as yf
+
 from data_fetcher import (
     fetch_with_benchmark, fetch_closing_prices, validate_tickers,
-    MIN_ROWS_TO_CACHE, YFinanceRateLimitError,
+    MIN_ROWS_TO_CACHE,
 )
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router
 from cache import cached
+from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
 
 HOUR = 60 * 60
 
@@ -80,7 +83,7 @@ async def validate(req: ValidateRequest):
 def _fetch_ticker_fundamentals(ticker: str) -> dict:
     """Fetch + derive one ticker's fundamentals. Raises on failure — callers
     handle the error so a bad fetch never gets cached."""
-    info = __import__('yfinance').Ticker(ticker).info
+    info = with_yfinance_retry(lambda: yf.Ticker(ticker).info, [ticker])
 
     def g(key, fallback=None):
         val = info.get(key)
