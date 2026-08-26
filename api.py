@@ -14,16 +14,14 @@ import os
 import pandas as pd
 import numpy as np
 
-import yfinance as yf
-
 from data_fetcher import (
     fetch_with_benchmark, fetch_closing_prices, validate_tickers,
     MIN_ROWS_TO_CACHE,
 )
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
-from stock_detail_route import router as stock_router
+from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError
 from cache import cached
-from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
+from yfinance_utils import YFinanceRateLimitError
 
 HOUR = 60 * 60
 
@@ -81,31 +79,66 @@ async def validate(req: ValidateRequest):
 
 @cached(ttl=HOUR, prefix="fundamentals")
 def _fetch_ticker_fundamentals(ticker: str) -> dict:
-    """Fetch + derive one ticker's fundamentals. Raises on failure — callers
-    handle the error so a bad fetch never gets cached."""
-    info = with_yfinance_retry(lambda: yf.Ticker(ticker).info, [ticker])
+    """Fetch + derive one ticker's fundamentals via Finnhub. Raises on failure
+    — callers handle the error so a bad fetch never gets cached.
+
+    Finnhub's /stock/metric doesn't cover everything yfinance did:
+      - insider ownership % and short interest % aren't available at all on
+        this tier — pct_insiders / short_pct stay None, so the flags/positives
+        gated on them below just never fire (already-existing behaviour for
+        any None metric, not new logic).
+      - free cash flow and absolute revenue aren't in the summary metrics
+        endpoint either (only per-share figures) — free_cashflow / revenue
+        stay None, which likewise just skips the cash-burn flag that needs
+        both.
+      - sector/industry: Finnhub only exposes one combined "finnhubIndustry"
+        field, so both response fields use it (same limitation as the
+        stock-detail drawer migration).
+    """
+    quote = _finnhub_get("quote", {"symbol": ticker})
+    if not quote.get("c"):
+        raise ValueError(f"Ticker '{ticker}' not found")
+
+    profile = _finnhub_get("stock/profile2", {"symbol": ticker})
+    metric  = _finnhub_get("stock/metric", {"symbol": ticker, "metric": "all"}).get("metric", {})
 
     def g(key, fallback=None):
-        val = info.get(key)
+        val = metric.get(key)
         return val if val not in (None, 'N/A', float('inf'), float('-inf')) else fallback
 
-    ps_ratio      = g('priceToSalesTrailing12Months')
-    ev_ebitda     = g('enterpriseToEbitda')
-    gross_margin  = g('grossMargins')
-    rev_growth    = g('revenueGrowth')
-    profit_margin = g('profitMargins')
-    debt_equity   = g('debtToEquity')
-    current_ratio = g('currentRatio')
-    roe           = g('returnOnEquity')
+    def pct(key, fallback=None):
+        # Finnhub reports these as percent-scale numbers (14.24 == 14.24%);
+        # convert to the decimal-fraction convention the rest of this
+        # function (and the frontend's *100 display) expects.
+        val = g(key)
+        return round(val / 100, 4) if val is not None else fallback
+
+    ps_ratio      = g('psTTM') or g('psAnnual')
+    ev_ebitda     = g('evEbitdaTTM')
+    gross_margin  = pct('grossMarginTTM')
+    rev_growth    = pct('revenueGrowthTTMYoy')
+    profit_margin = pct('netProfitMarginTTM')
+    current_ratio = g('currentRatioAnnual')
+    roe           = pct('roeTTM')
     beta          = g('beta')
-    market_cap    = g('marketCap')
-    sector        = g('sector', 'Unknown')
-    industry      = g('industry', 'Unknown')
-    name          = g('longName', ticker)
-    pct_insiders  = g('heldPercentInsiders')
-    short_pct     = g('shortPercentOfFloat')
-    revenue       = g('totalRevenue')
-    free_cashflow = g('freeCashflow')
+
+    # Finnhub's D/E is a raw ratio (1.35 == 135%); yfinance's debtToEquity
+    # was already percent-scale, and the flag thresholds below (>100, >200)
+    # assume that scale.
+    debt_equity_raw = g('totalDebt/totalEquityAnnual')
+    debt_equity   = round(debt_equity_raw * 100, 1) if debt_equity_raw is not None else None
+
+    market_cap    = profile.get('marketCapitalization')
+    market_cap    = round(market_cap * 1_000_000) if market_cap else None
+    sector        = profile.get('finnhubIndustry') or 'Unknown'
+    industry      = profile.get('finnhubIndustry') or 'Unknown'
+    name          = profile.get('name') or ticker
+
+    # Not available on Finnhub's free tier — see docstring.
+    pct_insiders  = None
+    short_pct     = None
+    revenue       = None
+    free_cashflow = None
 
     vg_score = None
     if ps_ratio and rev_growth and rev_growth > 0:
@@ -210,6 +243,9 @@ async def fundamentals(tickers: str):
         for ticker in ticker_list:
             try:
                 results.append(_fetch_ticker_fundamentals(ticker))
+            except FinnhubRateLimitError:
+                results.append({ "ticker": ticker, "error":
+                    "Finnhub rate limit reached (60 calls/minute). Please try again in a minute." })
             except Exception as e:
                 results.append({ "ticker": ticker, "error": str(e) })
 
