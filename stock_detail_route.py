@@ -1,85 +1,120 @@
 # Add this to your api.py (or as a separate router file)
-# Requires: yfinance (already in your requirements), fastapi
+# Requires: requests (already in requirements.txt), fastapi
+#
+# Data source: Finnhub REST API (https://finnhub.io/docs/api).
+# Requires FINNHUB_API_KEY set as an environment variable — see .env.example.
+#
+# Field mapping vs. the yfinance version this replaced:
+#   price, change, change_pct  <- /quote                (c, d, dp)
+#   company_name, sector       <- /stock/profile2        (name, finnhubIndustry —
+#                                                          Finnhub only exposes one
+#                                                          combined industry field,
+#                                                          no separate sector/industry)
+#   market_cap                 <- /stock/profile2        (marketCapitalization, in
+#                                                          millions — scaled to raw USD)
+#   pe_ratio, eps, beta,
+#   week_52_high/low,
+#   dividend_yield, avg_volume <- /stock/metric?metric=all
+#   sparkline                  <- NOT AVAILABLE. /stock/candle (historical daily
+#                                  bars) is gated behind a paid Finnhub plan — this
+#                                  key gets {"error": "You don't have access to this
+#                                  resource."} on every request. Returns [] instead;
+#                                  StockDrawer.jsx already renders no chart when
+#                                  sparkline is empty.
 
-from datetime import datetime, timedelta
+import os
 
-import yfinance as yf
+import requests
 from fastapi import APIRouter, HTTPException
-from typing import Optional
-
-from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
 
 router = APIRouter()  # or use your existing `app` directly
+
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
+FINNHUB_BASE = "https://finnhub.io/api/v1"
+
+
+class FinnhubRateLimitError(Exception):
+    """Raised when Finnhub returns 429 (60 calls/minute on the free tier)."""
+    pass
+
+
+def _finnhub_get(path: str, params: dict) -> dict:
+    resp = requests.get(
+        f"{FINNHUB_BASE}/{path}",
+        params={**params, "token": FINNHUB_API_KEY},
+        timeout=10,
+    )
+    if resp.status_code == 429:
+        raise FinnhubRateLimitError()
+    resp.raise_for_status()
+    return resp.json()
 
 
 @router.get("/stock-detail/{ticker}")
 async def stock_detail(ticker: str):
     """
-    Returns current price, daily change, 30-day sparkline,
-    and key fundamentals for a single ticker.
+    Returns current price, daily change, and key fundamentals for a single
+    ticker. Sourced from Finnhub — see module docstring for the field mapping
+    and the one gap (sparkline) vs. the previous yfinance-backed version.
     """
+    if not FINNHUB_API_KEY:
+        raise HTTPException(status_code=500, detail="FINNHUB_API_KEY is not configured")
+
     try:
         t = ticker.upper().strip()
-        stock = yf.Ticker(t)
-        info  = with_yfinance_retry(lambda: stock.info, [t])
 
-        # info can come back near-empty (e.g. just {"trailingPegRatio": None})
-        # both for a genuinely invalid ticker AND for a rate-limited/degraded
-        # response that never raised YFRateLimitError — yfinance makes the two
-        # indistinguishable at this point. Cross-check with a short yf.download(),
-        # a different endpoint than .info: if it also has no data, the ticker is
-        # genuinely invalid (404); if it succeeds with data, .info's failure was
-        # a rate-limit/degradation specific to that endpoint, not a bad ticker.
-        if not info or info.get("regularMarketPrice") is None:
-            end = datetime.today().strftime("%Y-%m-%d")
-            start = (datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d")
-            probe = with_yfinance_retry(
-                lambda: yf.download(t, start=start, end=end, auto_adjust=True, progress=False),
-                [t],
-            )
-            if probe.empty:
-                raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
-            raise YFinanceRateLimitError([t])
+        quote = _finnhub_get("quote", {"symbol": t})
+        price = quote.get("c")
 
-        # 30-day price history for sparkline
-        hist = with_yfinance_retry(lambda: stock.history(period="1mo"), [t])
-        sparkline = []
-        if not hist.empty:
-            sparkline = [round(float(v), 4) for v in hist["Close"].tolist()]
+        # Finnhub returns an all-zero quote (c=0, d/dp=null) for an unknown symbol
+        # rather than an error, so that's how we detect an invalid ticker here.
+        if not price:
+            raise HTTPException(status_code=404, detail=f"Ticker '{t}' not found")
 
-        price      = info.get("regularMarketPrice") or info.get("currentPrice")
-        prev_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
-        change     = round(price - prev_close, 4) if price and prev_close else None
-        change_pct = round(change / prev_close, 6) if change and prev_close else None
+        profile = _finnhub_get("stock/profile2", {"symbol": t})
+        metric = _finnhub_get("stock/metric", {"symbol": t, "metric": "all"}).get("metric", {})
+
+        change = quote.get("d")
+        # Finnhub's dp is already a percentage (-0.14 means -0.14%); the frontend
+        # multiplies by 100 to display it, so convert to a decimal fraction here.
+        change_pct = round(quote["dp"] / 100, 6) if quote.get("dp") is not None else None
+
+        market_cap = profile.get("marketCapitalization")
+        market_cap = round(market_cap * 1_000_000) if market_cap else None
+
+        dividend_yield = metric.get("dividendYieldIndicatedAnnual")
+        dividend_yield = round(dividend_yield / 100, 6) if dividend_yield is not None else None
+
+        avg_volume = metric.get("10DayAverageTradingVolume")
+        avg_volume = round(avg_volume * 1_000_000) if avg_volume else None
 
         return {
             "ticker":         t,
-            "company_name":   info.get("longName") or info.get("shortName"),
-            "sector":         info.get("sector"),
+            "company_name":   profile.get("name"),
+            "sector":         profile.get("finnhubIndustry"),
             "price":          round(price, 2) if price else None,
-            "change":         change,
+            "change":         round(change, 4) if change is not None else None,
             "change_pct":     change_pct,
-            "sparkline":      sparkline,
-            "market_cap":     info.get("marketCap"),
-            "pe_ratio":       info.get("trailingPE") or info.get("forwardPE"),
-            "eps":            info.get("trailingEps"),
-            "week_52_high":   info.get("fiftyTwoWeekHigh"),
-            "week_52_low":    info.get("fiftyTwoWeekLow"),
-            "beta":           info.get("beta"),
-            "dividend_yield": info.get("dividendYield"),
-            "avg_volume":     info.get("averageVolume"),
+            "sparkline":      [],
+            "market_cap":     market_cap,
+            "pe_ratio":       metric.get("peTTM") or metric.get("peBasicExclExtraTTM") or metric.get("peAnnual"),
+            "eps":            metric.get("epsTTM") or metric.get("epsInclExtraItemsTTM"),
+            "week_52_high":   metric.get("52WeekHigh"),
+            "week_52_low":    metric.get("52WeekLow"),
+            "beta":           metric.get("beta"),
+            "dividend_yield": dividend_yield,
+            "avg_volume":     avg_volume,
         }
 
     except HTTPException:
         raise
-    except YFinanceRateLimitError as e:
+    except FinnhubRateLimitError:
         raise HTTPException(
             status_code=503,
-            detail=(
-                f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
-                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
-            ),
+            detail="Finnhub rate limit reached (60 calls/minute). Please try again in a minute.",
         )
+    except requests.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Finnhub request failed: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
