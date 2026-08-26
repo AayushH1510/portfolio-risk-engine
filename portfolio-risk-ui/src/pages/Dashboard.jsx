@@ -7,6 +7,7 @@ import RiskGauge from '../components/RiskGauge'
 import InsightBox from '../components/InsightBox'
 import SectorChart from '../components/SectorChart'
 import FirstResultCallout from '../components/FirstResultCallout'
+import MetricTooltip from '../components/MetricTooltip'
 
 const fmt  = v => `${(v * 100).toFixed(1)}%`
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
@@ -75,9 +76,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const secondRowItems = [
     { label: 'VaR 95%',  value: `-${fmtDec(var_cvar.var_dollar)}`,  tone: 'bad',    small: true },
     { label: 'CVaR 95%', value: `-${fmtDec(var_cvar.cvar_dollar)}`, tone: 'bad',    small: true },
-    divScore ? { label: 'Diversification', value: `${divScore.score}/100`, tone: divTone, small: true, sub: `${divScore.label} · avg corr ${divScore.avg_pairwise_corr.toFixed(2)} · ${period.n_years}yr window` } : null,
-    ba ? { label: 'Beta',  value: ba.beta.toFixed(2),  tone: ba.beta > 1.5 ? 'warning' : 'neutral', small: true } : null,
-    ba ? { label: 'Alpha', value: fmt(ba.alpha),        tone: ba.alpha > 0 ? 'good' : 'bad',         small: true } : null,
+    divScore ? { label: 'Diversification', metricKey: 'diversification_score', value: `${divScore.score}/100`, tone: divTone, small: true, sub: `${divScore.label} · avg corr ${divScore.avg_pairwise_corr.toFixed(2)} · ${period.n_years}yr window` } : null,
+    ba ? { label: 'Beta',  metricKey: 'beta',  value: ba.beta.toFixed(2),  tone: ba.beta > 1.5 ? 'warning' : 'neutral', small: true } : null,
+    ba ? { label: 'Alpha', metricKey: 'alpha', value: fmt(ba.alpha),        tone: ba.alpha > 0 ? 'good' : 'bad',         small: true } : null,
   ].filter(Boolean)
 
   const secondCols = `repeat(${secondRowItems.length}, 1fr)`
@@ -117,7 +118,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
         {secondRowItems.map(item => (
           <MetricCard
             key={item.label}
-            label={item.label}
+            label={item.metricKey
+              ? <MetricTooltip metricKey={item.metricKey}>{item.label}</MetricTooltip>
+              : item.label}
             value={item.value}
             tone={item.tone}
             small={item.small}
