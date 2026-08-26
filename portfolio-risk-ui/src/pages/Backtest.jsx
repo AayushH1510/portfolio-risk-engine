@@ -9,7 +9,7 @@ const AXIS_STYLE  = { fill: 'var(--text-muted)', fontSize: 10 }
 
 const STRATEGIES = [
   { key: 'your_portfolio', label: 'Your Portfolio', color: '#52b788', dash: false },
-  { key: 'equal_weight',   label: 'Equal Weight',   color: '#e09a30', dash: false },
+  { key: 'equal_weight',   label: 'Equal Weight',   color: '#e09a30', dash: true  },
   { key: 'sp500',          label: 'S&P 500',        color: '#5a7a5a', dash: true  },
 ]
 
