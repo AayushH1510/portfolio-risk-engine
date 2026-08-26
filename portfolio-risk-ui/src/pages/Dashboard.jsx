@@ -38,7 +38,7 @@ function CustomTooltip({ active, payload, label, prefix = '', pct = false }) {
   )
 }
 
-export default function Dashboard({ data, tickers, weights, portfolioValue, onTickerClick, sectorData }) {
+export default function Dashboard({ data, tickers, weights, portfolioValue, onTickerClick, sectorData, sectorLoading }) {
   if (!data) return null
 
   const { annualised_return: ret, annualised_volatility: vol,
@@ -130,7 +130,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       </div>
 
       {/* Sector exposure */}
-      <SectorChart sectorData={sectorData} />
+      <SectorChart sectorData={sectorData} loading={sectorLoading} />
 
       {/* Charts row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 10, flex: 1, minHeight: 0 }}>
@@ -155,22 +155,31 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             </div>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="gPort" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#52b788" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#52b788" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
-                <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
-                <Tooltip content={<CustomTooltip pct />} />
-                <Area type="monotone" dataKey="portfolio" stroke="#52b788" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
-                {bench && <Line type="monotone" dataKey="benchmark" stroke="#5a7a5a" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
-              </ComposedChart>
-            </ResponsiveContainer>
+            {sectorLoading ? (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <svg className="spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20" />
+                </svg>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Loading chart…</div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="gPort" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#52b788" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#52b788" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                  <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
+                  <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
+                  <Tooltip content={<CustomTooltip pct />} />
+                  <Area type="monotone" dataKey="portfolio" stroke="#52b788" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
+                  {bench && <Line type="monotone" dataKey="benchmark" stroke="#5a7a5a" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <InsightBox
