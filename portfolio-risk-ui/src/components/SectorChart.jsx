@@ -31,7 +31,21 @@ function SectorTooltip({ active, payload, label }) {
   )
 }
 
-export default function SectorChart({ sectorData }) {
+export default function SectorChart({ sectorData, loading }) {
+  if (loading) {
+    return (
+      <div className="card" style={{
+        padding: '14px 16px', height: 120, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0,
+      }}>
+        <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20" />
+        </svg>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Loading sector exposure…</div>
+      </div>
+    )
+  }
+
   if (!sectorData?.length) return null
 
   const totalWeight = sectorData.reduce((sum, d) => sum + d.weight, 0)

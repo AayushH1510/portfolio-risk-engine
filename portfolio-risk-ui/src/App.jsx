@@ -40,6 +40,7 @@ export default function App() {
   const [drawerTicker, setDrawerTicker] = useState(null)
   const [drawerWeight, setDrawerWeight] = useState(null)
   const [sectorData, setSectorData]     = useState([])
+  const [sectorLoading, setSectorLoading] = useState(false)
 
   const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
   const analysis = useAnalysis()
@@ -50,9 +51,11 @@ export default function App() {
   useEffect(() => {
     if (!data || !tickers.length) {
       setSectorData([])
+      setSectorLoading(false)
       return
     }
     let cancelled = false
+    setSectorLoading(true)
     axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
       .then(res => {
         if (cancelled) return
@@ -73,6 +76,7 @@ export default function App() {
         )
       })
       .catch(() => { if (!cancelled) setSectorData([]) })
+      .finally(() => { if (!cancelled) setSectorLoading(false) })
     return () => { cancelled = true }
   }, [data])
 
@@ -262,7 +266,7 @@ export default function App() {
 
           {!loading && (hasRun || activeTab === 'learn' || activeTab === 'valuation') && (
             <div style={{ height: '100%' }} className="fade-up">
-              {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} />}
+              {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} sectorLoading={sectorLoading} />}
               {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} />}
               {activeTab === 'montecarlo' && <MonteCarlo  data={data} />}
               {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} />}
