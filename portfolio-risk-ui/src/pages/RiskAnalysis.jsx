@@ -5,6 +5,7 @@ import {
 import ReturnHistogram from '../components/ReturnHistogram'
 import StressTest from '../components/StressTest'
 import MetricTooltip from '../components/MetricTooltip'
+import InsightBox from '../components/InsightBox'
 
 const fmt  = v => `${(v * 100).toFixed(2)}%`
 const fmtS = v => `${(v * 100).toFixed(1)}%`
@@ -157,6 +158,11 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
+
+      <InsightBox
+        label="Why this matters"
+        text="Two portfolios can have the same return but very different risk. These metrics show whether you're being compensated fairly for the risk you're taking, not just how much you made."
+      />
 
       {/* Row 1: Rolling charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -326,20 +332,30 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
 
       {/* Row 3: Returns distribution */}
       {portfolio_returns && (
-        <div className="card" style={{ padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 14 }}>
-            Daily returns distribution
-          </div>
-          <ReturnHistogram
-            portfolioReturns={portfolio_returns}
-            varPct={var_cvar.var_pct}
-            cvarPct={var_cvar.cvar_pct}
-            confidence={var_cvar.confidence}
+        <>
+          <InsightBox
+            label="Why this matters"
+            text="Most returns cluster near zero, but the tails matter most. A portfolio with 'fat tails' can look calm most days while still carrying serious downside risk."
           />
-        </div>
+          <div className="card" style={{ padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 14 }}>
+              Daily returns distribution
+            </div>
+            <ReturnHistogram
+              portfolioReturns={portfolio_returns}
+              varPct={var_cvar.var_pct}
+              cvarPct={var_cvar.cvar_pct}
+              confidence={var_cvar.confidence}
+            />
+          </div>
+        </>
       )}
 
       {/* Row 4: Stress test */}
+      <InsightBox
+        label="Why this matters"
+        text="Backtested returns show how your portfolio performs in normal conditions. Stress tests show what happens when markets panic, the scenario most investors are least prepared for."
+      />
       <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
 
     </div>
