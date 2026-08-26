@@ -74,8 +74,8 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // Second row: VaR, CVaR, Diversification, Beta (if available), Alpha (if available)
   // Dynamic columns based on what's available
   const secondRowItems = [
-    { label: 'VaR 95%',  value: `-${fmtDec(var_cvar.var_dollar)}`,  tone: 'bad',    small: true },
-    { label: 'CVaR 95%', value: `-${fmtDec(var_cvar.cvar_dollar)}`, tone: 'bad',    small: true },
+    { label: 'VaR 95%',  metricKey: 'var_95',  value: `-${fmtDec(var_cvar.var_dollar)}`,  tone: 'bad',    small: true },
+    { label: 'CVaR 95%', metricKey: 'cvar_95', value: `-${fmtDec(var_cvar.cvar_dollar)}`, tone: 'bad',    small: true },
     divScore ? { label: 'Diversification', metricKey: 'diversification_score', value: `${divScore.score}/100`, tone: divTone, small: true, sub: `${divScore.label} · avg corr ${divScore.avg_pairwise_corr.toFixed(2)} · ${period.n_years}yr window` } : null,
     ba ? { label: 'Beta',  metricKey: 'beta',  value: ba.beta.toFixed(2),  tone: ba.beta > 1.5 ? 'warning' : 'neutral', small: true } : null,
     ba ? { label: 'Alpha', metricKey: 'alpha', value: fmt(ba.alpha),        tone: ba.alpha > 0 ? 'good' : 'bad',         small: true } : null,
@@ -104,13 +104,13 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
 
       {/* Top metrics row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
-        <MetricCard label="Annual Return"  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} />
-        <MetricCard label="Volatility"     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} />
+        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} />
+        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} />
         <div data-tour="sharpe-card">
-          <MetricCard label="Sharpe Ratio" value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" />
+          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" />
         </div>
-        <MetricCard label="Sortino Ratio"  value={sortino.toFixed(2)} tone={sharpeColor} />
-        <MetricCard label="Max Drawdown"   value={fmt(dd)}            tone={ddColor} />
+        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} />
+        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} />
       </div>
 
       {/* Second metrics row — dynamic */}
