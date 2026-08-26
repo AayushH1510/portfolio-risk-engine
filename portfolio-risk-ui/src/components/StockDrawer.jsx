@@ -100,10 +100,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
       .then(async r => {
         const d = await r.json()
         if (!r.ok) {
-          const message = r.status === 503
-            ? 'Yahoo Finance is rate-limiting right now, try again in a moment'
-            : (d.detail || 'Could not load data')
-          throw new Error(message)
+          throw new Error(d.detail || 'Could not load data')
         }
         setStock(d)
         setLoading(false)
@@ -289,7 +286,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
           padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.06)',
           fontSize: 9, color: 'rgba(255,255,255,0.2)', flexShrink: 0,
         }}>
-          Data via Yahoo Finance · 15min delay
+          Data via Finnhub
         </div>
       </div>
     </>

@@ -327,7 +327,7 @@ export default function Valuation({ tickers }) {
 
       {/* Disclaimer */}
       <div style={{ fontSize:10, color:'var(--text-muted)', paddingBottom:8, lineHeight:1.6 }}>
-        Fundamental data sourced from Yahoo Finance. Risk flags are rule-based and for educational purposes only — not financial advice. Always verify figures with primary sources.
+        Fundamental data sourced from Finnhub. Risk flags are rule-based and for educational purposes only — not financial advice. Always verify figures with primary sources.
       </div>
 
     </div>
