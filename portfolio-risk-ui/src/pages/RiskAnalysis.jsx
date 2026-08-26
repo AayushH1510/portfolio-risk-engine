@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import ReturnHistogram from '../components/ReturnHistogram'
 import StressTest from '../components/StressTest'
+import MetricTooltip from '../components/MetricTooltip'
 
 const fmt  = v => `${(v * 100).toFixed(2)}%`
 const fmtS = v => `${(v * 100).toFixed(1)}%`
@@ -220,7 +221,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
           {treynor != null && (
             <MetricPill
-              label="Treynor ratio"
+              label={<MetricTooltip metricKey="treynor_ratio">Treynor ratio</MetricTooltip>}
               value={treynor.toFixed(2)}
               color={toneColor[treynorTone]}
               sub="return per unit of market risk"
@@ -228,7 +229,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           )}
           {infoRatio != null && (
             <MetricPill
-              label="Information ratio"
+              label={<MetricTooltip metricKey="information_ratio">Information ratio</MetricTooltip>}
               value={infoRatio.toFixed(2)}
               color={toneColor[infoRatioTone]}
               sub="active return per unit of tracking risk"
@@ -265,13 +266,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           {/* VaR row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
             <MetricPill
-              label="VaR"
+              label={<MetricTooltip metricKey="var_95">VaR</MetricTooltip>}
               value={`−${fmt(var_cvar.var_pct)}`}
               color="#e05c5c"
               sub={`$${Math.abs(var_cvar.var_dollar).toFixed(0)} per day`}
             />
             <MetricPill
-              label="VaR"
+              label={<MetricTooltip metricKey="var_99">VaR</MetricTooltip>}
               value={`−${fmt(var_cvar_99?.var_pct ?? 0)}`}
               color="#b03a3a"
               sub={`$${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)} per day`}
@@ -281,13 +282,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           {/* CVaR row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
             <MetricPill
-              label="CVaR (avg tail)"
+              label={<MetricTooltip metricKey="cvar_95">CVaR (avg tail)</MetricTooltip>}
               value={`−${fmt(var_cvar.cvar_pct)}`}
               color="#e05c5c"
               sub={`$${Math.abs(var_cvar.cvar_dollar).toFixed(0)} avg`}
             />
             <MetricPill
-              label="CVaR (avg tail)"
+              label={<MetricTooltip metricKey="cvar_99">CVaR (avg tail)</MetricTooltip>}
               value={`−${fmt(var_cvar_99?.cvar_pct ?? 0)}`}
               color="#b03a3a"
               sub={`$${Math.abs(var_cvar_99?.cvar_dollar ?? 0).toFixed(0)} avg`}
