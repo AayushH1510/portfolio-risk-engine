@@ -9,9 +9,9 @@ import InsightBox from '../components/InsightBox'
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
 const SCENARIOS = [
-  { key: 'bear', label: 'Bear', color: '#e05c5c', sub: '−10%/yr headwind' },
-  { key: 'base', label: 'Base', color: '#52b788', sub: 'historical drift' },
-  { key: 'bull', label: 'Bull', color: '#b7e4c7', sub: '+10%/yr tailwind' },
+  { key: 'bear', label: 'Bear', color: 'var(--signal-negative)', bg: 'rgba(var(--signal-negative-rgb),0.13)', sub: '−10%/yr headwind' },
+  { key: 'base', label: 'Base', color: 'var(--signal-positive)', bg: 'rgba(var(--signal-positive-rgb),0.13)', sub: 'historical drift' },
+  { key: 'bull', label: 'Bull', color: 'var(--accent-light)', bg: 'rgba(var(--accent-light-rgb),0.13)', sub: '+10%/yr tailwind' },
 ]
 
 function ScenarioToggle({ scenario, onChange }) {
@@ -25,9 +25,9 @@ function ScenarioToggle({ scenario, onChange }) {
             onClick={() => onChange(s.key)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              padding: '8px 0', borderRadius: 8,
+              padding: '8px 0', borderRadius: 'var(--radius-sm)',
               border: `1px solid ${active ? s.color : 'var(--border)'}`,
-              background: active ? `${s.color}22` : 'rgba(255,255,255,0.03)',
+              background: active ? s.bg : 'rgba(var(--white-rgb),0.03)',
               cursor: 'pointer', transition: 'all 0.15s',
             }}
           >
@@ -69,7 +69,7 @@ function SimulatedPaths({ allPaths, xAxisMap, yAxisMap }) {
         const y = yScale(v)
         return `${i === 0 ? 'M' : 'L'}${x},${y}`
       }).join(' ')
-      return <path key={pi} d={d} stroke="rgba(180,210,180,0.09)" strokeWidth="0.7" fill="none" />
+      return <path key={pi} d={d} stroke="rgba(var(--chart-sage-rgb),0.09)" strokeWidth="0.7" fill="none" />
     })
 
   return <g>{paths}</g>
@@ -120,9 +120,9 @@ export default function MonteCarlo({ data }) {
           </div>
           <div style={{ display:'flex', gap:14, fontSize:10 }}>
             {[
-              { color:'#e05c5c', label:`Bad (5th) — ${fmtD(p5_final)}`,   dash:true },
-              { color:'#52b788', label:`Median — ${fmtD(p50_final)}`,      dash:false },
-              { color:'#b7e4c7', label:`Good (95th) — ${fmtD(p95_final)}`, dash:true },
+              { color:'var(--signal-negative)', label:`Bad (5th) — ${fmtD(p5_final)}`,   dash:true },
+              { color:'var(--signal-positive)', label:`Median — ${fmtD(p50_final)}`,      dash:false },
+              { color:'var(--accent-light)', label:`Good (95th) — ${fmtD(p95_final)}`, dash:true },
             ].map(l => (
               <span key={l.label} style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-muted)' }}>
                 <svg width="20" height="2" style={{ flexShrink:0 }}>
@@ -132,7 +132,7 @@ export default function MonteCarlo({ data }) {
               </span>
             ))}
             <span style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-muted)' }}>
-              <div style={{ width:16, height:1.5, background:'rgba(180,210,180,0.2)', borderRadius:1 }}/>
+              <div style={{ width:16, height:1.5, background:'rgba(var(--chart-sage-rgb),0.2)', borderRadius:'var(--radius-1)' }}/>
               Simulated paths
             </span>
           </div>
@@ -157,13 +157,13 @@ export default function MonteCarlo({ data }) {
               <Tooltip
                 formatter={(v, n) => [fmtD(v), n === 'p5' ? 'Bad scenario' : n === 'p50' ? 'Median' : 'Good scenario']}
                 labelFormatter={l => `Day ${l}`}
-                contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:8, fontSize:11 }}
+                contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', fontSize:11 }}
               />
-              <ReferenceLine y={portfolio_value} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4"
+              <ReferenceLine y={portfolio_value} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4"
                 label={{ value:'Start', fill:'var(--text-muted)', fontSize:9, position:'right' }} />
-              <Line type="monotone" dataKey="p5"  stroke="#e05c5c" strokeWidth={1.5} dot={false} strokeDasharray="5 4" />
-              <Line type="monotone" dataKey="p50" stroke="#52b788" strokeWidth={2}   dot={false} />
-              <Line type="monotone" dataKey="p95" stroke="#b7e4c7" strokeWidth={1.5} dot={false} strokeDasharray="5 4" />
+              <Line type="monotone" dataKey="p5"  stroke="var(--signal-negative)" strokeWidth={1.5} dot={false} strokeDasharray="5 4" />
+              <Line type="monotone" dataKey="p50" stroke="var(--signal-positive)" strokeWidth={2}   dot={false} />
+              <Line type="monotone" dataKey="p95" stroke="var(--accent-light)" strokeWidth={1.5} dot={false} strokeDasharray="5 4" />
               {all_paths && (
                 <Customized component={<SimulatedPaths allPaths={all_paths} />} />
               )}

@@ -7,6 +7,7 @@ import LandingRetail from './pages/LandingRetail.jsx'
 import LandingPro from './pages/LandingPro.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
+import StylePreview from './pages/StylePreview.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/app" element={<App />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/style-preview" element={<StylePreview />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

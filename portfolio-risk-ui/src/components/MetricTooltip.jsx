@@ -78,7 +78,7 @@ export default function MetricTooltip({ metricKey, children }) {
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
         style={{
           color: open ? 'var(--accent)' : 'inherit',
-          borderBottom: open ? '1.5px solid var(--accent)' : '1.5px dashed rgba(82,183,136,0.4)',
+          borderBottom: open ? '1.5px solid var(--accent)' : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
           paddingBottom: 1,
           cursor: 'help',
           transition: 'color 0.15s, border-color 0.15s',
@@ -97,7 +97,7 @@ export default function MetricTooltip({ metricKey, children }) {
             width: POPOVER_WIDTH,
             background: 'var(--card)',
             border: '1px solid var(--border)',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-sm)',
             padding: '8px 10px',
             fontSize: 11,
             fontWeight: 400,
@@ -105,7 +105,7 @@ export default function MetricTooltip({ metricKey, children }) {
             letterSpacing: 'normal',
             color: 'var(--text-primary)',
             lineHeight: 1.45,
-            boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+            boxShadow: '0 10px 28px rgba(var(--black-rgb),0.4)',
           }}
         >
           {explanation}

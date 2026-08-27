@@ -67,14 +67,14 @@ function TierToggle({ tier, onChange }) {
     <div style={{
       display: 'inline-flex', gap: 4, padding: 4,
       background: 'var(--card-2)', border: '1px solid var(--border)',
-      borderRadius: 10,
+      borderRadius: 'var(--radius-10)',
     }}>
       {TIERS.map(t => (
         <button
           key={t.key}
           onClick={() => onChange(t.key)}
           style={{
-            padding: '8px 18px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+            padding: '8px 18px', borderRadius: 'var(--radius-7)', fontSize: 12, fontWeight: 700,
             letterSpacing: '0.02em', border: 'none', cursor: 'pointer',
             background: tier === t.key ? 'var(--accent)' : 'transparent',
             color: tier === t.key ? 'var(--card)' : 'var(--text-muted)',
@@ -98,9 +98,9 @@ export default function Learn() {
         <div style={{
           marginBottom: 16,
           padding: '12px 16px',
-          background: 'rgba(82,183,136,0.08)',
-          border: '1px solid rgba(82,183,136,0.25)',
-          borderRadius: 8,
+          background: 'rgba(var(--signal-positive-rgb),0.08)',
+          border: '1px solid rgba(var(--signal-positive-rgb),0.25)',
+          borderRadius: 'var(--radius-sm)',
           fontSize: 12,
           color: 'var(--text-secondary)',
           lineHeight: 1.6,

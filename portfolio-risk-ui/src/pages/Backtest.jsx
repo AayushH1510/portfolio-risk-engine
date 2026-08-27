@@ -4,13 +4,13 @@ import {
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
 
-const CHART_STYLE = { background: 'transparent', fontSize: 11, fontFamily: 'monospace' }
+const CHART_STYLE = { background: 'transparent', fontSize: 11, fontFamily: 'var(--font-mono)' }
 const AXIS_STYLE  = { fill: 'var(--text-muted)', fontSize: 10 }
 
 const STRATEGIES = [
-  { key: 'your_portfolio', label: 'Your Portfolio', color: '#52b788', dash: false },
-  { key: 'equal_weight',   label: 'Equal Weight',   color: '#e09a30', dash: true  },
-  { key: 'sp500',          label: 'S&P 500',        color: '#5a7a5a', dash: true  },
+  { key: 'your_portfolio', label: 'Your Portfolio', color: 'var(--signal-positive)', dash: false },
+  { key: 'equal_weight',   label: 'Equal Weight',   color: 'var(--signal-caution)', dash: true  },
+  { key: 'sp500',          label: 'S&P 500',        color: 'var(--text-muted)', dash: true  },
 ]
 
 function CustomTooltip({ active, payload, label }) {
@@ -18,7 +18,7 @@ function CustomTooltip({ active, payload, label }) {
   return (
     <div style={{
       background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '8px 12px', fontSize: 11,
+      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
@@ -35,7 +35,7 @@ function Row({ label, value, tone }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
-      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color }}>{value}</span>
+      <span style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color }}>{value}</span>
     </div>
   )
 }
@@ -51,7 +51,7 @@ function StrategyCard({ label, color, sub, stats, borderTone }) {
           {label}
         </div>
         {sub && (
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 2 }}>{sub}</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{sub}</div>
         )}
       </div>
       <Row label="Annualised return" value={fmtPct(annualised_return)} tone={annualised_return >= 0 ? 'good' : 'bad'} />
@@ -70,7 +70,7 @@ function ReturnsTable({ backtest }) {
         Year-by-year returns
       </div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: 'monospace' }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: 'var(--font-mono)' }}>
           <thead>
             <tr>
               <th style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 10px 8px 4px', borderBottom: '1px solid var(--border)' }}>
@@ -86,7 +86,7 @@ function ReturnsTable({ backtest }) {
           <tbody>
             {years.map(y => (
               <tr key={y}>
-                <td style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '7px 10px 7px 4px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <td style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '7px 10px 7px 4px', borderBottom: '1px solid rgba(var(--white-rgb),0.04)' }}>
                   {y}
                 </td>
                 {STRATEGIES.map(s => {
@@ -94,7 +94,7 @@ function ReturnsTable({ backtest }) {
                   return (
                     <td key={s.key} style={{
                       textAlign: 'right', fontSize: 12, fontWeight: 600, padding: '7px 10px',
-                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      borderBottom: '1px solid rgba(var(--white-rgb),0.04)',
                       color: v >= 0 ? 'var(--positive)' : 'var(--negative)',
                     }}>
                       {fmtPct(v)}
@@ -147,12 +147,12 @@ export default function Backtest({ data, tickers }) {
         <StrategyCard
           label="Your Portfolio"
           sub={tickers?.join(', ')}
-          color="#52b788"
+          color="var(--signal-positive)"
           stats={backtest.your_portfolio}
           borderTone={yourBorderTone}
         />
-        <StrategyCard label="Equal Weight" color="#e09a30" stats={backtest.equal_weight} />
-        <StrategyCard label="S&P 500"      color="#5a7a5a" stats={backtest.sp500} />
+        <StrategyCard label="Equal Weight" color="var(--signal-caution)" stats={backtest.equal_weight} />
+        <StrategyCard label="S&P 500"      color="var(--text-muted)" stats={backtest.sp500} />
       </div>
 
       {/* Cumulative return chart */}
@@ -177,7 +177,7 @@ export default function Backtest({ data, tickers }) {
             <LineChart data={chartData} style={CHART_STYLE} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
               <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
-              <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
+              <ReferenceLine y={0} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4" />
               <Tooltip content={<CustomTooltip />} />
               {STRATEGIES.map(s => (
                 <Line

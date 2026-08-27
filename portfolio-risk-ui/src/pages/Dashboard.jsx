@@ -16,7 +16,7 @@ const fmtDec = v => `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDig
 const CHART_STYLE = {
   background: 'transparent',
   fontSize: 11,
-  fontFamily: 'monospace',
+  fontFamily: 'var(--font-mono)',
 }
 
 const AXIS_STYLE = { fill: 'var(--text-muted)', fontSize: 10 }
@@ -26,7 +26,7 @@ function CustomTooltip({ active, payload, label, prefix = '', pct = false }) {
   return (
     <div style={{
       background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '8px 12px', fontSize: 11,
+      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
@@ -93,9 +93,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
         {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
           <div key={i} style={{
             fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-            background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border)',
-            borderRadius: 4, padding: '3px 8px', color: 'var(--text-muted)',
-            fontFamily: 'monospace',
+            background: 'rgba(var(--white-rgb),0.07)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-4)', padding: '3px 8px', color: 'var(--text-muted)',
+            fontFamily: 'var(--font-mono)',
           }}>
             {pill}
           </div>
@@ -143,12 +143,12 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             </div>
             <div style={{ display: 'flex', gap: 10, fontSize: 10 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
-                <span style={{ width: 20, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 1 }} />
+                <span style={{ width: 20, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 'var(--radius-1)' }} />
                 Your portfolio
               </span>
               {bench && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
-                  <span style={{ width: 20, height: 2, display: 'inline-block', borderRadius: 1, opacity: 0.6, borderBottom: '2px dashed #5a7a5a' }} />
+                  <span style={{ width: 20, height: 2, display: 'inline-block', borderRadius: 'var(--radius-1)', opacity: 0.6, borderBottom: '2px dashed var(--text-muted)' }} />
                   S&P 500
                 </span>
               )}
@@ -167,16 +167,16 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                 <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="gPort" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#52b788" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="#52b788" stopOpacity={0}/>
+                      <stop offset="5%"  stopColor="var(--signal-positive)" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="var(--signal-positive)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
-                  <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
+                  <ReferenceLine y={0} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4" />
                   <Tooltip content={<CustomTooltip pct />} />
-                  <Area type="monotone" dataKey="portfolio" stroke="#52b788" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
-                  {bench && <Line type="monotone" dataKey="benchmark" stroke="#5a7a5a" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
+                  <Area type="monotone" dataKey="portfolio" stroke="var(--signal-positive)" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
+                  {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
                 </ComposedChart>
               </ResponsiveContainer>
             )}
@@ -207,20 +207,20 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                 <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="gDD" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#e05c5c" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#e05c5c" stopOpacity={0}/>
+                      <stop offset="5%"  stopColor="var(--signal-negative)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--signal-negative)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
                   <Tooltip content={<CustomTooltip pct />} />
-                  <Area type="monotone" dataKey="drawdown" stroke="#e05c5c" strokeWidth={1.5} fill="url(#gDD)" dot={false} name="Drawdown" />
+                  <Area type="monotone" dataKey="drawdown" stroke="var(--signal-negative)" strokeWidth={1.5} fill="url(#gDD)" dot={false} name="Drawdown" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div style={{ fontSize: 11, marginTop: 8 }}>
               <span style={{ color: 'var(--text-muted)' }}>Worst drop: </span>
-              <span style={{ color: 'var(--negative)', fontWeight: 600, fontFamily: 'monospace' }}>{fmt(dd)}</span>
+              <span style={{ color: 'var(--negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
             </div>
           </div>
 

@@ -91,14 +91,14 @@ export default function Sidebar({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
-          color: hovered ? '#52b788' : 'var(--text-primary)',
+          fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono)',
+          color: hovered ? 'var(--signal-positive)' : 'var(--text-primary)',
           cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 3,
           paddingBottom: 1,
           borderBottom: hovered
-            ? '1.5px solid #52b788'
-            : '1.5px dashed rgba(82,183,136,0.4)',
+            ? '1.5px solid var(--signal-positive)'
+            : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
           transition: 'color 0.15s, border-color 0.15s',
           userSelect: 'none',
         }}
@@ -108,7 +108,7 @@ export default function Sidebar({
           width="8" height="8" viewBox="0 0 8 8" fill="none"
           style={{ opacity: hovered ? 1 : 0.5, transition: 'opacity 0.15s' }}
         >
-          <path d="M1.5 4H6.5M4 1.5L6.5 4L4 6.5" stroke="#52b788" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M1.5 4H6.5M4 1.5L6.5 4L4 6.5" stroke="var(--signal-positive)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
     )
@@ -125,9 +125,9 @@ export default function Sidebar({
       {/* Logo */}
       <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 'var(--radius-6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="#1e2420"/>
+              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--card)"/>
             </svg>
           </div>
           <div>
@@ -159,7 +159,7 @@ export default function Sidebar({
             onBlur={handleTickerBlur}
             onKeyDown={e => e.key === 'Enter' && handleTickerBlur()}
             placeholder="AAPL, MSFT, GOOGL"
-            style={{ fontFamily: 'monospace', fontSize: 12 }}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}
           />
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
             Comma separated Tickets · Max 5 (Works best with 3)
@@ -173,7 +173,7 @@ export default function Sidebar({
             <input
               type="number" min={1} value={portfolioValue}
               onChange={e => setPortfolioValue(parseFloat(e.target.value) || 1)}
-              style={{ fontFamily: 'monospace' }}
+              style={{ fontFamily: 'var(--font-mono)' }}
             />
           </div>
         </Section>
@@ -184,7 +184,7 @@ export default function Sidebar({
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {['pct', 'dollar'].map(m => (
               <button key={m} onClick={() => setInputMode(m)} style={{
-                flex: 1, padding: '5px 0', borderRadius: 6, fontSize: 10,
+                flex: 1, padding: '5px 0', borderRadius: 'var(--radius-6)', fontSize: 10,
                 fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
                 background: inputMode === m ? 'var(--accent)' : 'var(--card-2)',
                 color: inputMode === m ? 'var(--card)' : 'var(--text-muted)',
@@ -204,14 +204,14 @@ export default function Sidebar({
                   <div key={ticker} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <TickerLabel ticker={ticker} weight={weights[i]} />
-                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'monospace', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
                         {weightPct[i]}%
                         {isLast && <span style={{ fontSize: 9, marginLeft: 4, color: 'var(--text-muted)' }}>auto</span>}
                       </span>
                     </div>
                     {isLast ? (
-                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${weightPct[i]}%`, background: 'var(--text-muted)', borderRadius: 2, opacity: 0.5 }} />
+                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${weightPct[i]}%`, background: 'var(--text-muted)', borderRadius: 'var(--radius-xs)', opacity: 0.5 }} />
                       </div>
                     ) : (
                       <input
@@ -232,12 +232,12 @@ export default function Sidebar({
             <>
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                marginBottom: 10, padding: '6px 10px', borderRadius: 6,
+                marginBottom: 10, padding: '6px 10px', borderRadius: 'var(--radius-6)',
                 background: 'var(--card-2)', border: '1px solid var(--border)',
               }}>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
                 <span style={{
-                  fontFamily: 'monospace', fontWeight: 700, fontSize: 13,
+                  fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13,
                   color: Math.abs(totalDollar - portfolioValue) < 1 ? 'var(--accent)' : 'var(--warning)',
                 }}>
                   ${Math.round(totalDollar).toLocaleString()}
@@ -251,14 +251,14 @@ export default function Sidebar({
                   <div key={ticker} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <TickerLabel ticker={ticker} weight={weights[i]} />
-                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'monospace', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
                         ${Math.round(dollarAmts[i]).toLocaleString()}
                         {isLast && <span style={{ fontSize: 9, marginLeft: 4, color: 'var(--text-muted)' }}>auto</span>}
                       </span>
                     </div>
                     {isLast ? (
-                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${(dollarAmts[i] / portfolioValue) * 100}%`, background: 'var(--text-muted)', borderRadius: 2, opacity: 0.4 }} />
+                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${(dollarAmts[i] / portfolioValue) * 100}%`, background: 'var(--text-muted)', borderRadius: 'var(--radius-xs)', opacity: 0.4 }} />
                       </div>
                     ) : (
                       <input type="range" min={0} max={portfolioValue}
@@ -285,7 +285,7 @@ export default function Sidebar({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 8 }}>
             {PERIODS.map(p => (
               <button key={p} onClick={() => { setPeriod(p); setUseCustomDate(false) }} style={{
-                padding: '5px 0', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10, fontWeight: 600,
                 background: period === p && !useCustomDate ? 'var(--accent)' : 'var(--card-2)',
                 color: period === p && !useCustomDate ? 'var(--card)' : 'var(--text-muted)',
                 border: '1px solid var(--border)', transition: 'all 0.15s',
@@ -296,7 +296,7 @@ export default function Sidebar({
           <button
             onClick={() => setUseCustomDate(v => !v)}
             style={{
-              width: '100%', padding: '5px 0', borderRadius: 5, fontSize: 10, fontWeight: 600,
+              width: '100%', padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10, fontWeight: 600,
               background: useCustomDate ? 'var(--accent)' : 'var(--card-2)',
               color: useCustomDate ? 'var(--card)' : 'var(--text-muted)',
               border: '1px solid var(--border)', transition: 'all 0.15s', marginBottom: useCustomDate ? 8 : 0,
@@ -332,7 +332,7 @@ export default function Sidebar({
                   </div>
                 </div>
               ))}
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                 {customStart.year}-{customStart.month}-{customStart.day} → {customEnd.year}-{customEnd.month}-{customEnd.day}
               </div>
             </div>
@@ -350,20 +350,20 @@ export default function Sidebar({
         <Section label="6. Benchmark">
           <div onClick={() => setShowBenchmark(!showBenchmark)} style={{
             display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-            padding: '7px 10px', borderRadius: 6,
-            background: showBenchmark ? 'rgba(82,183,136,0.12)' : 'var(--card-2)',
+            padding: '7px 10px', borderRadius: 'var(--radius-6)',
+            background: showBenchmark ? 'rgba(var(--signal-positive-rgb),0.12)' : 'var(--card-2)',
             border: `1px solid ${showBenchmark ? 'var(--accent)' : 'var(--border)'}`,
             transition: 'all 0.15s',
           }}>
             <div style={{
-              width: 16, height: 16, borderRadius: 4,
+              width: 16, height: 16, borderRadius: 'var(--radius-4)',
               background: showBenchmark ? 'var(--accent)' : 'var(--card-3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.15s',
             }}>
               {showBenchmark && (
                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                  <path d="M1 4L3.5 6.5L9 1" stroke="#1e2420" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 4L3.5 6.5L9 1" stroke="var(--card)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </div>

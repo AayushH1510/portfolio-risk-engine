@@ -10,8 +10,8 @@ export default function InsightBox({ label, text, tone = 'neutral' }) {
   return (
     <div style={{
       borderLeft: `3px solid ${c.border}`,
-      background: 'rgba(255,255,255,0.03)',
-      borderRadius: '0 6px 6px 0',
+      background: 'rgba(var(--white-rgb),0.03)',
+      borderRadius: 'var(--radius-tab)',
       padding: '10px 14px',
       marginTop: 8,
     }}>
