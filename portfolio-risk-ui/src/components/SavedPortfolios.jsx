@@ -54,8 +54,8 @@ export default function SavedPortfolios({
           {portfolios.length > 0 && (
             <span style={{
               marginLeft: 6, fontSize: 9, fontWeight: 700,
-              padding: '1px 5px', borderRadius: 3,
-              background: 'rgba(82,183,136,0.15)',
+              padding: '1px 5px', borderRadius: 'var(--radius-3)',
+              background: 'rgba(var(--signal-positive-rgb),0.15)',
               color: 'var(--accent)',
             }}>
               {portfolios.length}
@@ -72,15 +72,15 @@ export default function SavedPortfolios({
             <button
               onClick={() => setSaving(true)}
               style={{
-                width: '100%', padding: '6px 0', borderRadius: 6,
+                width: '100%', padding: '6px 0', borderRadius: 'var(--radius-6)',
                 fontSize: 11, fontWeight: 600, letterSpacing: '0.04em',
                 background: 'transparent',
-                border: '1px dashed rgba(82,183,136,0.4)',
+                border: '1px dashed rgba(var(--signal-positive-rgb),0.4)',
                 color: 'var(--accent)', cursor: 'pointer',
                 marginBottom: portfolios.length > 0 ? 8 : 0,
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(82,183,136,0.08)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(var(--signal-positive-rgb),0.08)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               + Save current portfolio
@@ -100,7 +100,7 @@ export default function SavedPortfolios({
                   onClick={handleSave}
                   disabled={!saveName.trim()}
                   style={{
-                    flex: 1, padding: '5px 0', borderRadius: 5, fontSize: 10,
+                    flex: 1, padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10,
                     fontWeight: 700, letterSpacing: '0.05em',
                     background: saveName.trim() ? 'var(--accent)' : 'var(--card-2)',
                     color: saveName.trim() ? 'var(--card)' : 'var(--text-muted)',
@@ -113,7 +113,7 @@ export default function SavedPortfolios({
                 <button
                   onClick={() => setSaving(false)}
                   style={{
-                    flex: 1, padding: '5px 0', borderRadius: 5, fontSize: 10,
+                    flex: 1, padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10,
                     fontWeight: 600, background: 'var(--card-2)',
                     color: 'var(--text-muted)', border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -138,7 +138,7 @@ export default function SavedPortfolios({
               style={{
                 background: 'var(--card-2)',
                 border: '1px solid var(--border)',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-6)',
                 padding: '8px 10px',
                 marginBottom: 5,
                 cursor: 'pointer',
@@ -155,7 +155,7 @@ export default function SavedPortfolios({
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.name}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                     {p.tickers.join(', ')} · {p.period}
                   </div>
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>
@@ -168,11 +168,11 @@ export default function SavedPortfolios({
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => { onDelete(p.id); setConfirmDelete(null) }}
-                      style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, background: 'rgba(224,92,92,0.2)', color: '#e05c5c', border: '1px solid rgba(224,92,92,0.4)', cursor: 'pointer', fontWeight: 700 }}
+                      style={{ fontSize: 9, padding: '2px 6px', borderRadius: 'var(--radius-3)', background: 'rgba(var(--signal-negative-rgb),0.2)', color: 'var(--negative)', border: '1px solid rgba(var(--signal-negative-rgb),0.4)', cursor: 'pointer', fontWeight: 700 }}
                     >Delete</button>
                     <button
                       onClick={() => setConfirmDelete(null)}
-                      style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, background: 'var(--card-3)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}
+                      style={{ fontSize: 9, padding: '2px 6px', borderRadius: 'var(--radius-3)', background: 'var(--card-3)', color: 'var(--text-muted)', border: '1px solid var(--border)', cursor: 'pointer' }}
                     >Keep</button>
                   </div>
                 ) : (

@@ -99,9 +99,36 @@
   --radius-6:    6px;
   --radius-7:    7px;
   --radius-10:   10px;
+  --radius-14:   14px;
   --radius-20:   20px;
   --radius-full: 50%;
   --radius-tab:  0 6px 6px 0;
+
+  /* ───────────────────────────────────────────────────────────────
+     Added for the AuthModal / CompareWrapper / ExportCSV / ExportPDF /
+     FeedbackButton / FirstResultCallout / OnboardingTour /
+     SavedPortfolios / StressTest pass. Same rule as above: values are
+     pinned to what's already on screen today.
+     ─────────────────────────────────────────────────────────────── */
+  --accent-dark-rgb: 45, 106, 79;
+  --chart-mint:      #95d5b2;   /* 4th step of ExportPDF's allocation-bar palette */
+
+  /* ExportPDF renders into a separate popup document (window.open +
+     document.write) that does NOT inherit this stylesheet, so these
+     report-only colours are also duplicated into a :root block written
+     directly into that popup's <style> tag — see ExportPDF.jsx. */
+  --report-bg:         #f0f4f0;   /* popup page background */
+  --report-text-dark:  #1a2a1a;   /* near-black text on the light report */
+  --report-track:      #e8ede8;   /* allocation bar track */
+  --report-gridline:   #e0e8e0;   /* chart zero-line */
+  --report-heat-high:  #fdd;      /* correlation heatmap: high */
+  --report-heat-mid:   #fef3d0;   /* correlation heatmap: mid */
+  --report-heat-low:   #e8f5ee;   /* correlation heatmap: low */
+  --report-card-soft:  #f5faf5;   /* instructional modal step background */
+  --report-card-alt:   #f8faf8;   /* Monte Carlo mini-stat background */
+  --report-amber:      #b7791f;   /* "profit chance" low-confidence amber */
+  --report-red:        #c0392b;   /* report-specific negative red (print-safe, distinct from --negative) */
+  --report-border:     #c8d8c8;   /* watermark border */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

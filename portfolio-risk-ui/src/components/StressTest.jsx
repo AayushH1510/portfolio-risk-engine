@@ -10,7 +10,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
   const { name, period, portfolio_return, worst_day, recovery_days, excluded_tickers } = scenario
   const noData = portfolio_return == null
 
-  const lossColor = portfolio_return < -0.3 ? '#e05c5c' : portfolio_return < -0.1 ? '#e09a30' : '#52b788'
+  const lossColor = portfolio_return < -0.3 ? 'var(--negative)' : portfolio_return < -0.1 ? 'var(--warning)' : 'var(--positive)'
 
   return (
     <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -18,7 +18,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
         <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
           {name}
         </div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 2 }}>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
           {period}
         </div>
       </div>
@@ -33,10 +33,10 @@ function ScenarioCard({ scenario, portfolioValue }) {
             <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
               Portfolio loss
             </div>
-            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'monospace', color: lossColor, lineHeight: 1.1 }}>
+            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-mono)', color: lossColor, lineHeight: 1.1 }}>
               {fmtPct(portfolio_return)}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
               −{fmtDollar(portfolioValue * Math.abs(portfolio_return))}
             </div>
           </div>
@@ -46,7 +46,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
                 Worst day
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: '#e05c5c' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--negative)' }}>
                 {fmtPct(worst_day)}
               </div>
             </div>
@@ -54,7 +54,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
                 Recovery
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
                 {recovery_days == null ? 'Not yet' : `${recovery_days}d`}
               </div>
             </div>
