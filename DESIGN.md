@@ -273,7 +273,7 @@ Animation is permitted and encouraged on data, not on chrome. The rule: motion s
 ## Agent Prompt Guide
 
 **Quick Reference**
-- canvas: `#1d1a18` · elevated: `#262321` · card: `#3d3a39`
+- canvas: `#0f0d0b` · elevated: `#2c2825` · card: `#211e1b`
 - hairline: `#4d4947` · faint line: `#2e2b29`
 - text: `#f2efec` primary · `#a39d98` secondary · `#7a736e` muted
 - positive: `#52b788` · negative: `#e0574f` · caution: `#d99a3c`
@@ -282,7 +282,7 @@ Animation is permitted and encouraged on data, not on chrome. The rule: motion s
 
 **Example Component Prompts**
 
-1. **Metric Card**: `#3d3a39` background, `1px solid #4d4947` border, 0 radius, padding 16px 20px. Label "SHARPE RATIO" at 10px weight 500 uppercase, letter-spacing 0.08em, colour `#7a736e`. Value "2.52" in Geist Mono 32px weight 600, letter-spacing -0.045em, colour `#f2efec`. No shadow.
+1. **Metric Card**: `#211e1b` background, `1px solid #4d4947` border, 0 radius, padding 16px 20px. Label "SHARPE RATIO" at 10px weight 500 uppercase, letter-spacing 0.08em, colour `#7a736e`. Value "2.52" in Geist Mono 32px weight 600, letter-spacing -0.045em, colour `#f2efec`. No shadow.
 
 2. **Risk Metric Card (negative state)**: Same as Metric Card plus a `2px solid #e0574f` top border. Value colour becomes `#e0574f`. No fill tint, no glow.
 
@@ -299,10 +299,9 @@ Animation is permitted and encouraged on data, not on chrome. The rule: motion s
 ```css
 :root {
   /* Surfaces */
-  --surface-canvas:    #1d1a18;
-  --surface-elevated:  #262321;
-  --surface-card:      #3d3a39;
-  --surface-raised:    #4d4947;
+  --surface-canvas:    #0f0d0b;
+  --surface-elevated:  #2c2825;
+  --surface-card:      #211e1b;
 
   /* Lines */
   --line-hairline:     #4d4947;
