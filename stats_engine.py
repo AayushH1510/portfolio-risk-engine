@@ -730,9 +730,9 @@ if __name__ == "__main__":
     v9 = m["var_cvar_99"]
     ds = m["diversification_score"]
 
-    print(f"\n  VaR  95%:  {vc['var_pct']:.2%}  →  -${abs(vc['var_dollar']):,.0f}")
-    print(f"  CVaR 95%:  {vc['cvar_pct']:.2%}  →  -${abs(vc['cvar_dollar']):,.0f}")
-    print(f"  VaR  99%:  {v9['var_pct']:.2%}  →  -${abs(v9['var_dollar']):,.0f}")
-    print(f"  CVaR 99%:  {v9['cvar_pct']:.2%}  →  -${abs(v9['cvar_dollar']):,.0f}")
-    print(f"\n  Diversification score: {ds['score']}/100 — {ds['label']}")
+    print(f"\n  VaR  95%:  {vc['var_pct']:.2%}  ->  -${abs(vc['var_dollar']):,.0f}")
+    print(f"  CVaR 95%:  {vc['cvar_pct']:.2%}  ->  -${abs(vc['cvar_dollar']):,.0f}")
+    print(f"  VaR  99%:  {v9['var_pct']:.2%}  ->  -${abs(v9['var_dollar']):,.0f}")
+    print(f"  CVaR 99%:  {v9['cvar_pct']:.2%}  ->  -${abs(v9['cvar_dollar']):,.0f}")
+    print(f"\n  Diversification score: {ds['score']}/100 - {ds['label']}")
     print(f"  Avg pairwise correlation: {ds['avg_pairwise_corr']:.4f}")

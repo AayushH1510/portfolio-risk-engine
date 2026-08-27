@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import axios from 'axios'
 import { format, subMonths, subYears } from 'date-fns'
+import { errorMessage } from '../lib/errorMessage'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -49,7 +50,7 @@ export function useAnalysis() {
       setData(res.data)
       setHasRun(true)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong. Check your tickers and try again.')
+      setError(errorMessage(err, 'Something went wrong. Check your tickers and try again.'))
     } finally {
       setLoading(false)
     }

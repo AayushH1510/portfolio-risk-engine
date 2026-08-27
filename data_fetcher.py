@@ -63,7 +63,7 @@ def fetch_closing_prices(
     tickers = [t.strip().upper() for t in tickers]
 
     print(f"Fetching data for: {tickers}")
-    print(f"Period: {start_date} → {end_date}")
+    print(f"Period: {start_date} -> {end_date}")
 
     # yf.download() is the core call.
     # auto_adjust=True means we get adjusted prices (corrected for
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     )
     print("\n--- Closing prices (first 5 rows) ---")
     print(prices.head())
-    print(f"\nShape: {prices.shape}  ({prices.shape[0]} trading days × {prices.shape[1]} tickers)")
+    print(f"\nShape: {prices.shape}  ({prices.shape[0]} trading days x {prices.shape[1]} tickers)")
 
     # Test 2: validation
     print("\n--- Ticker validation ---")
