@@ -64,7 +64,7 @@ export default function Privacy() {
       <TrustSection heading="Contact">
         <p>
           Questions about this policy or your data? Reach out at{' '}
-          <a href="mailto:aayushdxb1510@gmail.com" style={{ color: 'var(--accent)' }}>aayushdxb1510@gmail.com</a>.
+          <a href="mailto:aayushdxb1510@gmail.com" style={{ color: 'var(--signal-positive)' }}>aayushdxb1510@gmail.com</a>.
         </p>
       </TrustSection>
     </TrustPage>

@@ -77,8 +77,8 @@ export default function MetricTooltip({ metricKey, children }) {
         } : {})}
         onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
         style={{
-          color: open ? 'var(--accent)' : 'inherit',
-          borderBottom: open ? '1.5px solid var(--accent)' : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
+          color: open ? 'var(--signal-positive)' : 'inherit',
+          borderBottom: open ? '1.5px solid var(--signal-positive)' : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
           paddingBottom: 1,
           cursor: 'help',
           transition: 'color 0.15s, border-color 0.15s',
@@ -95,17 +95,16 @@ export default function MetricTooltip({ metricKey, children }) {
             left: coords.left,
             zIndex: 9999,
             width: POPOVER_WIDTH,
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '8px 10px',
-            fontSize: 11,
-            fontWeight: 400,
+            background: 'var(--surface-elevated)',
+            border: 'var(--border-emphasis)',
+            padding: '10px 12px',
+            fontSize: 'var(--text-body-sm)',
+            fontFamily: 'var(--font-primary)',
+            fontWeight: 'var(--weight-regular)',
             textTransform: 'none',
             letterSpacing: 'normal',
-            color: 'var(--text-primary)',
+            color: 'var(--text-secondary)',
             lineHeight: 1.45,
-            boxShadow: '0 10px 28px rgba(var(--black-rgb),0.4)',
           }}
         >
           {explanation}

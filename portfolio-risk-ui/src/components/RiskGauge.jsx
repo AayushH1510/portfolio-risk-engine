@@ -44,13 +44,13 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
     const arcEnd = START + SWEEP  // = 360° = 3 o'clock
 
     // Match card background
-    ctx.fillStyle = cssVar('var(--card)')
+    ctx.fillStyle = cssVar('var(--surface-card)')
     ctx.fillRect(0, 0, W, H)
 
     // Track arc — subtle background
     ctx.beginPath()
     ctx.arc(cx, cy, R * 0.78, START, arcEnd)
-    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.05)')
+    ctx.strokeStyle = cssVar('rgba(var(--text-primary-rgb),0.05)')
     ctx.lineWidth   = R * 0.10
     ctx.lineCap     = 'round'
     ctx.stroke()
@@ -98,7 +98,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
       ctx.beginPath()
       ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a))
       ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a))
-      ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.2)')
+      ctx.strokeStyle = cssVar('rgba(var(--text-primary-rgb),0.2)')
       ctx.lineWidth   = 1
       ctx.stroke()
     }
@@ -109,7 +109,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
     const nTip = { x: cx + nLen * Math.cos(na), y: cy + nLen * Math.sin(na) }
     ctx.beginPath()
     ctx.moveTo(cx, cy); ctx.lineTo(nTip.x, nTip.y)
-    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.9)')
+    ctx.strokeStyle = cssVar('rgba(var(--text-primary-rgb),0.9)')
     ctx.lineWidth   = 1.5
     ctx.lineCap     = 'round'
     ctx.stroke()
@@ -117,16 +117,16 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
     // Needle pivot
     ctx.beginPath()
     ctx.arc(cx, cy, R * 0.06, 0, Math.PI * 2)
-    ctx.fillStyle = cssVar('rgba(var(--white-rgb),0.15)')
+    ctx.fillStyle = cssVar('rgba(var(--text-primary-rgb),0.15)')
     ctx.fill()
     ctx.beginPath()
     ctx.arc(cx, cy, R * 0.03, 0, Math.PI * 2)
-    ctx.fillStyle = cssVar('var(--white)')
+    ctx.fillStyle = cssVar('var(--text-primary)')
     ctx.fill()
 
     // Score — small, muted, no glow
     ctx.fillStyle    = cssVar('rgba(var(--chart-sage-rgb),0.6)')
-    ctx.font         = `500 ${R * 0.14}px "IBM Plex Mono", monospace`
+    ctx.font         = `500 ${R * 0.14}px ${cssVar('var(--font-mono)')}`
     ctx.textAlign    = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(score, cx, cy + R * 0.32)
@@ -136,8 +136,8 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
   return (
     <div style={{ display:'flex', flexDirection:'column' }}>
       <div style={{
-        fontSize:10, fontWeight:700, textTransform:'uppercase',
-        letterSpacing:'0.08em', color:'var(--text-muted)', marginBottom:6,
+        fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase',
+        letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:6,
       }}>
         Risk Gauge
       </div>
@@ -145,10 +145,10 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
-          borderRadius:'var(--radius)', overflow:'hidden',
-          border:`1px solid ${hovered ? color : 'rgba(var(--white-rgb),0.06)'}`,
-          transition:'border-color 0.2s',
-          background:'var(--card)',
+          overflow:'hidden',
+          border:`1px solid ${hovered ? color : 'var(--line-hairline)'}`,
+          transition:'border-color var(--duration-standard) var(--ease-standard)',
+          background:'var(--surface-card)',
         }}
       >
         <canvas

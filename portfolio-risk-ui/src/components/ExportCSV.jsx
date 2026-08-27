@@ -85,14 +85,14 @@ export default function ExportCSV({ data, tickers, weights }) {
       onClick={handleExport}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: 11, fontWeight: 600, padding: '6px 14px',
-        borderRadius: 'var(--radius-6)', border: '1px solid var(--border-light)',
-        background: 'rgba(var(--white-rgb),0.5)',
-        color: 'var(--accent-dark)', cursor: 'pointer',
-        transition: 'all 0.15s', letterSpacing: '0.03em',
+        fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '6px 14px',
+        border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+        background: 'transparent',
+        color: 'var(--text-primary)', cursor: 'pointer',
+        transition: 'all var(--duration-fast) var(--ease-standard)', letterSpacing: '0.02em',
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--accent-dark-rgb),0.1)'; e.currentTarget.style.borderColor = 'var(--accent-dark)' }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--white-rgb),0.5)'; e.currentTarget.style.borderColor = 'var(--border-light)' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-elevated)'; e.currentTarget.style.borderColor = 'var(--line-emphasis)' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--line-hairline)' }}
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

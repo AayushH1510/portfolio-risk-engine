@@ -8,11 +8,11 @@ import InsightBox from '../components/InsightBox'
 const fmt    = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtD   = v => v != null ? `$${Math.abs(v).toFixed(0)}` : 'N/A'
 const fmtN   = v => v != null ? v.toFixed(2) : 'N/A'
-const TIP    = { background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', fontSize:11 }
+const TIP    = { background:'var(--surface-elevated)', border:'var(--border-emphasis)', fontSize:11 }
 
 // Colour for A and B
 const A_COLOR = 'var(--signal-positive)'
-const B_COLOR = 'var(--chart-blue)'
+const B_COLOR = 'var(--signal-caution)'
 
 function winner(aVal, bVal, lowerBetter = false) {
   if (aVal == null || bVal == null) return null
@@ -29,7 +29,7 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }
     <div style={{
       display: 'grid', gridTemplateColumns: '1fr 80px 1fr',
       alignItems: 'center', padding: '8px 0',
-      borderBottom: '1px solid rgba(var(--white-rgb),0.04)',
+      borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)',
     }}>
       {/* A value */}
       <div style={{
@@ -38,7 +38,7 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }
         color: w === 'A' ? A_COLOR : 'var(--text-secondary)',
         display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6,
       }}>
-        {w === 'A' && <span style={{ fontSize: 10, background: 'rgba(var(--signal-positive-rgb),0.15)', color: A_COLOR, padding: '1px 5px', borderRadius: 'var(--radius-3)', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
+        {w === 'A' && <span style={{ fontSize: 10, background: 'rgba(var(--signal-positive-rgb),0.15)', color: A_COLOR, padding: '1px 5px', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
         {fmtFn(aVal)}
       </div>
 
@@ -55,7 +55,7 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }
         display: 'flex', alignItems: 'center', gap: 6,
       }}>
         {fmtFn(bVal)}
-        {w === 'B' && <span style={{ fontSize: 10, background: 'rgba(var(--chart-blue-rgb),0.15)', color: B_COLOR, padding: '1px 5px', borderRadius: 'var(--radius-3)', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
+        {w === 'B' && <span style={{ fontSize: 10, background: 'rgba(var(--signal-caution-rgb),0.15)', color: B_COLOR, padding: '1px 5px', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
       </div>
     </div>
   )
@@ -100,8 +100,8 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
       {/* Header — portfolio labels */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', alignItems: 'center', flexShrink: 0 }}>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--signal-positive-rgb),0.1)', border: '1px solid rgba(var(--signal-positive-rgb),0.3)', borderRadius: 'var(--radius-sm)', padding: '8px 14px' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 'var(--radius-full)', background: A_COLOR }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--signal-positive-rgb),0.1)', border: '1px solid rgba(var(--signal-positive-rgb),0.3)', padding: '8px 14px' }}>
+            <div style={{ width: 10, height: 10, background: A_COLOR }} />
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{nameA}</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{tickersA.join(', ')}</div>
@@ -110,8 +110,8 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
         </div>
         <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>VS</div>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--chart-blue-rgb),0.1)', border: '1px solid rgba(var(--chart-blue-rgb),0.3)', borderRadius: 'var(--radius-sm)', padding: '8px 14px' }}>
-            <div style={{ width: 10, height: 10, borderRadius: 'var(--radius-full)', background: B_COLOR }} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--signal-caution-rgb),0.1)', border: '1px solid rgba(var(--signal-caution-rgb),0.3)', padding: '8px 14px' }}>
+            <div style={{ width: 10, height: 10, background: B_COLOR }} />
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{nameB}</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{tickersB.join(', ')}</div>
@@ -124,9 +124,9 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
       {overallWinner && (
         <div style={{
           textAlign: 'center', padding: '10px',
-          background: `rgba(${overallWinner === 'A' ? 'var(--signal-positive-rgb)' : 'var(--chart-blue-rgb)'},0.08)`,
+          background: `rgba(${overallWinner === 'A' ? 'var(--signal-positive-rgb)' : 'var(--signal-caution-rgb)'},0.08)`,
           border: `1px solid ${overallColor}`,
-          borderRadius: 'var(--radius-sm)', fontSize: 12, color: overallColor, fontWeight: 600, flexShrink: 0,
+          fontSize: 12, color: overallColor, fontWeight: 600, flexShrink: 0,
         }}>
           {overallWinner === 'A' ? nameA : nameB} wins on {Math.max(winsA, winsB)} of {metrics.length} metrics
         </div>
@@ -137,7 +137,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
 
         {/* Metrics comparison */}
         <div className="card" style={{ padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Head to head
           </div>
           <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  lowerBetter={false} />
@@ -157,28 +157,18 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
 
         {/* Growth chart */}
         <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Cumulative returns
           </div>
           <div style={{ flex: 1, minHeight: 200 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growthData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={A_COLOR} stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor={A_COLOR} stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={B_COLOR} stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor={B_COLOR} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
                 <XAxis dataKey="date" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                 <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={42} />
-                <ReferenceLine y={0} stroke="rgba(var(--white-rgb),0.08)" strokeDasharray="4 4" />
+                <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.08)" strokeDasharray="4 4" />
                 <Tooltip contentStyle={TIP} formatter={v => fmt(v)} />
-                <Area type="monotone" dataKey="a" stroke={A_COLOR} strokeWidth={2} fill="url(#gA)" dot={false} name={nameA} />
-                <Area type="monotone" dataKey="b" stroke={B_COLOR} strokeWidth={2} fill="url(#gB)" dot={false} name={nameB} />
+                <Area type="monotone" dataKey="a" stroke={A_COLOR} strokeWidth={1.5} fill={A_COLOR} fillOpacity={0.08} dot={false} name={nameA} />
+                <Area type="monotone" dataKey="b" stroke={B_COLOR} strokeWidth={1.5} fill={B_COLOR} fillOpacity={0.08} dot={false} name={nameB} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -188,13 +178,13 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
       {/* Monte Carlo comparison */}
       <div className="card" style={{ padding: '14px 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             Monte Carlo — median outcomes
           </div>
           <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
             {[[A_COLOR, nameA, dataA.monte_carlo.p50_final], [B_COLOR, nameB, dataB.monte_carlo.p50_final]].map(([c, n, v]) => (
               <span key={n} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
-                <div style={{ width: 16, height: 2, background: c, borderRadius: 'var(--radius-1)' }} />
+                <div style={{ width: 16, height: 2, background: c }} />
                 {n} — <span style={{ color: c, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>${Math.round(v).toLocaleString()}</span>
               </span>
             ))}
@@ -205,7 +195,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
             <LineChart data={mcData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
               <XAxis dataKey="day" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} label={{ value:'Trading days', position:'insideBottom', offset:-2, fill:'var(--text-muted)', fontSize:10 }} />
               <YAxis tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={48} />
-              <ReferenceLine y={dataA.monte_carlo.portfolio_value} stroke="rgba(var(--white-rgb),0.08)" strokeDasharray="4 4" />
+              <ReferenceLine y={dataA.monte_carlo.portfolio_value} stroke="rgba(var(--text-primary-rgb),0.08)" strokeDasharray="4 4" />
               <Tooltip contentStyle={TIP} formatter={v => [`$${Math.round(v).toLocaleString()}`, '']} labelFormatter={l => `Day ${l}`} />
               <Line type="monotone" dataKey="a" stroke={A_COLOR} strokeWidth={2} dot={false} name={nameA} />
               <Line type="monotone" dataKey="b" stroke={B_COLOR} strokeWidth={2} dot={false} name={nameB} />

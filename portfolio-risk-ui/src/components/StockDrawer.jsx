@@ -20,14 +20,14 @@ function Row({ label, value, accent }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '6px 0', borderBottom: '1px solid rgba(var(--white-rgb),0.05)',
+      padding: '6px 0', borderBottom: '1px solid rgba(var(--text-primary-rgb),0.05)',
     }}>
-      <span style={{ fontSize: 11, color: 'rgba(var(--white-rgb),0.4)', fontFamily: 'var(--font-mono)' }}>
+      <span style={{ fontSize: 11, color: 'rgba(var(--text-primary-rgb),0.4)', fontFamily: 'var(--font-mono)' }}>
         {label}
       </span>
       <span style={{
         fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)',
-        color: accent || 'rgba(var(--white-rgb),0.85)',
+        color: accent || 'rgba(var(--text-primary-rgb),0.85)',
       }}>
         {value}
       </span>
@@ -43,12 +43,6 @@ function Sparkline({ data }) {
   return (
     <ResponsiveContainer width="100%" height={64}>
       <AreaChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-        <defs>
-          <linearGradient id="sdGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor={color} stopOpacity={0.3} />
-            <stop offset="95%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
         <XAxis dataKey="i" hide />
         <YAxis domain={['auto', 'auto']} hide />
         <Tooltip
@@ -56,8 +50,8 @@ function Sparkline({ data }) {
             if (!active || !payload?.length) return null
             return (
               <div style={{
-                background: 'var(--surface-tooltip)', border: '1px solid rgba(var(--signal-positive-rgb),0.3)',
-                borderRadius: 'var(--radius-6)', padding: '4px 8px', fontSize: 10,
+                background: 'var(--surface-elevated)', border: 'var(--border-emphasis)',
+                padding: '4px 8px', fontSize: 10,
                 color: 'var(--signal-positive)', fontFamily: 'var(--font-mono)',
               }}>
                 {fmtP(payload[0].value)}
@@ -68,7 +62,7 @@ function Sparkline({ data }) {
         <Area
           type="monotone" dataKey="v"
           stroke={color} strokeWidth={1.5}
-          fill="url(#sdGrad)" dot={false}
+          fill={color} fillOpacity={0.08} dot={false}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -144,7 +138,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         style={{
           position: 'fixed', top: 48, right: 0, bottom: 0, zIndex: 100,
           width: 300,
-          background: 'var(--surface-drawer)',
+          background: 'var(--surface-elevated)',
           borderLeft: '1px solid rgba(var(--signal-positive-rgb),0.2)',
           display: 'flex', flexDirection: 'column',
           transform: visible ? 'translateX(0)' : 'translateX(100%)',
@@ -156,15 +150,15 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         <div style={{
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
           padding: '16px 18px 12px',
-          borderBottom: '1px solid rgba(var(--white-rgb),0.07)',
+          borderBottom: '1px solid rgba(var(--text-primary-rgb),0.07)',
           flexShrink: 0,
         }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--white)', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em' }}>
               {ticker}
             </div>
             {stock?.company_name && (
-              <div style={{ fontSize: 11, color: 'rgba(var(--white-rgb),0.4)', marginTop: 2, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 11, color: 'rgba(var(--text-primary-rgb),0.4)', marginTop: 2, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {stock.company_name}
               </div>
             )}
@@ -172,9 +166,9 @@ export default function StockDrawer({ ticker, weight, onClose }) {
           <button
             onClick={handleClose}
             style={{
-              background: 'rgba(var(--white-rgb),0.07)', border: 'none',
-              color: 'rgba(var(--white-rgb),0.5)', cursor: 'pointer',
-              width: 28, height: 28, borderRadius: 'var(--radius-6)',
+              background: 'rgba(var(--text-primary-rgb),0.07)', border: 'none',
+              color: 'rgba(var(--text-primary-rgb),0.5)', cursor: 'pointer',
+              width: 28, height: 28,
               fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, marginTop: 2,
             }}
@@ -204,7 +198,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
             <>
               {/* Price + change */}
               <div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--white)', fontFamily: 'var(--font-mono)' }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                   {fmtP(stock.price)}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4, alignItems: 'center' }}>
@@ -214,21 +208,21 @@ export default function StockDrawer({ ticker, weight, onClose }) {
                   <span style={{
                     fontSize: 11, fontWeight: 600, color: changeColor,
                     background: isUp ? 'rgba(var(--signal-positive-rgb),0.12)' : 'rgba(var(--signal-negative-rgb),0.12)',
-                    padding: '2px 6px', borderRadius: 'var(--radius-4)', fontFamily: 'var(--font-mono)',
+                    padding: '2px 6px', fontFamily: 'var(--font-mono)',
                   }}>
                     {isUp ? '+' : ''}{(stock.change_pct * 100).toFixed(2)}%
                   </span>
-                  <span style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.3)' }}>today</span>
+                  <span style={{ fontSize: 10, color: 'rgba(var(--text-primary-rgb),0.3)' }}>today</span>
                 </div>
               </div>
 
               {/* Sparkline */}
               <div style={{
-                background: 'rgba(var(--white-rgb),0.03)', borderRadius: 'var(--radius-sm)',
+                background: 'rgba(var(--text-primary-rgb),0.03)',
                 padding: '8px 4px 4px',
-                border: '1px solid rgba(var(--white-rgb),0.06)',
+                border: '1px solid rgba(var(--text-primary-rgb),0.06)',
               }}>
-                <div style={{ fontSize: 9, color: 'rgba(var(--white-rgb),0.3)', marginLeft: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: 9, color: 'rgba(var(--text-primary-rgb),0.3)', marginLeft: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   30-day price
                 </div>
                 <Sparkline data={stock.sparkline} />
@@ -239,22 +233,22 @@ export default function StockDrawer({ ticker, weight, onClose }) {
                 <div style={{
                   background: 'rgba(var(--signal-positive-rgb),0.06)',
                   border: '1px solid rgba(var(--signal-positive-rgb),0.18)',
-                  borderRadius: 'var(--radius-sm)', padding: '10px 14px',
+                  padding: '10px 14px',
                 }}>
                   <div style={{ fontSize: 9, color: 'rgba(var(--signal-positive-rgb),0.6)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                     Portfolio position
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.4)' }}>Weight</div>
+                      <div style={{ fontSize: 10, color: 'rgba(var(--text-primary-rgb),0.4)' }}>Weight</div>
                       <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--signal-positive)', fontFamily: 'var(--font-mono)' }}>
                         {Math.round(weight * 100)}%
                       </div>
                     </div>
                     {stock.sector && (
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.4)' }}>Sector</div>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(var(--white-rgb),0.7)', marginTop: 2, lineHeight: 1.3 }}>
+                        <div style={{ fontSize: 10, color: 'rgba(var(--text-primary-rgb),0.4)' }}>Sector</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(var(--text-primary-rgb),0.7)', marginTop: 2, lineHeight: 1.3 }}>
                           {stock.sector}
                         </div>
                       </div>
@@ -265,7 +259,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
 
               {/* Fundamentals */}
               <div>
-                <div style={{ fontSize: 9, color: 'rgba(var(--white-rgb),0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                <div style={{ fontSize: 9, color: 'rgba(var(--text-primary-rgb),0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                   Fundamentals
                 </div>
                 <Row label="Market Cap"     value={fmtM(stock.market_cap)} />
@@ -283,8 +277,8 @@ export default function StockDrawer({ ticker, weight, onClose }) {
 
         {/* Footer */}
         <div style={{
-          padding: '10px 18px', borderTop: '1px solid rgba(var(--white-rgb),0.06)',
-          fontSize: 9, color: 'rgba(var(--white-rgb),0.2)', flexShrink: 0,
+          padding: '10px 18px', borderTop: '1px solid rgba(var(--text-primary-rgb),0.06)',
+          fontSize: 9, color: 'rgba(var(--text-primary-rgb),0.2)', flexShrink: 0,
         }}>
           Data via Finnhub
         </div>

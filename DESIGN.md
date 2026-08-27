@@ -12,7 +12,7 @@ Varense operates as a precision instrument rendered in warm dark tones. The canv
 These are non-negotiable and define the system:
 
 1. **Zero border radius.** Every element, every card, every button, every input, every tag. `border-radius: 0`. No exceptions.
-2. **No gradients.** Anywhere. Not on backgrounds, not on charts, not on buttons, not as atmospheric bands.
+2. **No gradients**, with one narrow exception: a subtle radial vignette is permitted on the page canvas background only, for atmospheric depth (darker at the edges, a faint warm glow toward center, simulating a single light source in the room). This exception exists to make a flat dark canvas read as a physical space rather than a solid fill. It never applies to cards, buttons, inputs, charts, tags, or any other UI component, those remain flat, single-tone surfaces with zero gradient. The vignette must stay subtle enough that it reads as ambient lighting, not as a visible gradient someone would consciously notice.
 3. **No shadows.** Depth comes from surface tone and hairline borders alone.
 4. **One typeface for UI, one for numbers.** No third font.
 5. **Color is signal.** If a color does not carry meaning, it should not be there.
@@ -26,16 +26,19 @@ These are non-negotiable and define the system:
 
 | Name | Value | Token | Role |
 |------|-------|-------|------|
-| Canvas | `#1d1a18` | `--surface-canvas` | Page background. The warm brown-black everything sits on. |
-| Elevated | `#262321` | `--surface-elevated` | Nested cards, input wells, inset panels. One step up from canvas. |
-| Card | `#3d3a39` | `--surface-card` | Primary card and panel surface. |
-| Raised | `#4d4947` | `--surface-raised` | Hover states on interactive surfaces, active tab backgrounds. |
+| Canvas | `#0f0d0b` | `--surface-canvas` | Page background, vignette center `#1a1613` / edges `#0a0908`. |
+| Sidebar | `#161310` | `--surface-sidebar` | Sidebar background, one step above canvas. |
+| Card | `#211e1b` | `--surface-card` | Primary card and panel surface. |
+| Elevated | `#2c2825` | `--surface-elevated` | Hover states, nested cards, input wells. |
+
+> Earlier draft values (`#1d1a18` / `#262321` / `#3d3a39` / `#4d4947`) read as flat and monotone once rendered, insufficient tonal separation between levels. The above values, arrived at through iteration on the live `/style-preview` page, hold real contrast between canvas, sidebar, and card while staying inside the warm-brown family.
 
 ### Lines
 
 | Name | Value | Token | Role |
 |------|-------|-------|------|
-| Hairline | `#4d4947` | `--line-hairline` | Default 1px border on every card, divider, table cell, chart gridline. |
+| Hairline | `#4d4947` | `--line-hairline` | Default 1px border on card sides/bottom, dividers, table cells. |
+| Hairline Top | `#665f58` | `--line-hairline-top` | Card top edge only, slightly lighter than the other three sides to suggest light catching a physical edge. No shadow used for this effect. |
 | Hairline Emphasis | `#5f5a57` | `--line-emphasis` | Focused inputs, active card edges, hovered rows. |
 | Hairline Faint | `#2e2b29` | `--line-faint` | Chart gridlines, very low-emphasis separators inside dense data. |
 
@@ -62,6 +65,24 @@ These are non-negotiable and define the system:
 **Rule:** never more than one signal colour per component. A card is positive, negative, or caution, never a mix.
 
 ---
+
+## Surface Texture
+
+The canvas is not a flat color fill. Two layers of atmosphere sit underneath the UI:
+
+1. **Film grain.** A repeating SVG `feTurbulence` noise texture applied to the page canvas at ~6-8% opacity, and to card surfaces (and the sidebar) at a lower ~4% opacity so every surface reads as cut from the same material, just a different tone. Implemented as a `::before` pseudo-element per surface (`z-index: -1` relative to that surface's own content, sitting above its background color) rather than a single global layer, since opaque components would otherwise fully occlude a shared canvas-level grain layer. This is texture, not decoration, it is what makes matte dark surfaces feel physical instead of like a CSS `background-color`.
+
+2. **Canvas vignette.** See the no-gradients exception above. Final locked values, arrived at through iteration on `/style-preview`:
+   - Center color: `#1a1613`
+   - Edge color: `#050403`
+   - Shape: `ellipse 1600px 1400px`, positioned slightly above and right of page-center (~56%/38%)
+   - Edge color reached at 65% of the ellipse's extent (not 85%, not 30%, both were tried and rejected, 85% made it imperceptible in a full-page view, 30% made it read as a visible, distracting glow)
+   - Layered as its own fixed, full-viewport `z-index: 0` overlay, beneath the grain layer, beneath all components. Opaque component backgrounds (sidebar, buttons) sit fully above it and are correctly unaffected.
+   - The sidebar is never let to bleed the vignette through, it stays fully opaque at `--surface-sidebar`. Only card and content-area surfaces get a 10% transparency allowance (`rgba(var(--surface-card-rgb), 0.9)`) so the vignette is visible through them without touching the sidebar's flat, solid read.
+
+The calibration lesson from this process: judge the vignette against two views together, a full-page screenshot (to confirm it doesn't disappear at normal viewing scale) and a tight crop centered on its brightest point next to an unaffected surface like the sidebar (to confirm it isn't accidentally leaking or, conversely, isn't too strong up close). Either view alone is misleading, subtle effects can look absent in a full page and alarming in a crop.
+
+Both layers are additive and intentionally restrained, someone using the product should feel the depth without being able to point at "the gradient" or "the noise."
 
 ## Tokens — Typography
 

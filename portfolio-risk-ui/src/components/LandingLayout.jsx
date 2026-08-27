@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom'
 
-export const LANDING_BG = 'var(--text-on-accent)'
+export const LANDING_BG = 'var(--surface-canvas)'
 
 export function LandingPage({ children }) {
   return (
-    <div style={{
+    <div className="grain-canvas" style={{
       height: '100vh', overflowY: 'auto',
       background: LANDING_BG, color: 'var(--text-primary)',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      display: 'flex', flexDirection: 'column',
+      fontFamily: 'var(--font-primary)',
+      display: 'flex', flexDirection: 'column', position: 'relative',
     }}>
       {children}
     </div>
@@ -23,7 +23,7 @@ export function LandingHeader({ crossLinkLabel, crossLinkTo }) {
       flexShrink: 0,
     }}>
       <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 'var(--radius-7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 30, height: 30, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
             <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--text-on-accent)"/>
           </svg>
@@ -58,8 +58,9 @@ export function LandingHero({ headline, subhead, ctaLabel = 'Launch app', ctaTo 
   return (
     <div style={{ textAlign: 'center', padding: '72px 24px 60px', maxWidth: 780, margin: '0 auto', flexShrink: 0 }}>
       <h1 style={{
-        fontSize: 42, fontWeight: 800, color: 'var(--text-primary)',
-        lineHeight: 1.18, letterSpacing: '-0.02em', margin: '0 0 20px',
+        fontSize: 'var(--text-display)', fontWeight: 'var(--weight-semibold)', color: 'var(--text-primary)',
+        fontFamily: 'var(--font-primary)',
+        lineHeight: 'var(--leading-display)', letterSpacing: 'var(--tracking-display)', margin: '0 0 20px',
       }}>
         {headline}
       </h1>
@@ -104,8 +105,8 @@ export function LandingHowItWorks({ steps }) {
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', padding: '0 24px 80px', width: '100%' }}>
       <div style={{
-        fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
-        color: 'var(--text-muted)', textAlign: 'center', marginBottom: 32,
+        fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)',
+        fontFamily: 'var(--font-primary)', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 32,
       }}>
         How it works
       </div>
@@ -113,9 +114,9 @@ export function LandingHowItWorks({ steps }) {
         {steps.map((label, i) => (
           <div key={label} style={{ textAlign: 'center' }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 'var(--radius-full)',
-              background: 'rgba(var(--signal-positive-rgb),0.12)', border: '1px solid var(--accent)',
-              color: 'var(--accent)', fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-mono)',
+              width: 34, height: 34,
+              background: 'rgba(var(--signal-positive-rgb),0.12)', border: '1px solid var(--signal-positive)',
+              color: 'var(--signal-positive)', fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-mono)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
             }}>
               {i + 1}
@@ -134,7 +135,7 @@ export function LandingFooter() {
   return (
     <footer style={{
       textAlign: 'center', padding: '24px 24px', fontSize: 11, color: 'var(--text-muted)',
-      borderTop: '1px solid var(--border)', marginTop: 'auto', flexShrink: 0,
+      borderTop: 'var(--border-default)', marginTop: 'auto', flexShrink: 0,
     }}>
       <div style={{ marginBottom: 8 }}>
         Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
@@ -154,7 +155,7 @@ export function TrustPage({ title, updated, children }) {
     <LandingPage>
       <LandingHeader crossLinkLabel="← Back to Varense" crossLinkTo="/" />
       <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 24px 80px', width: '100%', flex: 1 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: '0 0 6px' }}>
+        <h1 style={{ fontSize: 'var(--text-heading-lg)', fontWeight: 'var(--weight-semibold)', fontFamily: 'var(--font-primary)', color: 'var(--text-primary)', letterSpacing: 'var(--tracking-heading-lg)', margin: '0 0 6px' }}>
           {title}
         </h1>
         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 36 }}>
@@ -170,7 +171,7 @@ export function TrustPage({ title, updated, children }) {
 export function TrustSection({ heading, children }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)', letterSpacing: '-0.01em', margin: '0 0 10px' }}>
+      <h2 style={{ fontSize: 15, fontWeight: 'var(--weight-semibold)', fontFamily: 'var(--font-primary)', color: 'var(--signal-positive)', letterSpacing: '-0.01em', margin: '0 0 10px' }}>
         {heading}
       </h2>
       <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75 }}>

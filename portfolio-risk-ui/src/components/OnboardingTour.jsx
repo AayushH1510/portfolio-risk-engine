@@ -51,9 +51,8 @@ export default function OnboardingTour() {
     <div style={{
       position: 'fixed', top, left, transform: 'translateY(-50%)',
       zIndex: 999, width: 236,
-      background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-10)', padding: '14px 16px',
-      boxShadow: '0 12px 32px rgba(var(--black-rgb),0.45)',
+      background: 'var(--surface-card)', border: 'var(--border-default)',
+      padding: '14px 16px',
     }}>
       {/* Arrow pointing back at the anchor */}
       <div style={{
@@ -61,18 +60,18 @@ export default function OnboardingTour() {
         width: 0, height: 0,
         borderTop: '7px solid transparent',
         borderBottom: '7px solid transparent',
-        borderRight: '7px solid var(--card)',
+        borderRight: '7px solid var(--surface-card)',
       }} />
       <div style={{
         position: 'absolute', left: -8, top: '50%', transform: 'translateY(-50%)',
         width: 0, height: 0,
         borderTop: '8px solid transparent',
         borderBottom: '8px solid transparent',
-        borderRight: '8px solid var(--border)',
+        borderRight: '8px solid var(--line-hairline)',
         zIndex: -1,
       }} />
 
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent)', marginBottom: 6 }}>
+      <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)', textTransform: 'uppercase', color: 'var(--signal-positive)', fontFamily: 'var(--font-primary)', marginBottom: 6 }}>
         STEP {step + 1} OF {STEPS.length}
       </div>
       <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5, marginBottom: 14 }}>

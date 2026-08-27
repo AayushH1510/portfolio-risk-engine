@@ -57,7 +57,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
       {!hasRun && (
         <div className="card" style={{ padding: '16px', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
               Configure Portfolio B
             </div>
             {portfolios.length > 0 && (
@@ -65,9 +65,9 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
                 <button
                   onClick={() => setShowSavedPicker(v => !v)}
                   style={{
-                    fontSize: 11, fontWeight: 600, padding: '5px 12px', borderRadius: 'var(--radius-6)',
-                    border: '1px solid rgba(var(--chart-blue-rgb),0.4)', background: 'rgba(var(--chart-blue-rgb),0.08)',
-                    color: 'var(--chart-blue)', cursor: 'pointer',
+                    fontSize: 11, fontWeight: 600, padding: '5px 12px',
+                    border: '1px solid rgba(var(--signal-caution-rgb),0.4)', background: 'rgba(var(--signal-caution-rgb),0.08)',
+                    color: 'var(--signal-caution)', cursor: 'pointer',
                   }}
                 >
                   Load saved portfolio ▾
@@ -75,8 +75,8 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
                 {showSavedPicker && (
                   <div style={{
                     position: 'absolute', top: '100%', right: 0, marginTop: 4,
-                    background: 'var(--card)', border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-sm)', zIndex: 100, minWidth: 220,
+                    background: 'var(--surface-elevated)', border: 'var(--border-default)',
+                    zIndex: 100, minWidth: 220,
                     boxShadow: '0 8px 24px rgba(var(--black-rgb),0.4)',
                     overflow: 'hidden',
                   }}>
@@ -99,23 +99,23 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
                           style={{
                             padding: '10px 14px',
                             cursor: isA ? 'not-allowed' : 'pointer',
-                            borderBottom: '1px solid rgba(var(--white-rgb),0.04)',
+                            borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)',
                             transition: 'background 0.1s',
                             opacity: isA ? 0.5 : 1,
                             background: isA ? 'rgba(var(--signal-positive-rgb),0.05)' : 'transparent',
                           }}
-                          onMouseEnter={e => { if (!isA) e.currentTarget.style.background = 'rgba(var(--chart-blue-rgb),0.08)' }}
+                          onMouseEnter={e => { if (!isA) e.currentTarget.style.background = 'rgba(var(--signal-caution-rgb),0.08)' }}
                           onMouseLeave={e => { if (!isA) e.currentTarget.style.background = 'transparent' }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: isA ? 'var(--accent)' : 'var(--text-primary)' }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: isA ? 'var(--signal-positive)' : 'var(--text-primary)' }}>
                               {p.name}
                             </div>
                             {isA && (
                               <div style={{
                                 fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                                borderRadius: 'var(--radius-3)', background: 'rgba(var(--signal-positive-rgb),0.15)',
-                                color: 'var(--accent)', letterSpacing: '0.05em',
+                                background: 'rgba(var(--signal-positive-rgb),0.15)',
+                                color: 'var(--signal-positive)', letterSpacing: '0.05em',
                               }}>
                                 ✓ Portfolio A
                               </div>
@@ -154,10 +154,10 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
                 {PERIODS.map(p => (
                   <button key={p} onClick={() => setPeriod(p)} style={{
-                    padding: '4px 0', borderRadius: 'var(--radius-4)', fontSize: 10, fontWeight: 600,
-                    background: period === p ? 'var(--accent)' : 'var(--card-2)',
-                    color: period === p ? 'var(--card)' : 'var(--text-muted)',
-                    border: '1px solid var(--border)', cursor: 'pointer',
+                    padding: '4px 0', fontSize: 10, fontWeight: 600,
+                    background: period === p ? 'var(--signal-positive)' : 'var(--surface-elevated)',
+                    color: period === p ? 'var(--surface-elevated)' : 'var(--text-muted)',
+                    border: 'var(--border-default)', cursor: 'pointer',
                   }}>{p}</button>
                 ))}
               </div>
@@ -191,7 +191,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
                 <div key={ticker}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{ticker}</span>
-                    <span style={{ fontSize: 11, color: 'var(--chart-blue)', fontWeight: 600 }}>{weightPct[i]}%</span>
+                    <span style={{ fontSize: 11, color: 'var(--signal-caution)', fontWeight: 600 }}>{weightPct[i]}%</span>
                   </div>
                   <input
                     type="range" min={0} max={100} value={weightPct[i]}
@@ -204,7 +204,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
           </div>
 
           {error && (
-            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--negative)', padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)', borderRadius: 'var(--radius-6)' }}>
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--signal-negative)', padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)' }}>
               {error}
             </div>
           )}
@@ -217,12 +217,12 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
           <button
             onClick={() => compB.setTickers(tickers)}
             style={{
-              fontSize: 11, fontWeight: 600, padding: '5px 14px', borderRadius: 'var(--radius-6)',
-              border: '1px solid var(--border)', background: 'transparent',
+              fontSize: 11, fontWeight: 600, padding: '5px 14px',
+              border: 'var(--border-default)', background: 'transparent',
               color: 'var(--text-muted)', cursor: 'pointer',
             }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--chart-blue)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--signal-caution)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line-hairline)'}
           >
             ← Reconfigure Portfolio B
           </button>

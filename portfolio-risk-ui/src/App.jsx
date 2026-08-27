@@ -100,7 +100,10 @@ export default function App() {
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'PR'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="grain-canvas" style={{ height: '100vh', overflow: 'hidden', background: 'var(--surface-canvas)', position: 'relative' }}>
+      <div className="vignette-layer" />
+
+      <div style={{ display: 'flex', height: '100%', position: 'relative', zIndex: 1 }}>
 
       {showAuth && (
         <AuthModal
@@ -138,8 +141,8 @@ export default function App() {
         <header style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 12px', height: 48,
-          background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(8px)',
-          borderBottom: '1px solid var(--border-light)',
+          background: 'transparent',
+          borderBottom: 'var(--border-default)',
           flexShrink: 0, minWidth: 0, overflow: 'hidden',
         }}>
           <nav style={{ display: 'flex', gap: 0, height: '100%', alignItems: 'stretch', overflowX: 'auto', flexShrink: 1, minWidth: 0 }}>
@@ -151,13 +154,14 @@ export default function App() {
                   key={tab.id}
                   onClick={() => unlocked && setActiveTab(tab.id)}
                   style={{
-                    padding: '0 10px', fontSize: 11, fontWeight: 600,
-                    letterSpacing: '0.03em', textTransform: 'uppercase',
+                    padding: '0 10px', fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)',
+                    letterSpacing: 'var(--tracking-tab)', textTransform: 'uppercase',
+                    fontFamily: 'var(--font-primary)',
                     background: 'transparent', border: 'none',
-                    borderBottom: active ? '2px solid var(--accent-dark)' : '2px solid transparent',
-                    color: active ? 'var(--accent-dark)' : !unlocked ? '#aab8aa' : '#3a4a3a',
+                    borderBottom: active ? '2px solid var(--signal-positive)' : '2px solid transparent',
+                    color: active ? 'var(--text-primary)' : !unlocked ? 'var(--text-faint)' : 'var(--text-muted)',
                     cursor: !unlocked ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                    transition: 'all var(--duration-fast) var(--ease-standard)', whiteSpace: 'nowrap', flexShrink: 0,
                   }}
                 >
                   {tab.label}
@@ -176,15 +180,15 @@ export default function App() {
 
             {authLoading ? null : user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: 11, color: '#3a4a3a', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-secondary)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user.email?.split('@')[0]}
                 </div>
                 <button
                   onClick={signOut}
                   style={{
-                    fontSize: 10, fontWeight: 600, padding: '4px 10px',
-                    borderRadius: 6, border: '1px solid var(--border-light)',
-                    background: 'transparent', color: '#5a7a5a', cursor: 'pointer',
+                    fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', padding: '4px 10px',
+                    border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+                    background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer',
                   }}
                 >
                   Sign out
@@ -194,25 +198,27 @@ export default function App() {
               <button
                 onClick={() => setShowAuth(true)}
                 style={{
-                  fontSize: 11, fontWeight: 700, padding: '6px 14px',
-                  borderRadius: 6, border: '1px solid var(--accent-dark)',
-                  background: 'transparent', color: 'var(--accent-dark)',
-                  cursor: 'pointer', letterSpacing: '0.04em', transition: 'all 0.15s',
+                  fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '10px 20px',
+                  border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+                  background: 'transparent', color: 'var(--text-primary)',
+                  cursor: 'pointer', letterSpacing: '0.02em', textTransform: 'uppercase',
+                  transition: 'all var(--duration-fast) var(--ease-standard)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-dark)'; e.currentTarget.style.color = '#fff' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--accent-dark)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-elevated)'; e.currentTarget.style.borderColor = 'var(--line-emphasis)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--line-hairline)' }}
               >
                 Sign in
               </button>
             )}
 
             <div style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: user ? 'var(--accent-dark)' : 'rgba(255,255,255,0.4)',
-              border: '1px solid var(--border-light)',
+              width: 32, height: 32,
+              background: user ? 'var(--signal-positive)' : 'var(--surface-elevated)',
+              border: 'var(--border-default)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700,
-              color: user ? '#fff' : '#5a7a5a',
+              fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-semibold)',
+              fontFamily: 'var(--font-mono)',
+              color: user ? 'var(--surface-canvas)' : 'var(--text-muted)',
             }}>
               {initials}
             </div>
@@ -223,9 +229,9 @@ export default function App() {
 
           {error && (
             <div style={{
-              background: 'rgba(224,92,92,0.12)', border: '1px solid var(--negative)',
-              borderRadius: 8, padding: '10px 14px', marginBottom: 12,
-              fontSize: 12, color: 'var(--negative)',
+              background: 'var(--signal-negative-wash)', border: '1px solid var(--signal-negative)',
+              padding: '10px 14px', marginBottom: 12,
+              fontSize: 'var(--text-body-sm)', color: 'var(--signal-negative)', fontFamily: 'var(--font-primary)',
             }}>
               {error}
             </div>
@@ -234,29 +240,29 @@ export default function App() {
           {loading && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 16 }}>
               <svg className="spin" width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20"/>
+                <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20"/>
               </svg>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Fetching data and running analysis...</div>
+              <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-muted)' }}>Fetching data and running analysis...</div>
             </div>
           )}
 
           {!loading && !hasRun && activeTab !== 'learn' && activeTab !== 'valuation' && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 16, textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, background: 'rgba(82,183,136,0.12)', border: '1px solid var(--accent)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 56, height: 56, background: 'var(--signal-positive-wash)', border: '1px solid var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 17L9 11L13 15L21 7" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 17L9 11L13 15L21 7" stroke="var(--signal-positive)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 6 }}>Varense</div>
-                <div style={{ fontSize: 13, color: '#5a7a5a', maxWidth: 380, lineHeight: 1.6 }}>
+                <div style={{ fontFamily: 'var(--font-primary)', fontSize: 'var(--text-heading-sm)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-heading-sm)', color: 'var(--text-primary)', marginBottom: 6 }}>Varense</div>
+                <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-secondary)', maxWidth: 380, lineHeight: 1.6 }}>
                   Your portfolio's already loaded with three tech stocks. Hit Run Analysis to see what your risk actually looks like.
-                  {!user && <span> <span style={{ color: 'var(--accent-dark)', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowAuth(true)}>Sign in</span> to save your portfolios.</span>}
+                  {!user && <span> <span style={{ color: 'var(--signal-positive)', cursor: 'pointer', fontWeight: 'var(--weight-semibold)' }} onClick={() => setShowAuth(true)}>Sign in</span> to save your portfolios.</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                 {['VaR & CVaR', 'Sharpe & Sortino', 'Monte Carlo', 'Efficient Frontier', 'Beta & Alpha'].map(f => (
-                  <div key={f} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.3)', borderRadius: 4, color: 'var(--accent-dark)' }}>
+                  <div key={f} style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)', textTransform: 'uppercase', padding: '4px 10px', background: 'var(--signal-positive-wash)', border: '1px solid var(--signal-positive)', color: 'var(--signal-positive)', fontFamily: 'var(--font-primary)' }}>
                     {f}
                   </div>
                 ))}
@@ -285,15 +291,16 @@ export default function App() {
 
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '6px 20px', fontSize: 10, color: '#8aaa8a',
-          borderTop: '1px solid var(--border-light)', background: 'rgba(255,255,255,0.3)', flexShrink: 0,
+          padding: '6px 20px', fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
+          borderTop: 'var(--border-default)', background: 'transparent', flexShrink: 0,
         }}>
           <span>Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
           <span style={{ display: 'flex', gap: 12, flexShrink: 0, marginLeft: 12 }}>
-            <Link to="/privacy" style={{ color: '#8aaa8a', textDecoration: 'none' }}>Privacy</Link>
-            <Link to="/terms" style={{ color: '#8aaa8a', textDecoration: 'none' }}>Terms</Link>
+            <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
+            <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>
           </span>
         </div>
+      </div>
       </div>
     </div>
   )

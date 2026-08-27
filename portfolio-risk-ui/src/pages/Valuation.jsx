@@ -53,6 +53,7 @@ const fmtCap  = v => {
 }
 
 const SEV_COLOR = { high: 'var(--signal-negative)', medium: 'var(--signal-caution)', low: 'var(--signal-positive-soft)' }
+const SEV_BG    = { high: 'rgba(var(--signal-negative-rgb),0.13)', medium: 'rgba(var(--signal-caution-rgb),0.13)', low: 'rgba(var(--signal-positive-soft-rgb),0.13)' }
 const CAT_LABEL = { accounting: 'Accounting', concentration: 'Leverage / Ownership', competitive: 'Competitive' }
 
 function ScoreBar({ value, max, color }) {
@@ -60,8 +61,8 @@ function ScoreBar({ value, max, color }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 4, background: 'rgba(var(--white-rgb),0.07)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 'var(--radius-xs)' }} />
+      <div style={{ flex: 1, height: 4, background: 'rgba(var(--text-primary-rgb),0.07)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color }} />
       </div>
       <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', minWidth: 40, textAlign: 'right' }}>
         {fmtPct(value)}
@@ -90,14 +91,14 @@ export default function Valuation({ tickers }) {
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', gap:12, color:'var(--text-muted)' }}>
       <svg className="spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20"/>
+        <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20"/>
       </svg>
       Loading fundamental data...
     </div>
   )
 
   if (error) return (
-    <div style={{ color:'var(--negative)', fontSize:13, padding:16 }}>{error}</div>
+    <div style={{ color:'var(--signal-negative)', fontSize:13, padding:16 }}>{error}</div>
   )
 
   if (!data) return (
@@ -119,7 +120,7 @@ export default function Valuation({ tickers }) {
 
       {/* Header */}
       <div>
-        <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:'var(--text-secondary)', marginBottom:2 }}>
+        <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:2 }}>
           Relative Valuation
         </div>
         <div style={{ fontSize:11, color:'var(--text-muted)' }}>
@@ -131,7 +132,7 @@ export default function Valuation({ tickers }) {
       <div className="card" style={{ padding:0, overflow:'hidden', flexShrink:0 }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
           <thead>
-            <tr style={{ borderBottom:'1px solid rgba(var(--white-rgb),0.06)' }}>
+            <tr style={{ borderBottom:'1px solid rgba(var(--text-primary-rgb),0.06)' }}>
               {COLUMNS.map(col => (
                 <ColHeader key={col.label} label={col.label} tip={col.tip} />
               ))}
@@ -148,21 +149,21 @@ export default function Valuation({ tickers }) {
                   key={stock.ticker}
                   onClick={() => !hasError && setSelected(stock.ticker)}
                   style={{
-                    borderBottom:'1px solid rgba(var(--white-rgb),0.04)',
+                    borderBottom:'1px solid rgba(var(--text-primary-rgb),0.04)',
                     background: isSelected ? 'rgba(var(--signal-positive-rgb),0.07)' : 'transparent',
                     cursor: hasError ? 'default' : 'pointer',
                     transition:'background 0.12s',
                   }}
-                  onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(var(--white-rgb),0.02)')}
+                  onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(var(--text-primary-rgb),0.02)')}
                   onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'transparent')}
                 >
                   {/* Rank */}
                   <td style={{ padding:'12px 14px' }}>
                     <div style={{
-                      width:22, height:22, borderRadius:'var(--radius-full)', fontSize:11, fontWeight:700,
+                      width:22, height:22, fontSize:11, fontWeight:700,
                       display:'flex', alignItems:'center', justifyContent:'center',
-                      background: i===0 ? 'var(--accent)' : i===1 ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--white-rgb),0.07)',
-                      color: i===0 ? 'var(--card)' : 'var(--text-primary)',
+                      background: i===0 ? 'var(--signal-positive)' : i===1 ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--text-primary-rgb),0.07)',
+                      color: i===0 ? 'var(--surface-canvas)' : 'var(--text-primary)',
                     }}>{i+1}</div>
                   </td>
 
@@ -173,7 +174,7 @@ export default function Valuation({ tickers }) {
                       {flagCount > 0 && (
                         <span style={{
                           marginLeft:6, fontSize:9, fontWeight:700, padding:'1px 5px',
-                          borderRadius:'var(--radius-3)', background:'rgba(var(--signal-negative-rgb),0.2)', color:'var(--signal-negative)',
+                          background:'rgba(var(--signal-negative-rgb),0.2)', color:'var(--signal-negative)',
                         }}>{flagCount} flag{flagCount>1?'s':''}</span>
                       )}
                     </div>
@@ -183,18 +184,18 @@ export default function Valuation({ tickers }) {
                   </td>
 
                   {hasError ? (
-                    <td colSpan={6} style={{ padding:'12px 14px', color:'var(--negative)', fontSize:11 }}>
+                    <td colSpan={6} style={{ padding:'12px 14px', color:'var(--signal-negative)', fontSize:11 }}>
                       {stock.error || 'Could not load data'}
                     </td>
                   ) : (
                     <>
                       <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-primary)' }}>{fmtX(stock.ps_ratio)}</td>
                       <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-primary)' }}>{fmtX(stock.ev_ebitda)}</td>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color: stock.gross_margin > 0.5 ? 'var(--positive)' : 'var(--text-primary)' }}>
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color: stock.gross_margin > 0.5 ? 'var(--signal-positive)' : 'var(--text-primary)' }}>
                         {fmtPct(stock.gross_margin)}
                       </td>
                       <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)',
-                        color: stock.rev_growth > 0.15 ? 'var(--positive)' : stock.rev_growth < 0 ? 'var(--negative)' : 'var(--text-primary)' }}>
+                        color: stock.rev_growth > 0.15 ? 'var(--signal-positive)' : stock.rev_growth < 0 ? 'var(--signal-negative)' : 'var(--text-primary)' }}>
                         {stock.rev_growth != null ? `${stock.rev_growth > 0 ? '+' : ''}${(stock.rev_growth*100).toFixed(1)}%` : 'N/A'}
                       </td>
                       <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-muted)' }}>{fmtCap(stock.market_cap)}</td>
@@ -202,7 +203,7 @@ export default function Valuation({ tickers }) {
                         {stock.vg_score != null ? (
                           <span style={{
                             fontFamily:'var(--font-mono)', fontWeight:700, fontSize:13,
-                            color: stock.vg_score < 0.15 ? 'var(--positive)' : stock.vg_score < 0.4 ? 'var(--warning)' : 'var(--negative)',
+                            color: stock.vg_score < 0.15 ? 'var(--signal-positive)' : stock.vg_score < 0.4 ? 'var(--signal-caution)' : 'var(--signal-negative)',
                           }}>
                             {stock.vg_score.toFixed(2)}
                             <span style={{ fontSize:9, marginLeft:4, color:'var(--text-muted)', fontWeight:400 }}>
@@ -220,7 +221,7 @@ export default function Valuation({ tickers }) {
         </table>
 
         {/* Score explanation */}
-        <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(var(--white-rgb),0.04)', fontSize:10, color:'var(--text-muted)', lineHeight:1.6 }}>
+        <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(var(--text-primary-rgb),0.04)', fontSize:10, color:'var(--text-muted)', lineHeight:1.6 }}>
           <strong style={{ color:'var(--text-secondary)' }}>Value/Growth Score</strong> = P/S ÷ Revenue Growth %.
           Lower = more growth per dollar of valuation. Click a row to see the full risk assessment.
         </div>
@@ -232,7 +233,7 @@ export default function Valuation({ tickers }) {
 
           {/* Metrics breakdown */}
           <div className="card" style={{ padding:'14px 16px' }}>
-            <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:12 }}>
+            <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:12 }}>
               {selectedStock.ticker} — Key metrics
             </div>
             {[
@@ -247,7 +248,7 @@ export default function Valuation({ tickers }) {
               { label:'Beta',           val: selectedStock.beta != null ? selectedStock.beta.toFixed(2) : 'N/A', note:'Market sensitivity' },
               { label:'Market Cap',     val: fmtCap(selectedStock.market_cap),   note:'Total company value' },
             ].map(m => (
-              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid rgba(var(--white-rgb),0.03)' }}>
+              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid rgba(var(--text-primary-rgb),0.03)' }}>
                 <div>
                   <div style={{ fontSize:11, color:'var(--text-secondary)' }}>{m.label}</div>
                   <div style={{ fontSize:10, color:'var(--text-muted)' }}>{m.note}</div>
@@ -262,23 +263,23 @@ export default function Valuation({ tickers }) {
 
             {/* Risk flags */}
             <div className="card" style={{ padding:'14px 16px', flex: selectedStock.flags?.length > 0 ? 1 : 0 }}>
-              <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:10 }}>
+              <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:10 }}>
                 Risk flags ({selectedStock.flags?.length || 0})
               </div>
               {selectedStock.flags?.length === 0 && (
-                <div style={{ fontSize:12, color:'var(--positive)' }}>No significant risk flags detected.</div>
+                <div style={{ fontSize:12, color:'var(--signal-positive)' }}>No significant risk flags detected.</div>
               )}
               {selectedStock.flags?.map((flag, i) => (
                 <div key={i} style={{
-                  marginBottom:8, padding:'8px 10px', borderRadius:'var(--radius-6)',
-                  background:'rgba(var(--white-rgb),0.03)',
+                  marginBottom:8, padding:'8px 10px',
+                  background:'rgba(var(--text-primary-rgb),0.03)',
                   borderLeft:`3px solid ${SEV_COLOR[flag.severity] || 'var(--grey-generic)'}`,
                 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                     <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)' }}>{flag.title}</span>
                     <span style={{
-                      fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:'var(--radius-3)',
-                      background: `${SEV_COLOR[flag.severity]}22`,
+                      fontSize:9, fontWeight:700, padding:'1px 6px',
+                      background: SEV_BG[flag.severity] || 'var(--surface-elevated)',
                       color: SEV_COLOR[flag.severity],
                       textTransform:'uppercase', letterSpacing:'0.05em',
                     }}>{flag.severity}</span>
@@ -292,7 +293,7 @@ export default function Valuation({ tickers }) {
             {/* Positives */}
             {selectedStock.positives?.length > 0 && (
               <div className="card" style={{ padding:'14px 16px' }}>
-                <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--text-muted)', marginBottom:10 }}>
+                <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:10 }}>
                   Strengths
                 </div>
                 {selectedStock.positives.map((p, i) => (
@@ -300,7 +301,7 @@ export default function Valuation({ tickers }) {
                     display:'flex', gap:8, alignItems:'flex-start',
                     fontSize:11, color:'var(--text-secondary)', marginBottom:7, lineHeight:1.5,
                   }}>
-                    <div style={{ width:6, height:6, borderRadius:'var(--radius-full)', background:'var(--accent)', flexShrink:0, marginTop:4 }}/>
+                    <div style={{ width:6, height:6, background:'var(--signal-positive)', flexShrink:0, marginTop:4 }}/>
                     {p}
                   </div>
                 ))}
@@ -314,7 +315,7 @@ export default function Valuation({ tickers }) {
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Sector</div>
                   <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '—'}</div>
                 </div>
-                <div style={{ borderLeft:'1px solid rgba(var(--white-rgb),0.06)', paddingLeft:12 }}>
+                <div style={{ borderLeft:'1px solid rgba(var(--text-primary-rgb),0.06)', paddingLeft:12 }}>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Industry</div>
                   <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.industry || '—'}</div>
                 </div>

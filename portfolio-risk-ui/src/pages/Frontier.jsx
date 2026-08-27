@@ -75,7 +75,7 @@ function WeightCard({ title, weights, color, highlightBorderColor, highlight }) 
   if (!weights?.length) return null
   return (
     <div className="card" style={{ padding: '10px 14px', border: highlight ? `1px solid ${highlightBorderColor}` : undefined, overflowY: 'auto' }}>
-      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10, color: highlight ? color : 'var(--text-muted)' }}>
+      <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', marginBottom: 10, color: highlight ? color : 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
         {title}
       </div>
       {weights.map(({ ticker, w }) => (
@@ -84,8 +84,8 @@ function WeightCard({ title, weights, color, highlightBorderColor, highlight }) 
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{ticker}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color, fontFamily: 'var(--font-mono)' }}>{Math.round((w ?? 0) * 100)}%</span>
           </div>
-          <div style={{ height: 2, background: 'rgba(var(--white-rgb),0.06)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${(w ?? 0) * 100}%`, background: color, borderRadius: 'var(--radius-xs)', opacity: 0.8 }}/>
+          <div style={{ height: 2, background: 'rgba(var(--text-primary-rgb),0.06)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${(w ?? 0) * 100}%`, background: color, opacity: 0.8 }}/>
           </div>
         </div>
       ))}
@@ -112,8 +112,8 @@ export default function Frontier({ data, tickers, weights }) {
   const yourSharpe = data.sharpe_ratio          ?? 0
   const gap        = (max_sharpe_sharpe ?? 0) - yourSharpe
   const insight    = getInsight(gap, yourSharpe, max_sharpe_sharpe, max_sharpe_weights, tickers, weights)
-  const accentColor = insight.tone === 'good' ? 'var(--signal-positive)' : 'var(--chart-highlight-alt)'
-  const accentBorderColor = insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.15)' : 'rgba(var(--chart-highlight-alt-rgb),0.15)'
+  const accentColor = insight.tone === 'good' ? 'var(--signal-positive)' : 'var(--signal-caution)'
+  const accentBorderColor = insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.15)' : 'rgba(var(--signal-caution-rgb),0.15)'
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -145,19 +145,19 @@ export default function Frontier({ data, tickers, weights }) {
     const toX = v => PAD.left + (v - minV) / (maxV - minV) * PW
     const toY = v => PAD.top  + (1 - (v - minR) / (maxR - minR)) * PH
 
-    ctx.fillStyle = cssVar('var(--text-on-accent)'); ctx.fillRect(0, 0, W, H)
+    ctx.fillStyle = cssVar('var(--surface-card)'); ctx.fillRect(0, 0, W, H)
 
     // Grid
-    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.04)'); ctx.lineWidth = 1
+    ctx.strokeStyle = cssVar('rgba(var(--text-primary-rgb),0.04)'); ctx.lineWidth = 1
     for (let i = 0; i <= 4; i++) { const y = PAD.top + (i/4)*PH; ctx.beginPath(); ctx.moveTo(PAD.left,y); ctx.lineTo(PAD.left+PW,y); ctx.stroke() }
     for (let i = 0; i <= 5; i++) { const x = PAD.left + (i/5)*PW; ctx.beginPath(); ctx.moveTo(x,PAD.top); ctx.lineTo(x,PAD.top+PH); ctx.stroke() }
 
     // Axis labels
-    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.5)'); ctx.font = '9px monospace'; ctx.textAlign = 'center'
+    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.5)'); ctx.font = `9px ${cssVar('var(--font-mono)')}`; ctx.textAlign = 'center'
     for (let i = 0; i <= 5; i++) { const v = minV+(i/5)*(maxV-minV); ctx.fillText(`${(v*100).toFixed(1)}%`, PAD.left+(i/5)*PW, H-12) }
     ctx.textAlign = 'right'
     for (let i = 0; i <= 4; i++) { const v = minR+(1-i/4)*(maxR-minR); ctx.fillText(`${(v*100).toFixed(0)}%`, PAD.left-8, PAD.top+(i/4)*PH+4) }
-    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.3)'); ctx.font = '9px monospace'; ctx.textAlign = 'center'
+    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.3)'); ctx.font = `9px ${cssVar('var(--font-mono)')}`; ctx.textAlign = 'center'
     ctx.fillText('Risk (volatility) →', PAD.left+PW/2, H-2)
     ctx.save(); ctx.translate(12, PAD.top+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('Return →', 0, 0); ctx.restore()
 
@@ -194,7 +194,7 @@ export default function Frontier({ data, tickers, weights }) {
     })
 
     if (smoothCurve.length > 2) {
-      ctx.beginPath(); ctx.setLineDash([4,5]); ctx.lineWidth = 1; ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.1)')
+      ctx.beginPath(); ctx.setLineDash([4,5]); ctx.lineWidth = 1; ctx.strokeStyle = cssVar('rgba(var(--text-primary-rgb),0.1)')
       ctx.moveTo(toX(smoothCurve[0].v), toY(smoothCurve[0].r))
       for (let i = 1; i < smoothCurve.length; i++) {
         const prev = smoothCurve[i-1]
@@ -220,15 +220,15 @@ export default function Frontier({ data, tickers, weights }) {
     }
     ctx.beginPath(); ctx.arc(ypX, ypY, 8, 0, Math.PI*2); ctx.fillStyle = cssVar('var(--signal-positive)'); ctx.fill()
     ctx.strokeStyle = cssVar('var(--canvas-gradient-4)'); ctx.lineWidth = 1.5; ctx.stroke()
-    ctx.beginPath(); ctx.arc(ypX, ypY, 3, 0, Math.PI*2); ctx.fillStyle = cssVar('var(--white)'); ctx.fill()
+    ctx.beginPath(); ctx.arc(ypX, ypY, 3, 0, Math.PI*2); ctx.fillStyle = cssVar('var(--text-primary)'); ctx.fill()
 
-    const ypText = 'Your portfolio'; ctx.font = '600 9px monospace'
+    const ypText = 'Your portfolio'; ctx.font = `600 9px ${cssVar('var(--font-mono)')}`
     const ypLw = ctx.measureText(ypText).width + 16
     const ypLx = Math.max(6, Math.min(ypX - ypLw/2, W - ypLw - 6))
     const labelAbove = ypY > 40
     const ypLy = labelAbove ? ypY - 26 : ypY + 32
     ctx.fillStyle = cssVar('var(--canvas-gradient-1)'); ctx.beginPath()
-    if (ctx.roundRect) ctx.roundRect(ypLx, ypLy-9, ypLw, 16, 3); else ctx.rect(ypLx, ypLy-9, ypLw, 16)
+    ctx.rect(ypLx, ypLy-9, ypLw, 16)
     ctx.fill(); ctx.strokeStyle = cssVar('rgba(var(--signal-positive-rgb),0.5)'); ctx.lineWidth = 1; ctx.stroke()
     ctx.fillStyle = cssVar('var(--signal-positive)'); ctx.textAlign = 'center'
     ctx.fillText(ypText, ypLx+ypLw/2, ypLy+3)
@@ -242,8 +242,8 @@ export default function Frontier({ data, tickers, weights }) {
         const a = 0.06 + 0.05*Math.sin(frame*0.04), r = 10+Math.sin(frame*0.04)*2
         ctx.beginPath(); ctx.arc(opX,opY,r,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a})`); ctx.lineWidth=2; ctx.stroke()
         ctx.beginPath(); ctx.arc(opX,opY,r*0.6,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a*1.5})`); ctx.lineWidth=1; ctx.stroke()
-        drawCrosshair(ctx,opX,opY,5,'var(--signal-caution)'); drawDiamond(ctx,opX,opY,6,'var(--signal-caution)','rgba(var(--white-rgb),0.65)')
-        ctx.beginPath(); ctx.arc(opX,opY,2,0,Math.PI*2); ctx.fillStyle=cssVar('var(--white)'); ctx.fill()
+        drawCrosshair(ctx,opX,opY,5,'var(--signal-caution)'); drawDiamond(ctx,opX,opY,6,'var(--signal-caution)','rgba(var(--text-primary-rgb),0.65)')
+        ctx.beginPath(); ctx.arc(opX,opY,2,0,Math.PI*2); ctx.fillStyle=cssVar('var(--text-primary)'); ctx.fill()
         frame++; animRef.current = requestAnimationFrame(animate)
       }
       animRef.current = requestAnimationFrame(animate)
@@ -272,26 +272,29 @@ export default function Frontier({ data, tickers, weights }) {
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           Efficient Frontier
-          <span style={{ fontWeight: 400, marginLeft: 8, opacity: 0.6 }}>5,000 simulated portfolios</span>
+          <span style={{ fontWeight: 'var(--weight-regular)', marginLeft: 8, opacity: 0.6 }}>5,000 simulated portfolios</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 10, color: 'var(--text-muted)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 60, height: 6, borderRadius: 'var(--radius-3)', background: 'linear-gradient(to right, var(--signal-negative), var(--signal-caution), var(--chart-highlight), var(--signal-positive), var(--chart-teal))' }}/>
+            {/* Continuous Sharpe heat-map swatch — flagged exception to the single-signal-colour
+                rule, see chat: mirrors the frontier scatter's own gradient legend, which needs
+                a 5-stop ramp to communicate a continuous metric, not a single signal state. */}
+            <div style={{ width: 60, height: 6, background: 'linear-gradient(to right, var(--signal-negative), var(--signal-caution), var(--chart-highlight), var(--signal-positive), var(--chart-teal))' }}/>
             <span style={{ opacity: 0.6 }}>Low → High Sharpe</span>
           </div>
           <span style={{ opacity: 0.2 }}>|</span>
           {[{ color: 'var(--signal-positive)', label: 'Your portfolio' }, { color: 'var(--signal-caution)', label: 'Optimal' }, { color: 'rgba(var(--chart-teal-alt-rgb),0.9)', label: 'Min vol' }].map(l => (
             <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 7, height: 7, borderRadius: 'var(--radius-full)', background: l.color }}/>{l.label}
+              <div style={{ width: 7, height: 7, background: l.color }}/>{l.label}
             </span>
           ))}
         </div>
       </div>
 
       {/* Canvas */}
-      <div style={{ flex: 1, minHeight: 0, borderRadius: 'var(--radius-10)', background: 'var(--text-on-accent)', border: '1px solid rgba(var(--white-rgb),0.05)', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, minHeight: 0, background: 'var(--surface-card)', border: 'var(--border-default)', overflow: 'hidden', position: 'relative' }}>
         <canvas ref={canvasRef} onMouseMove={handleMouseMove} onMouseLeave={() => setTooltip(null)}
           style={{ width: '100%', height: '100%', display: 'block', cursor: tooltip ? 'crosshair' : 'default' }} />
         {tooltip && (
@@ -299,20 +302,19 @@ export default function Frontier({ data, tickers, weights }) {
             position: 'absolute',
             left: Math.min(tooltip.left+14, (canvasRef.current?.offsetWidth||999)-170),
             top:  Math.max(tooltip.top-90, 8),
-            background: tooltip.special ? 'var(--canvas-gradient-3)' : 'var(--canvas-gradient-2)',
-            border: `1px solid ${tooltip.color||sharpeColor(tooltip.pct,0.5)}`,
-            borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 11, fontFamily: 'var(--font-mono)',
+            background: 'var(--surface-elevated)',
+            border: `1px solid ${tooltip.color || sharpeColor(tooltip.pct, 0.5)}`,
+            padding: '10px 14px', fontSize: 'var(--text-body-sm)', fontFamily: 'var(--font-mono)',
             pointerEvents: 'none', zIndex: 10, minWidth: 148,
-            boxShadow: tooltip.special ? `0 0 20px ${tooltip.glow},0 4px 20px rgba(var(--black-rgb),0.5)` : '0 4px 16px rgba(var(--black-rgb),0.4)',
           }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 8, color: tooltip.color||sharpeColor(tooltip.pct), display: 'flex', alignItems: 'center', gap: 5 }}>
-              {tooltip.special && <div style={{ width: 6, height: 6, borderRadius: 'var(--radius-full)', background: tooltip.color, flexShrink: 0 }}/>}
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)', textTransform: 'uppercase', marginBottom: 8, color: tooltip.color||sharpeColor(tooltip.pct), fontFamily: 'var(--font-primary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              {tooltip.special && <div style={{ width: 6, height: 6, background: tooltip.color, flexShrink: 0 }}/>}
               {tooltip.label}
             </div>
             {[{ k: 'Return', v: fmt(tooltip.ret) }, { k: 'Risk', v: fmt(tooltip.vol) }, { k: 'Sharpe', v: fmtN(tooltip.sharpe), accent: tooltip.color||sharpeColor(tooltip.pct) }].map(row => (
-              <div key={row.k} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 4, paddingBottom: 4, borderBottom: '1px solid rgba(var(--white-rgb),0.04)' }}>
+              <div key={row.k} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 4, paddingBottom: 4, borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)' }}>
                 <span style={{ color: 'rgba(var(--chart-sage-rgb),0.5)' }}>{row.k}</span>
-                <span style={{ color: row.accent||'var(--white)', fontWeight: row.accent?700:400 }}>{row.v}</span>
+                <span style={{ color: row.accent||'var(--text-primary)', fontWeight: row.accent?700:400 }}>{row.v}</span>
               </div>
             ))}
           </div>
@@ -323,21 +325,21 @@ export default function Frontier({ data, tickers, weights }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, flexShrink: 0 }}>
         <div style={{
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          padding: '10px 14px', borderRadius: 'var(--radius-sm)',
-          background: 'rgba(var(--white-rgb),0.03)',
-          border: '1px solid rgba(var(--white-rgb),0.07)',
+          padding: '10px 14px',
+          background: 'var(--surface-elevated)',
+          border: 'var(--border-faint)',
           gap: 6,
         }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             Sharpe ratio
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: accentColor, lineHeight: 1 }}>
+            <div style={{ fontSize: 'var(--text-heading)', fontWeight: 'var(--weight-semibold)', fontFamily: 'var(--font-mono)', color: accentColor, lineHeight: 1 }}>
               {fmtN(yourSharpe)}
             </div>
             <div style={{
-              fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--radius-20)',
-              background: insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.1)' : 'var(--chart-gold-wash)',
+              fontSize: 9, fontWeight: 600, padding: '2px 7px',
+              background: insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.1)' : 'var(--signal-caution-wash)',
               color: accentColor, border: `1px solid ${accentBorderColor}`,
               letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap',
             }}>

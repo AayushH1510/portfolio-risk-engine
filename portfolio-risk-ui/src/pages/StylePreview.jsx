@@ -9,16 +9,38 @@ import {
 // nav; reachable only by navigating directly to /style-preview.
 // ─────────────────────────────────────────────────────────────────────────
 
+// Repeating grain texture — feTurbulence noise, not a gradient. Rendered once as a
+// small tile and repeated via background-repeat. Declared before TOKENS so its data
+// URI can be interpolated straight into the card-level ::before rule below; overall
+// strength per-layer is set by CSS opacity, not baked into the SVG itself.
+const NOISE_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
+  <filter id='n' x='0' y='0' width='100%' height='100%'>
+    <feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch' result='t' />
+    <feComponentTransfer in='t' result='c'>
+      <feFuncA type='gamma' amplitude='1' exponent='2.5' offset='0' />
+    </feComponentTransfer>
+    <feColorMatrix in='c' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0' />
+  </filter>
+  <rect width='100%' height='100%' filter='url(#n)' />
+</svg>`
+const NOISE_DATA_URI = `data:image/svg+xml,${encodeURIComponent(NOISE_SVG)}`
+
 const TOKENS = `
 .sp-root {
-  --surface-canvas:    #1d1a18;
+  --surface-canvas:    #0f0d0b;
+  --surface-sidebar:   #161310;
   --surface-elevated:  #262321;
-  --surface-card:      #3d3a39;
+  --surface-card:      #211e1b;
+  --surface-card-rgb:  33, 30, 27;
+  --surface-card-hover:#2c2825;
   --surface-raised:    #4d4947;
+  --vignette-center:   #1a1613;
+  --vignette-edge:     #050403;
 
-  --line-hairline:     #4d4947;
-  --line-emphasis:     #5f5a57;
-  --line-faint:        #2e2b29;
+  --line-hairline:       #4d4947;
+  --line-hairline-light: #665f58;
+  --line-emphasis:       #5f5a57;
+  --line-faint:          #2e2b29;
 
   --text-primary:      #f2efec;
   --text-secondary:    #a39d98;
@@ -44,9 +66,47 @@ const TOKENS = `
   font-family: var(--font-primary);
   min-height: 100vh;
   font-feature-settings: "tnum" on, "zero" on;
+  position: relative;
 }
 .sp-root * { box-sizing: border-box; }
 .sp-mono { font-family: var(--font-mono); font-feature-settings: "tnum" on, "zero" on; }
+
+.sp-card {
+  position: relative;
+  /* ~90% opaque so the canvas vignette reads faintly through the card, per request.
+     The grain ::before below is a separate layer and keeps its own opacity untouched. */
+  background: rgba(var(--surface-card-rgb), 0.9);
+  border: 1px solid var(--line-hairline);
+  border-top-color: var(--line-hairline-light);
+  border-radius: 0;
+  padding: 16px 20px;
+  transition: background 150ms ease-out;
+}
+.sp-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("${NOISE_DATA_URI}");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
+.sp-card:hover { background: var(--surface-card-hover); }
+
+.sp-sidebar { position: relative; }
+.sp-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("${NOISE_DATA_URI}");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+}
 
 .sp-caption {
   font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
@@ -56,7 +116,7 @@ const TOKENS = `
 .sp-body-sm { font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--text-secondary); }
 
 .sp-btn-primary {
-  background: var(--signal-positive); color: var(--surface-canvas);
+  background: var(--signal-positive); color: var(--surface-sidebar);
   border: none; padding: 10px 20px; font-family: var(--font-primary);
   font-size: 12px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase;
   cursor: pointer; transition: filter 120ms ease-out;
@@ -102,11 +162,8 @@ const TOKENS = `
 function Card({ children, style, className = '', label, delay = 0 }) {
   return (
     <div
-      className={`sp-card-enter ${className}`}
-      style={{
-        background: 'var(--surface-card)', border: 'var(--border-default)',
-        borderRadius: 0, padding: '16px 20px', animationDelay: `${delay}ms`, ...style,
-      }}
+      className={`sp-card sp-card-enter ${className}`}
+      style={{ animationDelay: `${delay}ms`, ...style }}
     >
       {label && <div className="sp-caption" style={{ marginBottom: 12 }}>{label}</div>}
       {children}
@@ -138,10 +195,10 @@ function MetricCard({ label, value, suffix = '', signal, sub, decimals = 2, dela
   const color = signal === 'positive' ? 'var(--signal-positive)'
     : signal === 'negative' ? 'var(--signal-negative)'
     : 'var(--text-primary)'
-  const topBorder = signal && signal !== 'neutral' ? `2px solid ${color}` : 'var(--border-default)'
+  const topBorder = signal && signal !== 'neutral' ? `2px solid ${color}` : undefined
 
   return (
-    <Card delay={delay} style={{ borderTop: topBorder, flex: 1 }}>
+    <Card delay={delay} style={{ ...(topBorder ? { borderTop: topBorder } : {}), flex: 1 }}>
       <div className="sp-caption" style={{ marginBottom: 12 }}>{label}</div>
       <div className="sp-mono" style={{
         fontSize: 32, fontWeight: 600, letterSpacing: '-0.045em', lineHeight: 1.12, color,
@@ -221,9 +278,11 @@ const CHART_DATA = [
 ]
 
 const TABLE_ROWS = [
-  { ticker: 'AAPL', weight: '34.0%', price: 309.90, change: -0.14 },
-  { ticker: 'MSFT', weight: '33.0%', price: 491.71, change: 0.90 },
-  { ticker: 'GOOGL', weight: '33.0%', price: 264.12, change: 1.42 },
+  { ticker: 'AAPL',  weight: '22.0%', price: 309.90, change: -0.14 },
+  { ticker: 'MSFT',  weight: '21.0%', price: 491.71, change: 0.90 },
+  { ticker: 'GOOGL', weight: '20.0%', price: 264.12, change: 1.42 },
+  { ticker: 'NVDA',  weight: '19.0%', price: 187.35, change: 2.61 },
+  { ticker: 'AMZN',  weight: '18.0%', price: 231.08, change: -0.62 },
 ]
 
 const TABS = ['Dashboard', 'Risk Analysis', 'Monte Carlo', 'Valuation', 'Learn']
@@ -254,11 +313,27 @@ export default function StylePreview() {
     <div className="sp-root">
       <style>{TOKENS}</style>
 
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Vignette layer — canvas only, sits under the grain. DOM order (not z-index,
+          both are 0) is what puts it beneath the grain texture that follows. Opaque
+          radial-gradient exception per DESIGN.md's no-gradients rule; sidebar and
+          cards paint their own opaque surfaces on top of this and are unaffected. */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 1600px 1400px at 56% 38%, var(--vignette-center) 0%, var(--vignette-edge) 65%)',
+      }} />
+
+      {/* Grain texture layer — sits behind all content, purely decorative */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        opacity: 0.07, backgroundImage: `url("${NOISE_DATA_URI}")`,
+        backgroundRepeat: 'repeat', backgroundSize: '180px 180px',
+      }} />
+
+      <div style={{ display: 'flex', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
 
         {/* Sidebar */}
-        <div style={{
-          width: 260, minWidth: 260, background: 'var(--surface-canvas)',
+        <div className="sp-sidebar" style={{
+          width: 260, minWidth: 260, background: 'var(--surface-sidebar)',
           borderRight: 'var(--border-default)', padding: '20px 16px',
         }}>
           <div className="sp-mono" style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', marginBottom: 4 }}>
@@ -296,15 +371,12 @@ export default function StylePreview() {
 
           {/* Display headline */}
           <div style={{ marginTop: 40, marginBottom: 40 }}>
-            <div className="sp-caption" style={{ marginBottom: 8 }}>Portfolio value</div>
-            <div className="sp-mono" style={{
-              fontSize: 64, fontWeight: 600, letterSpacing: '-0.06em', lineHeight: 1.0, color: 'var(--text-primary)',
+            <div className="sp-caption" style={{ marginBottom: 12 }}>Display headline — 64px / 600 / -0.06em</div>
+            <div style={{
+              fontFamily: 'var(--font-primary)', fontSize: 64, fontWeight: 600,
+              letterSpacing: '-0.06em', lineHeight: 1.05, color: 'var(--text-primary)',
             }}>
-              $142,384.20
-            </div>
-            <div className="sp-body-sm" style={{ marginTop: 8 }}>
-              <span style={{ color: 'var(--signal-positive)' }}>+$12,940.55 (+9.7%)</span>
-              <span style={{ color: 'var(--text-muted)', marginLeft: 8 }}>past 12 months</span>
+              Institutional-grade risk analysis.
             </div>
           </div>
 

@@ -10,7 +10,7 @@ const truncate = (label, max = 24) =>
 // that ever shortens the label.
 function SectorTick({ x, y, payload }) {
   return (
-    <text x={x} y={y} dy={3} textAnchor="end" fill="var(--text-muted)" fontSize={10} fontFamily="monospace">
+    <text x={x} y={y} dy={3} textAnchor="end" fill="var(--text-muted)" fontSize={10} fontFamily="var(--font-mono)">
       {truncate(payload.value)}
     </text>
   )
@@ -20,8 +20,8 @@ function SectorTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
+      background: 'var(--surface-card)', border: 'var(--border-default)',
+      padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
@@ -39,7 +39,7 @@ export default function SectorChart({ sectorData, loading }) {
         alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0,
       }}>
         <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20" />
+          <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20" />
         </svg>
         <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Loading sector exposure…</div>
       </div>
@@ -54,11 +54,11 @@ export default function SectorChart({ sectorData, loading }) {
   return (
     <div className="card" style={{ padding: '14px 16px', height: 120, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           Sector exposure
         </div>
         {hasExcluded && (
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: 'var(--text-micro)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             ETFs & unrecognized tickers excluded
           </div>
         )}
@@ -80,8 +80,8 @@ export default function SectorChart({ sectorData, loading }) {
               axisLine={false}
               width={165}
             />
-            <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(var(--white-rgb),0.03)' }} />
-            <Bar dataKey="weight" fill="var(--signal-positive)" radius={[0, 4, 4, 0]} barSize={8}>
+            <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(var(--text-primary-rgb),0.03)' }} />
+            <Bar dataKey="weight" fill="var(--signal-positive)" radius={[0, 0, 0, 0]} barSize={8}>
               <LabelList
                 dataKey="weight"
                 position="right"

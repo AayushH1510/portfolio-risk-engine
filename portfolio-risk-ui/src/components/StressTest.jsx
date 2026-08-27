@@ -10,12 +10,12 @@ function ScenarioCard({ scenario, portfolioValue }) {
   const { name, period, portfolio_return, worst_day, recovery_days, excluded_tickers } = scenario
   const noData = portfolio_return == null
 
-  const lossColor = portfolio_return < -0.3 ? 'var(--negative)' : portfolio_return < -0.1 ? 'var(--warning)' : 'var(--positive)'
+  const lossColor = portfolio_return < -0.3 ? 'var(--signal-negative)' : portfolio_return < -0.1 ? 'var(--signal-caution)' : 'var(--signal-positive)'
 
   return (
     <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           {name}
         </div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
@@ -30,7 +30,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
       ) : (
         <>
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 2 }}>
               Portfolio loss
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-mono)', color: lossColor, lineHeight: 1.1 }}>
@@ -43,15 +43,15 @@ function ScenarioCard({ scenario, portfolioValue }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
+              <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 2 }}>
                 Worst day
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--negative)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--signal-negative)' }}>
                 {fmtPct(worst_day)}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 2 }}>
+              <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 2 }}>
                 Recovery
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
@@ -88,7 +88,7 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
 
   return (
     <div className="card" style={{ padding: '14px 16px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 12 }}>
+      <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
         Stress test — historical scenarios
       </div>
 
@@ -97,7 +97,7 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
       )}
 
       {error && (
-        <div style={{ fontSize: 12, color: 'var(--negative)' }}>{error}</div>
+        <div style={{ fontSize: 12, color: 'var(--signal-negative)' }}>{error}</div>
       )}
 
       {scenarios && (
