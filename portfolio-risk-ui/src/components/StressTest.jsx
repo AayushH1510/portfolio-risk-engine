@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { errorMessage } from '../lib/errorMessage'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -82,7 +83,7 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
     setError(null)
     axios.post(`${API}/api/stress-test`, { tickers, weights, portfolio_value: portfolioValue })
       .then(res => setScenarios(res.data.scenarios))
-      .catch(e => setError(e.response?.data?.detail || 'Failed to load stress test scenarios'))
+      .catch(e => setError(errorMessage(e, 'Failed to load stress test scenarios')))
       .finally(() => setLoading(false))
   }, [tickers.join(','), weights.join(',')])
 

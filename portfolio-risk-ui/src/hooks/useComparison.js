@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import axios from 'axios'
 import { format, subMonths, subYears } from 'date-fns'
+import { errorMessage } from '../lib/errorMessage'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -57,7 +58,7 @@ export function useComparison() {
       setData(res.data)
       setHasRun(true)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Analysis failed. Check your tickers.')
+      setError(errorMessage(err, 'Analysis failed. Check your tickers.'))
     } finally {
       setLoading(false)
     }

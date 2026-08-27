@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { errorMessage } from '../lib/errorMessage'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -84,7 +85,7 @@ export default function Valuation({ tickers }) {
     setSelected(null)
     axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
       .then(r => { setData(r.data.tickers); setSelected(r.data.tickers[0]?.ticker) })
-      .catch(e => setError(e.response?.data?.detail || 'Failed to load fundamentals'))
+      .catch(e => setError(errorMessage(e, 'Failed to load fundamentals')))
       .finally(() => setLoading(false))
   }, [tickers.join(',')])
 
