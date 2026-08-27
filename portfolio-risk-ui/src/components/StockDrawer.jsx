@@ -20,14 +20,14 @@ function Row({ label, value, accent }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+      padding: '6px 0', borderBottom: '1px solid rgba(var(--white-rgb),0.05)',
     }}>
-      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono, monospace)' }}>
+      <span style={{ fontSize: 11, color: 'rgba(var(--white-rgb),0.4)', fontFamily: 'var(--font-mono)' }}>
         {label}
       </span>
       <span style={{
-        fontSize: 11, fontWeight: 600, fontFamily: 'monospace',
-        color: accent || 'rgba(255,255,255,0.85)',
+        fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)',
+        color: accent || 'rgba(var(--white-rgb),0.85)',
       }}>
         {value}
       </span>
@@ -39,7 +39,7 @@ function Sparkline({ data }) {
   if (!data?.length) return null
   const chartData = data.map((v, i) => ({ i, v }))
   const isUp = data[data.length - 1] >= data[0]
-  const color = isUp ? '#52b788' : '#e05c5c'
+  const color = isUp ? 'var(--signal-positive)' : 'var(--signal-negative)'
   return (
     <ResponsiveContainer width="100%" height={64}>
       <AreaChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
@@ -56,9 +56,9 @@ function Sparkline({ data }) {
             if (!active || !payload?.length) return null
             return (
               <div style={{
-                background: '#1e2e1e', border: '1px solid rgba(82,183,136,0.3)',
-                borderRadius: 6, padding: '4px 8px', fontSize: 10,
-                color: '#52b788', fontFamily: 'monospace',
+                background: 'var(--surface-tooltip)', border: '1px solid rgba(var(--signal-positive-rgb),0.3)',
+                borderRadius: 'var(--radius-6)', padding: '4px 8px', fontSize: 10,
+                color: 'var(--signal-positive)', fontFamily: 'var(--font-mono)',
               }}>
                 {fmtP(payload[0].value)}
               </div>
@@ -123,7 +123,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
   if (!ticker) return null
 
   const isUp = stock?.change_pct >= 0
-  const changeColor = isUp ? '#52b788' : '#e05c5c'
+  const changeColor = isUp ? 'var(--signal-positive)' : 'var(--signal-negative)'
 
   return (
     <>
@@ -132,7 +132,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         onClick={handleClose}
         style={{
           position: 'fixed', inset: 0, zIndex: 99,
-          background: 'rgba(0,0,0,0.25)',
+          background: 'rgba(var(--black-rgb),0.25)',
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.2s ease',
         }}
@@ -144,8 +144,8 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         style={{
           position: 'fixed', top: 48, right: 0, bottom: 0, zIndex: 100,
           width: 300,
-          background: '#141f14',
-          borderLeft: '1px solid rgba(82,183,136,0.2)',
+          background: 'var(--surface-drawer)',
+          borderLeft: '1px solid rgba(var(--signal-positive-rgb),0.2)',
           display: 'flex', flexDirection: 'column',
           transform: visible ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -156,15 +156,15 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         <div style={{
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
           padding: '16px 18px 12px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          borderBottom: '1px solid rgba(var(--white-rgb),0.07)',
           flexShrink: 0,
         }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--white)', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em' }}>
               {ticker}
             </div>
             {stock?.company_name && (
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 11, color: 'rgba(var(--white-rgb),0.4)', marginTop: 2, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {stock.company_name}
               </div>
             )}
@@ -172,9 +172,9 @@ export default function StockDrawer({ ticker, weight, onClose }) {
           <button
             onClick={handleClose}
             style={{
-              background: 'rgba(255,255,255,0.07)', border: 'none',
-              color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-              width: 28, height: 28, borderRadius: 6,
+              background: 'rgba(var(--white-rgb),0.07)', border: 'none',
+              color: 'rgba(var(--white-rgb),0.5)', cursor: 'pointer',
+              width: 28, height: 28, borderRadius: 'var(--radius-6)',
               fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, marginTop: 2,
             }}
@@ -189,13 +189,13 @@ export default function StockDrawer({ ticker, weight, onClose }) {
           {loading && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
               <svg className="spin" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="#52b788" strokeWidth="3" strokeDasharray="40 20"/>
+                <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20"/>
               </svg>
             </div>
           )}
 
           {error && (
-            <div style={{ fontSize: 12, color: '#e05c5c', textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: 12, color: 'var(--signal-negative)', textAlign: 'center', padding: '20px 0' }}>
               {error}
             </div>
           )}
@@ -204,31 +204,31 @@ export default function StockDrawer({ ticker, weight, onClose }) {
             <>
               {/* Price + change */}
               <div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--white)', fontFamily: 'var(--font-mono)' }}>
                   {fmtP(stock.price)}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4, alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: changeColor, fontFamily: 'monospace' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: changeColor, fontFamily: 'var(--font-mono)' }}>
                     {isUp ? '▲' : '▼'} {fmtP(Math.abs(stock.change))}
                   </span>
                   <span style={{
                     fontSize: 11, fontWeight: 600, color: changeColor,
-                    background: isUp ? 'rgba(82,183,136,0.12)' : 'rgba(224,92,92,0.12)',
-                    padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace',
+                    background: isUp ? 'rgba(var(--signal-positive-rgb),0.12)' : 'rgba(var(--signal-negative-rgb),0.12)',
+                    padding: '2px 6px', borderRadius: 'var(--radius-4)', fontFamily: 'var(--font-mono)',
                   }}>
                     {isUp ? '+' : ''}{(stock.change_pct * 100).toFixed(2)}%
                   </span>
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>today</span>
+                  <span style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.3)' }}>today</span>
                 </div>
               </div>
 
               {/* Sparkline */}
               <div style={{
-                background: 'rgba(255,255,255,0.03)', borderRadius: 8,
+                background: 'rgba(var(--white-rgb),0.03)', borderRadius: 'var(--radius-sm)',
                 padding: '8px 4px 4px',
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: '1px solid rgba(var(--white-rgb),0.06)',
               }}>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginLeft: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: 9, color: 'rgba(var(--white-rgb),0.3)', marginLeft: 8, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   30-day price
                 </div>
                 <Sparkline data={stock.sparkline} />
@@ -237,24 +237,24 @@ export default function StockDrawer({ ticker, weight, onClose }) {
               {/* Portfolio contribution */}
               {weight != null && (
                 <div style={{
-                  background: 'rgba(82,183,136,0.06)',
-                  border: '1px solid rgba(82,183,136,0.18)',
-                  borderRadius: 8, padding: '10px 14px',
+                  background: 'rgba(var(--signal-positive-rgb),0.06)',
+                  border: '1px solid rgba(var(--signal-positive-rgb),0.18)',
+                  borderRadius: 'var(--radius-sm)', padding: '10px 14px',
                 }}>
-                  <div style={{ fontSize: 9, color: 'rgba(82,183,136,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                  <div style={{ fontSize: 9, color: 'rgba(var(--signal-positive-rgb),0.6)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                     Portfolio position
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Weight</div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: '#52b788', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.4)' }}>Weight</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--signal-positive)', fontFamily: 'var(--font-mono)' }}>
                         {Math.round(weight * 100)}%
                       </div>
                     </div>
                     {stock.sector && (
                       <div>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Sector</div>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginTop: 2, lineHeight: 1.3 }}>
+                        <div style={{ fontSize: 10, color: 'rgba(var(--white-rgb),0.4)' }}>Sector</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(var(--white-rgb),0.7)', marginTop: 2, lineHeight: 1.3 }}>
                           {stock.sector}
                         </div>
                       </div>
@@ -265,14 +265,14 @@ export default function StockDrawer({ ticker, weight, onClose }) {
 
               {/* Fundamentals */}
               <div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                <div style={{ fontSize: 9, color: 'rgba(var(--white-rgb),0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
                   Fundamentals
                 </div>
                 <Row label="Market Cap"     value={fmtM(stock.market_cap)} />
                 <Row label="P/E Ratio"      value={fmtN(stock.pe_ratio)} />
                 <Row label="EPS (TTM)"      value={stock.eps != null ? `$${stock.eps.toFixed(2)}` : '—'} />
-                <Row label="52w High"       value={fmtP(stock.week_52_high)} accent="#52b788" />
-                <Row label="52w Low"        value={fmtP(stock.week_52_low)}  accent="#e05c5c" />
+                <Row label="52w High"       value={fmtP(stock.week_52_high)} accent="var(--signal-positive)" />
+                <Row label="52w Low"        value={fmtP(stock.week_52_low)}  accent="var(--signal-negative)" />
                 <Row label="Beta"           value={fmtN(stock.beta)} />
                 <Row label="Dividend Yield" value={stock.dividend_yield ? fmt(stock.dividend_yield) : 'None'} />
                 <Row label="Avg Volume"     value={stock.avg_volume != null ? `${(stock.avg_volume / 1e6).toFixed(1)}M` : '—'} />
@@ -283,8 +283,8 @@ export default function StockDrawer({ ticker, weight, onClose }) {
 
         {/* Footer */}
         <div style={{
-          padding: '10px 18px', borderTop: '1px solid rgba(255,255,255,0.06)',
-          fontSize: 9, color: 'rgba(255,255,255,0.2)', flexShrink: 0,
+          padding: '10px 18px', borderTop: '1px solid rgba(var(--white-rgb),0.06)',
+          fontSize: 9, color: 'rgba(var(--white-rgb),0.2)', flexShrink: 0,
         }}>
           Data via Finnhub
         </div>

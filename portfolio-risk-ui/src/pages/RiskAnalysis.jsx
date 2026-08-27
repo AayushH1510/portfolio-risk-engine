@@ -13,7 +13,7 @@ const fmtS = v => `${(v * 100).toFixed(1)}%`
 const AXIS = { fill: 'var(--text-muted)', fontSize: 10 }
 const TIP  = {
   background: 'var(--card)', border: '1px solid var(--border)',
-  borderRadius: 8, fontSize: 11, padding: '6px 10px',
+  borderRadius: 'var(--radius-sm)', fontSize: 11, padding: '6px 10px',
 }
 
 function MiniChart({ data, dataKey, color, filled, refVal }) {
@@ -29,7 +29,7 @@ function MiniChart({ data, dataKey, color, filled, refVal }) {
           </defs>
           <XAxis dataKey="date" hide />
           <YAxis hide />
-          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />}
+          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="3 3" />}
           <Tooltip formatter={v => fmtS(v)} contentStyle={TIP} itemStyle={{ color }} />
           <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} fill={`url(#g_${dataKey})`} dot={false} />
         </AreaChart>
@@ -37,7 +37,7 @@ function MiniChart({ data, dataKey, color, filled, refVal }) {
         <LineChart data={data} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
           <XAxis dataKey="date" hide />
           <YAxis hide />
-          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(255,255,255,0.1)" strokeDasharray="3 3" />}
+          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="3 3" />}
           <Tooltip formatter={v => v?.toFixed(2)} contentStyle={TIP} itemStyle={{ color }} />
           <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} dot={false} />
         </LineChart>
@@ -51,18 +51,18 @@ function MetricPill({ label, value, color, sub }) {
     <div style={{
       display: 'flex', flexDirection: 'column', gap: 3,
       padding: '10px 14px',
-      background: 'rgba(255,255,255,0.03)',
-      borderRadius: 8,
-      border: '1px solid rgba(255,255,255,0.06)',
+      background: 'rgba(var(--white-rgb),0.03)',
+      borderRadius: 'var(--radius-sm)',
+      border: '1px solid rgba(var(--white-rgb),0.06)',
     }}>
       <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
         {label}
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'monospace', color: color || 'var(--text-primary)' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-mono)', color: color || 'var(--text-primary)' }}>
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{sub}</div>
+        <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{sub}</div>
       )}
     </div>
   )
@@ -76,10 +76,10 @@ function CorrMatrix({ corr }) {
   const rowWidth = n >= 5 ? 32        : n >= 4 ? 38        : 44
 
   const cellColor = v => {
-    if (v >= 0.8) return { bg: 'rgba(224,92,92,0.25)',   text: '#e05c5c' }
-    if (v >= 0.5) return { bg: 'rgba(224,154,48,0.2)',   text: '#e09a30' }
-    if (v >= 0.2) return { bg: 'rgba(255,255,255,0.06)', text: 'rgba(255,255,255,0.7)' }
-    return            { bg: 'rgba(82,183,136,0.15)',  text: '#52b788' }
+    if (v >= 0.8) return { bg: 'rgba(var(--signal-negative-rgb),0.25)',   text: 'var(--signal-negative)' }
+    if (v >= 0.5) return { bg: 'rgba(var(--signal-caution-rgb),0.2)',   text: 'var(--signal-caution)' }
+    if (v >= 0.2) return { bg: 'rgba(var(--white-rgb),0.06)', text: 'rgba(var(--white-rgb),0.7)' }
+    return            { bg: 'rgba(var(--signal-positive-rgb),0.15)',  text: 'var(--signal-positive)' }
   }
 
   return (
@@ -91,7 +91,7 @@ function CorrMatrix({ corr }) {
             {corr.tickers.map(t => (
               <th key={t} style={{
                 fontSize: headFont, fontWeight: 700, color: 'var(--text-muted)',
-                fontFamily: 'monospace', padding: '0 2px 6px', textAlign: 'center',
+                fontFamily: 'var(--font-mono)', padding: '0 2px 6px', textAlign: 'center',
               }}>{t}</th>
             ))}
           </tr>
@@ -101,14 +101,14 @@ function CorrMatrix({ corr }) {
             <tr key={row}>
               <td style={{
                 fontSize: headFont, fontWeight: 700, color: 'var(--text-muted)',
-                fontFamily: 'monospace', paddingRight: 6, textAlign: 'right',
+                fontFamily: 'var(--font-mono)', paddingRight: 6, textAlign: 'right',
               }}>{row}</td>
               {corr.values[ri].map((val, ci) => {
                 const { bg, text } = cellColor(Math.abs(val))
                 return (
                   <td key={ci} style={{
-                    textAlign: 'center', fontSize: cellFont, fontFamily: 'monospace',
-                    fontWeight: 700, padding: cellPad, borderRadius: 5,
+                    textAlign: 'center', fontSize: cellFont, fontFamily: 'var(--font-mono)',
+                    fontWeight: 700, padding: cellPad, borderRadius: 'var(--radius-5)',
                     background: bg, color: text,
                   }}>
                     {val.toFixed(2)}
@@ -121,12 +121,12 @@ function CorrMatrix({ corr }) {
       </table>
       <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 10, color: 'var(--text-muted)' }}>
         {[
-          ['≥ 0.8 High',  'rgba(224,92,92,0.3)'],
-          ['0.5–0.8 Med', 'rgba(224,154,48,0.3)'],
-          ['< 0.2 Low',   'rgba(82,183,136,0.25)'],
+          ['≥ 0.8 High',  'rgba(var(--signal-negative-rgb),0.3)'],
+          ['0.5–0.8 Med', 'rgba(var(--signal-caution-rgb),0.3)'],
+          ['< 0.2 Low',   'rgba(var(--signal-positive-rgb),0.25)'],
         ].map(([l, c]) => (
           <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: c }}/>
+            <div style={{ width: 8, height: 8, borderRadius: 'var(--radius-xs)', background: c }}/>
             {l}
           </span>
         ))}
@@ -173,23 +173,23 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
               <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 4 }}>
                 Rolling volatility
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'monospace', color: riskRising ? '#e09a30' : '#52b788' }}>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: riskRising ? 'var(--signal-caution)' : 'var(--signal-positive)' }}>
                 {fmtS(recentVol)}
               </div>
             </div>
             <div style={{
-              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
-              background: riskRising ? 'rgba(224,154,48,0.12)' : 'rgba(82,183,136,0.12)',
-              color: riskRising ? '#e09a30' : '#52b788',
-              border: `1px solid ${riskRising ? 'rgba(224,154,48,0.3)' : 'rgba(82,183,136,0.3)'}`,
+              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 'var(--radius-20)',
+              background: riskRising ? 'rgba(var(--signal-caution-rgb),0.12)' : 'rgba(var(--signal-positive-rgb),0.12)',
+              color: riskRising ? 'var(--signal-caution)' : 'var(--signal-positive)',
+              border: `1px solid ${riskRising ? 'rgba(var(--signal-caution-rgb),0.3)' : 'rgba(var(--signal-positive-rgb),0.3)'}`,
               marginTop: 2,
             }}>
               {riskRising ? '↑ Rising' : '↓ Falling'}
             </div>
           </div>
-          <MiniChart data={rvData} dataKey="vol" color="#e09a30" filled refVal={vol} />
+          <MiniChart data={rvData} dataKey="vol" color="var(--signal-caution)" filled refVal={vol} />
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
-            Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'monospace' }}>{fmtS(vol)}</span>
+            Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmtS(vol)}</span>
             <span style={{ marginLeft: 8, opacity: 0.5 }}>dashed line = long-run average</span>
           </div>
         </div>
@@ -200,23 +200,23 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
               <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 4 }}>
                 Rolling Sharpe
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'monospace', color: recentSharpe > 1 ? '#52b788' : recentSharpe > 0 ? '#e09a30' : '#e05c5c' }}>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: recentSharpe > 1 ? 'var(--signal-positive)' : recentSharpe > 0 ? 'var(--signal-caution)' : 'var(--signal-negative)' }}>
                 {recentSharpe.toFixed(2)}
               </div>
             </div>
             <div style={{
-              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 20,
-              background: recentSharpe > sharpe ? 'rgba(82,183,136,0.12)' : 'rgba(224,154,48,0.12)',
-              color: recentSharpe > sharpe ? '#52b788' : '#e09a30',
-              border: `1px solid ${recentSharpe > sharpe ? 'rgba(82,183,136,0.3)' : 'rgba(224,154,48,0.3)'}`,
+              fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 'var(--radius-20)',
+              background: recentSharpe > sharpe ? 'rgba(var(--signal-positive-rgb),0.12)' : 'rgba(var(--signal-caution-rgb),0.12)',
+              color: recentSharpe > sharpe ? 'var(--signal-positive)' : 'var(--signal-caution)',
+              border: `1px solid ${recentSharpe > sharpe ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--signal-caution-rgb),0.3)'}`,
               marginTop: 2,
             }}>
               {recentSharpe > sharpe ? '↑ Improving' : '↓ Weakening'}
             </div>
           </div>
-          <MiniChart data={rsData} dataKey="sharpe" color="#52b788" filled={false} refVal={sharpe} />
+          <MiniChart data={rsData} dataKey="sharpe" color="var(--signal-positive)" filled={false} refVal={sharpe} />
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
-            Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'monospace' }}>{sharpe.toFixed(2)}</span>
+            Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{sharpe.toFixed(2)}</span>
             <span style={{ marginLeft: 8, opacity: 0.5 }}>above 1.0 is strong</span>
           </div>
         </div>
@@ -256,13 +256,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           {/* Confidence level headers */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
             {[
-              { label: '95% confidence', color: '#e05c5c' },
-              { label: '99% confidence', color: '#b03a3a' },
-            ].map(({ label, color }) => (
+              { label: '95% confidence', color: 'var(--signal-negative)', borderColor: 'rgba(var(--signal-negative-rgb),0.19)' },
+              { label: '99% confidence', color: 'var(--signal-negative-strong)', borderColor: 'rgba(var(--signal-negative-strong-rgb),0.19)' },
+            ].map(({ label, color, borderColor }) => (
               <div key={label} style={{
                 fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
                 letterSpacing: '0.07em', color, textAlign: 'center',
-                padding: '3px 0', borderBottom: `1px solid ${color}30`,
+                padding: '3px 0', borderBottom: `1px solid ${borderColor}`,
               }}>
                 {label}
               </div>
@@ -274,13 +274,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             <MetricPill
               label={<MetricTooltip metricKey="var_95">VaR</MetricTooltip>}
               value={`−${fmt(var_cvar.var_pct)}`}
-              color="#e05c5c"
+              color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.var_dollar).toFixed(0)} per day`}
             />
             <MetricPill
               label={<MetricTooltip metricKey="var_99">VaR</MetricTooltip>}
               value={`−${fmt(var_cvar_99?.var_pct ?? 0)}`}
-              color="#b03a3a"
+              color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)} per day`}
             />
           </div>
@@ -290,13 +290,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             <MetricPill
               label={<MetricTooltip metricKey="cvar_95">CVaR (avg tail)</MetricTooltip>}
               value={`−${fmt(var_cvar.cvar_pct)}`}
-              color="#e05c5c"
+              color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.cvar_dollar).toFixed(0)} avg`}
             />
             <MetricPill
               label={<MetricTooltip metricKey="cvar_99">CVaR (avg tail)</MetricTooltip>}
               value={`−${fmt(var_cvar_99?.cvar_pct ?? 0)}`}
-              color="#b03a3a"
+              color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.cvar_dollar ?? 0).toFixed(0)} avg`}
             />
           </div>
@@ -304,13 +304,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{
             fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6,
             padding: '10px 12px',
-            background: 'rgba(224,92,92,0.05)', borderRadius: 8,
-            border: '1px solid rgba(224,92,92,0.12)',
+            background: 'rgba(var(--signal-negative-rgb),0.05)', borderRadius: 'var(--radius-sm)',
+            border: '1px solid rgba(var(--signal-negative-rgb),0.12)',
           }}>
-            On your worst <strong style={{ color: 'rgba(255,255,255,0.7)' }}>5% of days</strong>, expect to lose up to{' '}
-            <strong style={{ color: '#e05c5c' }}>${Math.abs(var_cvar.var_dollar).toFixed(0)}</strong>.
+            On your worst <strong style={{ color: 'rgba(var(--white-rgb),0.7)' }}>5% of days</strong>, expect to lose up to{' '}
+            <strong style={{ color: 'var(--signal-negative)' }}>${Math.abs(var_cvar.var_dollar).toFixed(0)}</strong>.
             {' '}The 99% threshold rises to{' '}
-            <strong style={{ color: '#b03a3a' }}>${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)}</strong> — the worst 1 in 100 days.
+            <strong style={{ color: 'var(--signal-negative-strong)' }}>${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)}</strong> — the worst 1 in 100 days.
           </div>
         </div>
 
@@ -322,10 +322,10 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{
             fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6,
             padding: '10px 12px', marginTop: 12,
-            background: 'rgba(255,255,255,0.02)', borderRadius: 8,
-            border: '1px solid rgba(255,255,255,0.05)',
+            background: 'rgba(var(--white-rgb),0.02)', borderRadius: 'var(--radius-sm)',
+            border: '1px solid rgba(var(--white-rgb),0.05)',
           }}>
-            High correlation means your stocks move together — <strong style={{ color: 'rgba(255,255,255,0.65)' }}>less diversification</strong> than you might think.
+            High correlation means your stocks move together — <strong style={{ color: 'rgba(var(--white-rgb),0.65)' }}>less diversification</strong> than you might think.
           </div>
         </div>
       </div>

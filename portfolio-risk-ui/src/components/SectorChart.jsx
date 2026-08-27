@@ -21,7 +21,7 @@ function SectorTooltip({ active, payload, label }) {
   return (
     <div style={{
       background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '8px 12px', fontSize: 11,
+      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
@@ -68,7 +68,7 @@ export default function SectorChart({ sectorData, loading }) {
           <BarChart
             data={sectorData}
             layout="vertical"
-            style={{ background: 'transparent', fontSize: 11, fontFamily: 'monospace' }}
+            style={{ background: 'transparent', fontSize: 11, fontFamily: 'var(--font-mono)' }}
             margin={{ top: 0, right: 36, bottom: 0, left: 4 }}
           >
             <XAxis type="number" hide domain={[0, 1]} />
@@ -80,13 +80,13 @@ export default function SectorChart({ sectorData, loading }) {
               axisLine={false}
               width={165}
             />
-            <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-            <Bar dataKey="weight" fill="#52b788" radius={[0, 4, 4, 0]} barSize={8}>
+            <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(var(--white-rgb),0.03)' }} />
+            <Bar dataKey="weight" fill="var(--signal-positive)" radius={[0, 4, 4, 0]} barSize={8}>
               <LabelList
                 dataKey="weight"
                 position="right"
                 formatter={v => `${(v * 100).toFixed(0)}%`}
-                style={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'monospace' }}
+                style={{ fill: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
               />
             </Bar>
           </BarChart>

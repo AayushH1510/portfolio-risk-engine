@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-export const LANDING_BG = '#0d1a10'
+export const LANDING_BG = 'var(--text-on-accent)'
 
 export function LandingPage({ children }) {
   return (
@@ -23,9 +23,9 @@ export function LandingHeader({ crossLinkLabel, crossLinkTo }) {
       flexShrink: 0,
     }}>
       <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 30, height: 30, background: 'var(--accent)', borderRadius: 'var(--radius-7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="#0d1a10"/>
+            <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--text-on-accent)"/>
           </svg>
         </div>
         <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
@@ -113,9 +113,9 @@ export function LandingHowItWorks({ steps }) {
         {steps.map((label, i) => (
           <div key={label} style={{ textAlign: 'center' }}>
             <div style={{
-              width: 34, height: 34, borderRadius: '50%',
-              background: 'rgba(82,183,136,0.12)', border: '1px solid var(--accent)',
-              color: 'var(--accent)', fontWeight: 700, fontSize: 14, fontFamily: 'monospace',
+              width: 34, height: 34, borderRadius: 'var(--radius-full)',
+              background: 'rgba(var(--signal-positive-rgb),0.12)', border: '1px solid var(--accent)',
+              color: 'var(--accent)', fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-mono)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
             }}>
               {i + 1}

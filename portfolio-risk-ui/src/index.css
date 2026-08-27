@@ -9,6 +9,7 @@
   --accent:        #52b788;
   --accent-dark:   #2d6a4f;
   --accent-light:  #b7e4c7;
+  --accent-light-rgb: 183, 228, 199;
   --text-primary:  #eef2ee;
   --text-secondary:#8aaa8a;
   --text-muted:    #5a7a5a;
@@ -21,6 +22,86 @@
   --radius:        12px;
   --radius-sm:     8px;
   --radius-lg:     16px;
+
+  /* ───────────────────────────────────────────────────────────────
+     Step 1 of the DESIGN.md migration: every value below is a NEW
+     variable name (matching DESIGN.md's future token vocabulary),
+     but its VALUE is pinned to whatever the app already renders today.
+     Nothing here should change what a single pixel looks like — Step 2
+     is what actually swaps these to DESIGN.md's warm-brown palette.
+     ─────────────────────────────────────────────────────────────── */
+
+  /* Signal colours (already match DESIGN.md's own hex, kept as-is) */
+  --signal-positive:        #52b788;
+  --signal-negative:        #e05c5c;
+  --signal-caution:         #e09a30;
+  --signal-positive-rgb:    82, 183, 136;
+  --signal-negative-rgb:    224, 92, 92;
+  --signal-caution-rgb:     224, 154, 48;
+
+  /* Extra signal-adjacent shades used today that don't collapse cleanly
+     into the three above — kept distinct so no two different current
+     colours get merged into one token (that would change the picture). */
+  --signal-negative-strong: #b03a3a;   /* 99%-confidence VaR/CVaR red */
+  --signal-negative-strong-rgb: 176, 58, 58;
+  --signal-positive-soft:   #74c69d;   /* "low severity" light green */
+  --text-on-accent:         #0d1a10;   /* text/icons sitting on a green fill */
+
+  /* Chart-specific colours (Frontier optimal marker, Comparison's
+     second-portfolio series, misc canvas accents) */
+  --chart-highlight:        #d4c84a;
+  --chart-highlight-alt:    #c8a84b;
+  --chart-highlight-alt-rgb: 200, 168, 75;
+  --chart-blue:             #6ea8fe;
+  --chart-blue-rgb:         110, 168, 254;
+  --chart-teal:             #28c5b0;
+  --chart-sage-rgb:         180, 210, 180;
+  --chart-teal-alt-rgb:     120, 210, 180;
+  --chart-sage-dark-rgb:    120, 150, 120;
+  --chart-gold-wash:        rgba(200, 168, 75, 0.1);
+  --chart-amber-dark-wash:  rgba(200, 150, 60, 0.65);
+
+  /* Neutrals used in overlays/washes today */
+  --white:                  #ffffff;
+  --white-rgb:              255, 255, 255;
+  --black-rgb:              0, 0, 0;
+  --grey-generic:           #888888;
+
+  /* Deep near-black surfaces (stock drawer panel, sparkline tooltip,
+     canvas chart gradient stops) — each is its own distinct shade today,
+     not a shared family, so each gets its own token rather than being
+     forced into one. */
+  --surface-drawer:         #141f14;
+  --surface-tooltip:        #1e2e1e;
+  --canvas-gradient-1:      rgba(12, 22, 14, 0.95);
+  --canvas-gradient-2:      rgba(12, 20, 14, 0.96);
+  --canvas-gradient-3:      rgba(10, 18, 12, 0.98);
+  --canvas-gradient-4:      rgba(6, 12, 8, 0.95);
+  --canvas-gradient-5:      rgba(6, 12, 8, 0.9);
+  --canvas-gradient-6:      rgba(6, 12, 8, 0.85);
+
+  /* Typography — today's actual stacks. --font-mono intentionally
+     matches the generic `monospace` keyword used almost everywhere
+     inline today, NOT the richer stack .mono uses below; unifying those
+     is a Step 2 decision, not a Step 1 one. */
+  --font-primary:           'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:               monospace;
+  --font-mono-rich:         'IBM Plex Mono', 'Roboto Mono', monospace;
+  --font-sans-generic:      sans-serif;
+
+  /* Border-radius scale — supplements the existing --radius/--radius-sm/
+     --radius-lg with the other sizes already in use across components. */
+  --radius-1:    1px;
+  --radius-xs:   2px;
+  --radius-3:    3px;
+  --radius-4:    4px;
+  --radius-5:    5px;
+  --radius-6:    6px;
+  --radius-7:    7px;
+  --radius-10:   10px;
+  --radius-20:   20px;
+  --radius-full: 50%;
+  --radius-tab:  0 6px 6px 0;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,7 +138,7 @@ body {
 }
 
 .mono {
-  font-family: 'IBM Plex Mono', 'Roboto Mono', monospace;
+  font-family: var(--font-mono-rich);
 }
 
 .positive { color: var(--positive); }

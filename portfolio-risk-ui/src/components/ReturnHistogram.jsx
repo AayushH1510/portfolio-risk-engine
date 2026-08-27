@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { cssVar } from '../lib/cssVar'
 
 export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, confidence }) {
   const canvasRef = useRef(null)
@@ -41,11 +42,11 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     const toY = v => PAD.top  + (1 - v / maxCount) * PH
 
     // Clean dark background
-    ctx.fillStyle = '#0d1a10'
+    ctx.fillStyle = cssVar('var(--text-on-accent)')
     ctx.fillRect(0, 0, W, H)
 
     // Subtle grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.04)')
     ctx.lineWidth   = 1
     for (let i = 1; i <= 4; i++) {
       const y = PAD.top + (i / 4) * PH
@@ -57,7 +58,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
     // Zero line
     const zeroX = toX(0)
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)'
+    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.12)')
     ctx.lineWidth   = 1
     ctx.setLineDash([3, 4])
     ctx.beginPath(); ctx.moveTo(zeroX, PAD.top); ctx.lineTo(zeroX, PAD.top + PH); ctx.stroke()
@@ -65,11 +66,11 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
     // Tail shading (left of VaR)
     const varX = toX(varPct)
-    ctx.fillStyle = 'rgba(224,92,92,0.05)'
+    ctx.fillStyle = cssVar('rgba(var(--signal-negative-rgb),0.05)')
     ctx.fillRect(PAD.left, PAD.top, varX - PAD.left, PH)
 
     // VaR line
-    ctx.strokeStyle = 'rgba(224,92,92,0.6)'
+    ctx.strokeStyle = cssVar('rgba(var(--signal-negative-rgb),0.6)')
     ctx.lineWidth   = 1.5
     ctx.setLineDash([5, 4])
     ctx.beginPath(); ctx.moveTo(varX, PAD.top); ctx.lineTo(varX, PAD.top + PH); ctx.stroke()
@@ -77,7 +78,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
     // CVaR line
     const cvarX = toX(cvarPct)
-    ctx.strokeStyle = 'rgba(224,154,48,0.55)'
+    ctx.strokeStyle = cssVar('rgba(var(--signal-caution-rgb),0.55)')
     ctx.lineWidth   = 1.5
     ctx.setLineDash([5, 4])
     ctx.beginPath(); ctx.moveTo(cvarX, PAD.top); ctx.lineTo(cvarX, PAD.top + PH); ctx.stroke()
@@ -118,7 +119,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     const scaleFactor = maxCount / (gaussian(mean) * returns.length * binW)
 
     ctx.beginPath()
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+    ctx.strokeStyle = cssVar('rgba(var(--white-rgb),0.18)')
     ctx.lineWidth   = 1.5
     for (let i = 0; i <= PW; i++) {
       const rv = minR + (i / PW) * (maxR - minR)
@@ -131,7 +132,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     ctx.stroke()
 
     // X-axis labels
-    ctx.fillStyle = 'rgba(120,150,120,0.55)'
+    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.55)')
     ctx.font      = '9px monospace'
     ctx.textAlign = 'center'
     const xTicks  = 6
@@ -142,7 +143,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
     // Y-axis labels
     ctx.textAlign = 'right'
-    ctx.fillStyle = 'rgba(120,150,120,0.45)'
+    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.45)')
     const yTicks  = 3
     for (let i = 1; i <= yTicks; i++) {
       const v = Math.round((i / yTicks) * maxCount)
@@ -152,13 +153,13 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     // Labels on lines
     ctx.font      = '9px monospace'
     ctx.textAlign = 'center'
-    ctx.fillStyle = 'rgba(224,92,92,0.85)'
+    ctx.fillStyle = cssVar('rgba(var(--signal-negative-rgb),0.85)')
     ctx.fillText(`VaR ${(confidence * 100).toFixed(0)}%`, varX, PAD.top + 10)
 
-    ctx.fillStyle = 'rgba(224,154,48,0.85)'
+    ctx.fillStyle = cssVar('rgba(var(--signal-caution-rgb),0.85)')
     ctx.fillText('CVaR', cvarX, PAD.top + 10)
 
-    ctx.fillStyle = 'rgba(255,255,255,0.3)'
+    ctx.fillStyle = cssVar('rgba(var(--white-rgb),0.3)')
     ctx.fillText('Mean', toX(mean), PAD.top + 10)
 
   }, [portfolioReturns, varPct, cvarPct])
@@ -169,19 +170,19 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
       {/* Legend */}
       <div style={{ display: 'flex', gap: 16, fontSize: 10, color: 'var(--text-muted)' }}>
         {[
-          { color: 'rgba(82,183,136,0.7)',  label: 'Gain days' },
-          { color: 'rgba(200,150,60,0.65)', label: 'Small loss' },
-          { color: 'rgba(224,92,92,0.75)',  label: 'Tail risk' },
+          { color: 'rgba(var(--signal-positive-rgb),0.7)',  label: 'Gain days' },
+          { color: 'var(--chart-amber-dark-wash)', label: 'Small loss' },
+          { color: 'rgba(var(--signal-negative-rgb),0.75)',  label: 'Tail risk' },
           { color: null,                    label: 'VaR / CVaR', dashed: true },
-          { color: 'rgba(255,255,255,0.2)', label: 'Normal curve', line: true },
+          { color: 'rgba(var(--white-rgb),0.2)', label: 'Normal curve', line: true },
         ].map(l => (
           <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             {l.dashed ? (
-              <div style={{ width: 16, height: 0, borderBottom: '1.5px dashed rgba(224,92,92,0.7)' }}/>
+              <div style={{ width: 16, height: 0, borderBottom: '1.5px dashed rgba(var(--signal-negative-rgb),0.7)' }}/>
             ) : l.line ? (
               <div style={{ width: 16, height: 0, borderBottom: `1.5px solid ${l.color}` }}/>
             ) : (
-              <div style={{ width: 8, height: 8, background: l.color, borderRadius: 2 }}/>
+              <div style={{ width: 8, height: 8, background: l.color, borderRadius: 'var(--radius-xs)' }}/>
             )}
             {l.label}
           </span>
@@ -190,8 +191,8 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
       {/* Canvas */}
       <div style={{
-        borderRadius: 10, overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.05)',
+        borderRadius: 'var(--radius-10)', overflow: 'hidden',
+        border: '1px solid rgba(var(--white-rgb),0.05)',
       }}>
         <canvas ref={canvasRef} style={{ width: '100%', height: 200, display: 'block' }} />
       </div>
@@ -199,21 +200,21 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
         {[
-          { label: 'Mean daily',   value: fmtS(mean),  color: mean >= 0 ? '#52b788' : '#e05c5c' },
+          { label: 'Mean daily',   value: fmtS(mean),  color: mean >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
           { label: 'Std dev',      value: fmtS(std),   color: 'var(--text-primary)' },
-          { label: 'Positive days',value: `${(posPct * 100).toFixed(1)}%`, color: posPct > 0.5 ? '#52b788' : '#e05c5c' },
+          { label: 'Positive days',value: `${(posPct * 100).toFixed(1)}%`, color: posPct > 0.5 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
           { label: 'Observations', value: returns.length, color: 'var(--text-muted)' },
         ].map(s => (
           <div key={s.label} style={{
             padding: '8px 12px',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.05)',
-            borderRadius: 8,
+            background: 'rgba(var(--white-rgb),0.03)',
+            border: '1px solid rgba(var(--white-rgb),0.05)',
+            borderRadius: 'var(--radius-sm)',
           }}>
             <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
               {s.label}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'monospace', color: s.color }}>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: s.color }}>
               {s.value}
             </div>
           </div>

@@ -30,14 +30,14 @@ function ColHeader({ label, tip }) {
           title={`${label}\n\n${tip}`}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
-            cursor: 'help', borderBottom: '1px dashed rgba(82,183,136,0.3)',
+            cursor: 'help', borderBottom: '1px dashed rgba(var(--signal-positive-rgb),0.3)',
             paddingBottom: 1,
           }}
         >
           {label}
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
-            <circle cx="6" cy="6" r="5" stroke="#52b788" strokeWidth="1.2"/>
-            <text x="6" y="9.5" textAnchor="middle" fontSize="7" fill="#52b788" fontWeight="700">?</text>
+            <circle cx="6" cy="6" r="5" stroke="var(--signal-positive)" strokeWidth="1.2"/>
+            <text x="6" y="9.5" textAnchor="middle" fontSize="7" fill="var(--signal-positive)" fontWeight="700">?</text>
           </svg>
         </span>
       ) : label}
@@ -52,7 +52,7 @@ const fmtCap  = v => {
   return `$${(v/1e6).toFixed(0)}M`
 }
 
-const SEV_COLOR = { high: '#e05c5c', medium: '#e09a30', low: '#74c69d' }
+const SEV_COLOR = { high: 'var(--signal-negative)', medium: 'var(--signal-caution)', low: 'var(--signal-positive-soft)' }
 const CAT_LABEL = { accounting: 'Accounting', concentration: 'Leverage / Ownership', competitive: 'Competitive' }
 
 function ScoreBar({ value, max, color }) {
@@ -60,10 +60,10 @@ function ScoreBar({ value, max, color }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2 }} />
+      <div style={{ flex: 1, height: 4, background: 'rgba(var(--white-rgb),0.07)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 'var(--radius-xs)' }} />
       </div>
-      <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-primary)', minWidth: 40, textAlign: 'right' }}>
+      <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', minWidth: 40, textAlign: 'right' }}>
         {fmtPct(value)}
       </span>
     </div>
@@ -131,7 +131,7 @@ export default function Valuation({ tickers }) {
       <div className="card" style={{ padding:0, overflow:'hidden', flexShrink:0 }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
           <thead>
-            <tr style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+            <tr style={{ borderBottom:'1px solid rgba(var(--white-rgb),0.06)' }}>
               {COLUMNS.map(col => (
                 <ColHeader key={col.label} label={col.label} tip={col.tip} />
               ))}
@@ -148,32 +148,32 @@ export default function Valuation({ tickers }) {
                   key={stock.ticker}
                   onClick={() => !hasError && setSelected(stock.ticker)}
                   style={{
-                    borderBottom:'1px solid rgba(255,255,255,0.04)',
-                    background: isSelected ? 'rgba(82,183,136,0.07)' : 'transparent',
+                    borderBottom:'1px solid rgba(var(--white-rgb),0.04)',
+                    background: isSelected ? 'rgba(var(--signal-positive-rgb),0.07)' : 'transparent',
                     cursor: hasError ? 'default' : 'pointer',
                     transition:'background 0.12s',
                   }}
-                  onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                  onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(var(--white-rgb),0.02)')}
                   onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'transparent')}
                 >
                   {/* Rank */}
                   <td style={{ padding:'12px 14px' }}>
                     <div style={{
-                      width:22, height:22, borderRadius:'50%', fontSize:11, fontWeight:700,
+                      width:22, height:22, borderRadius:'var(--radius-full)', fontSize:11, fontWeight:700,
                       display:'flex', alignItems:'center', justifyContent:'center',
-                      background: i===0 ? 'var(--accent)' : i===1 ? 'rgba(82,183,136,0.3)' : 'rgba(255,255,255,0.07)',
+                      background: i===0 ? 'var(--accent)' : i===1 ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--white-rgb),0.07)',
                       color: i===0 ? 'var(--card)' : 'var(--text-primary)',
                     }}>{i+1}</div>
                   </td>
 
                   {/* Ticker + name */}
                   <td style={{ padding:'12px 14px' }}>
-                    <div style={{ fontWeight:700, fontFamily:'monospace', color:'var(--text-primary)', fontSize:13 }}>
+                    <div style={{ fontWeight:700, fontFamily:'var(--font-mono)', color:'var(--text-primary)', fontSize:13 }}>
                       {stock.ticker}
                       {flagCount > 0 && (
                         <span style={{
                           marginLeft:6, fontSize:9, fontWeight:700, padding:'1px 5px',
-                          borderRadius:3, background:'rgba(224,92,92,0.2)', color:'#e05c5c',
+                          borderRadius:'var(--radius-3)', background:'rgba(var(--signal-negative-rgb),0.2)', color:'var(--signal-negative)',
                         }}>{flagCount} flag{flagCount>1?'s':''}</span>
                       )}
                     </div>
@@ -188,20 +188,20 @@ export default function Valuation({ tickers }) {
                     </td>
                   ) : (
                     <>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'monospace', color:'var(--text-primary)' }}>{fmtX(stock.ps_ratio)}</td>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'monospace', color:'var(--text-primary)' }}>{fmtX(stock.ev_ebitda)}</td>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'monospace', color: stock.gross_margin > 0.5 ? 'var(--positive)' : 'var(--text-primary)' }}>
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-primary)' }}>{fmtX(stock.ps_ratio)}</td>
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-primary)' }}>{fmtX(stock.ev_ebitda)}</td>
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color: stock.gross_margin > 0.5 ? 'var(--positive)' : 'var(--text-primary)' }}>
                         {fmtPct(stock.gross_margin)}
                       </td>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'monospace',
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)',
                         color: stock.rev_growth > 0.15 ? 'var(--positive)' : stock.rev_growth < 0 ? 'var(--negative)' : 'var(--text-primary)' }}>
                         {stock.rev_growth != null ? `${stock.rev_growth > 0 ? '+' : ''}${(stock.rev_growth*100).toFixed(1)}%` : 'N/A'}
                       </td>
-                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'monospace', color:'var(--text-muted)' }}>{fmtCap(stock.market_cap)}</td>
+                      <td style={{ padding:'12px 14px', textAlign:'right', fontFamily:'var(--font-mono)', color:'var(--text-muted)' }}>{fmtCap(stock.market_cap)}</td>
                       <td style={{ padding:'12px 14px', textAlign:'right' }}>
                         {stock.vg_score != null ? (
                           <span style={{
-                            fontFamily:'monospace', fontWeight:700, fontSize:13,
+                            fontFamily:'var(--font-mono)', fontWeight:700, fontSize:13,
                             color: stock.vg_score < 0.15 ? 'var(--positive)' : stock.vg_score < 0.4 ? 'var(--warning)' : 'var(--negative)',
                           }}>
                             {stock.vg_score.toFixed(2)}
@@ -220,7 +220,7 @@ export default function Valuation({ tickers }) {
         </table>
 
         {/* Score explanation */}
-        <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,0.04)', fontSize:10, color:'var(--text-muted)', lineHeight:1.6 }}>
+        <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(var(--white-rgb),0.04)', fontSize:10, color:'var(--text-muted)', lineHeight:1.6 }}>
           <strong style={{ color:'var(--text-secondary)' }}>Value/Growth Score</strong> = P/S ÷ Revenue Growth %.
           Lower = more growth per dollar of valuation. Click a row to see the full risk assessment.
         </div>
@@ -247,12 +247,12 @@ export default function Valuation({ tickers }) {
               { label:'Beta',           val: selectedStock.beta != null ? selectedStock.beta.toFixed(2) : 'N/A', note:'Market sensitivity' },
               { label:'Market Cap',     val: fmtCap(selectedStock.market_cap),   note:'Total company value' },
             ].map(m => (
-              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid rgba(255,255,255,0.03)' }}>
+              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid rgba(var(--white-rgb),0.03)' }}>
                 <div>
                   <div style={{ fontSize:11, color:'var(--text-secondary)' }}>{m.label}</div>
                   <div style={{ fontSize:10, color:'var(--text-muted)' }}>{m.note}</div>
                 </div>
-                <div style={{ fontSize:12, fontFamily:'monospace', fontWeight:600, color:'var(--text-primary)' }}>{m.val}</div>
+                <div style={{ fontSize:12, fontFamily:'var(--font-mono)', fontWeight:600, color:'var(--text-primary)' }}>{m.val}</div>
               </div>
             ))}
           </div>
@@ -270,14 +270,14 @@ export default function Valuation({ tickers }) {
               )}
               {selectedStock.flags?.map((flag, i) => (
                 <div key={i} style={{
-                  marginBottom:8, padding:'8px 10px', borderRadius:6,
-                  background:'rgba(255,255,255,0.03)',
-                  borderLeft:`3px solid ${SEV_COLOR[flag.severity] || '#888'}`,
+                  marginBottom:8, padding:'8px 10px', borderRadius:'var(--radius-6)',
+                  background:'rgba(var(--white-rgb),0.03)',
+                  borderLeft:`3px solid ${SEV_COLOR[flag.severity] || 'var(--grey-generic)'}`,
                 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                     <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)' }}>{flag.title}</span>
                     <span style={{
-                      fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:3,
+                      fontSize:9, fontWeight:700, padding:'1px 6px', borderRadius:'var(--radius-3)',
                       background: `${SEV_COLOR[flag.severity]}22`,
                       color: SEV_COLOR[flag.severity],
                       textTransform:'uppercase', letterSpacing:'0.05em',
@@ -300,7 +300,7 @@ export default function Valuation({ tickers }) {
                     display:'flex', gap:8, alignItems:'flex-start',
                     fontSize:11, color:'var(--text-secondary)', marginBottom:7, lineHeight:1.5,
                   }}>
-                    <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--accent)', flexShrink:0, marginTop:4 }}/>
+                    <div style={{ width:6, height:6, borderRadius:'var(--radius-full)', background:'var(--accent)', flexShrink:0, marginTop:4 }}/>
                     {p}
                   </div>
                 ))}
@@ -314,7 +314,7 @@ export default function Valuation({ tickers }) {
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Sector</div>
                   <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '—'}</div>
                 </div>
-                <div style={{ borderLeft:'1px solid rgba(255,255,255,0.06)', paddingLeft:12 }}>
+                <div style={{ borderLeft:'1px solid rgba(var(--white-rgb),0.06)', paddingLeft:12 }}>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Industry</div>
                   <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.industry || '—'}</div>
                 </div>
