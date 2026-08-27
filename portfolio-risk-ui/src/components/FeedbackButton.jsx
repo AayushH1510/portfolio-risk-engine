@@ -52,16 +52,16 @@ export default function FeedbackButton({ user }) {
         aria-label="Send feedback"
         style={{
           position: 'fixed', bottom: 20, right: 20, zIndex: 500,
-          width: 48, height: 48, borderRadius: '50%',
+          width: 48, height: 48, borderRadius: 'var(--radius-full)',
           background: 'var(--accent)', border: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+          boxShadow: '0 6px 20px rgba(var(--black-rgb),0.35)',
           cursor: 'pointer', transition: 'transform 0.15s',
         }}
         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)' }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
       >
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0d1a10" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
         </svg>
       </button>
@@ -70,7 +70,7 @@ export default function FeedbackButton({ user }) {
         <div
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(var(--black-rgb),0.6)',
             display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
             padding: 20,
           }}
@@ -81,8 +81,8 @@ export default function FeedbackButton({ user }) {
             style={{
               width: 320, background: 'var(--card)',
               border: '1px solid var(--border)',
-              borderRadius: 14, padding: '20px 20px 18px',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+              borderRadius: 'var(--radius-14)', padding: '20px 20px 18px',
+              boxShadow: '0 24px 64px rgba(var(--black-rgb),0.5)',
             }}
           >
             {submitted ? (
@@ -115,7 +115,7 @@ export default function FeedbackButton({ user }) {
                   style={{
                     width: '100%', resize: 'vertical', fontFamily: 'inherit',
                     fontSize: 12, marginBottom: 10,
-                    color: '#ffffff', background: 'var(--card-2)',
+                    color: 'var(--white)', background: 'var(--card-2)',
                     border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
                     padding: '7px 10px', outline: 'none',
                   }}

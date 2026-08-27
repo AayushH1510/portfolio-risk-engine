@@ -40,8 +40,8 @@ export default function FirstResultCallout() {
       position: 'fixed', top: rect.bottom + 10, left: rect.left,
       zIndex: 999, width: 250,
       background: 'var(--card)', border: '1px solid var(--accent)',
-      borderRadius: 10, padding: '12px 14px',
-      boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+      borderRadius: 'var(--radius-10)', padding: '12px 14px',
+      boxShadow: '0 12px 32px rgba(var(--black-rgb),0.45)',
     }}>
       <div style={{
         position: 'absolute', top: -7, left: 24,

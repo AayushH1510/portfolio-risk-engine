@@ -52,8 +52,8 @@ export default function OnboardingTour() {
       position: 'fixed', top, left, transform: 'translateY(-50%)',
       zIndex: 999, width: 236,
       background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 10, padding: '14px 16px',
-      boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+      borderRadius: 'var(--radius-10)', padding: '14px 16px',
+      boxShadow: '0 12px 32px rgba(var(--black-rgb),0.45)',
     }}>
       {/* Arrow pointing back at the anchor */}
       <div style={{

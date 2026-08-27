@@ -23,7 +23,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'rgba(0,0,0,0.6)',
+      background: 'rgba(var(--black-rgb),0.6)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}
       onClick={onClose}
@@ -33,15 +33,15 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
         style={{
           width: 360, background: 'var(--card)',
           border: '1px solid var(--border)',
-          borderRadius: 14, padding: '28px 28px 24px',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+          borderRadius: 'var(--radius-14)', padding: '28px 28px 24px',
+          boxShadow: '0 24px 64px rgba(var(--black-rgb),0.5)',
         }}
       >
         {/* Logo + title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-          <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="#1e2420"/>
+              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--card)"/>
             </svg>
           </div>
           <div>
@@ -64,7 +64,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
             <button
               onClick={onSignInGoogle}
               style={{
-                width: '100%', padding: '10px 0', borderRadius: 8,
+                width: '100%', padding: '10px 0', borderRadius: 'var(--radius-sm)',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 background: 'var(--card-2)', border: '1px solid var(--border)',
                 color: 'var(--text-primary)', display: 'flex', alignItems: 'center',
@@ -105,7 +105,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
             </div>
 
             {error && (
-              <div style={{ fontSize: 12, color: 'var(--negative)', marginBottom: 10, padding: '6px 10px', background: 'rgba(224,92,92,0.1)', borderRadius: 6 }}>
+              <div style={{ fontSize: 12, color: 'var(--negative)', marginBottom: 10, padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)', borderRadius: 'var(--radius-6)' }}>
                 {error}
               </div>
             )}
