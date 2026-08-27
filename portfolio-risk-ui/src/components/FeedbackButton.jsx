@@ -52,10 +52,9 @@ export default function FeedbackButton({ user }) {
         aria-label="Send feedback"
         style={{
           position: 'fixed', bottom: 20, right: 20, zIndex: 500,
-          width: 48, height: 48, borderRadius: 'var(--radius-full)',
-          background: 'var(--accent)', border: 'none',
+          width: 48, height: 48,
+          background: 'var(--signal-positive)', border: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 6px 20px rgba(var(--black-rgb),0.35)',
           cursor: 'pointer', transition: 'transform 0.15s',
         }}
         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)' }}
@@ -79,10 +78,9 @@ export default function FeedbackButton({ user }) {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: 320, background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-14)', padding: '20px 20px 18px',
-              boxShadow: '0 24px 64px rgba(var(--black-rgb),0.5)',
+              width: 320, background: 'var(--surface-card)',
+              border: 'var(--border-emphasis)',
+              padding: '20px 20px 18px',
             }}
           >
             {submitted ? (
@@ -115,8 +113,8 @@ export default function FeedbackButton({ user }) {
                   style={{
                     width: '100%', resize: 'vertical', fontFamily: 'inherit',
                     fontSize: 12, marginBottom: 10,
-                    color: 'var(--white)', background: 'var(--card-2)',
-                    border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+                    color: 'var(--text-primary)', background: 'var(--surface-elevated)',
+                    border: 'var(--border-default)',
                     padding: '7px 10px', outline: 'none',
                   }}
                 />
@@ -130,7 +128,7 @@ export default function FeedbackButton({ user }) {
                 </select>
 
                 {error && (
-                  <div style={{ fontSize: 11, color: 'var(--negative)', marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: 'var(--signal-negative)', marginBottom: 10 }}>
                     {error}
                   </div>
                 )}

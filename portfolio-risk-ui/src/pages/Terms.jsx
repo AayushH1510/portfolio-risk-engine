@@ -53,7 +53,7 @@ export default function Terms() {
       <TrustSection heading="Contact">
         <p>
           Questions about these terms? Reach out at{' '}
-          <a href="mailto:aayushdxb1510@gmail.com" style={{ color: 'var(--accent)' }}>aayushdxb1510@gmail.com</a>.
+          <a href="mailto:aayushdxb1510@gmail.com" style={{ color: 'var(--signal-positive)' }}>aayushdxb1510@gmail.com</a>.
         </p>
       </TrustSection>
     </TrustPage>

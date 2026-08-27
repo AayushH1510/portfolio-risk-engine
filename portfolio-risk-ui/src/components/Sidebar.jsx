@@ -115,19 +115,19 @@ export default function Sidebar({
   }
 
   return (
-    <aside style={{
+    <aside className="grain-surface" style={{
       width: 240, minWidth: 240, height: '100%',
-      background: 'var(--card)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      background: 'var(--surface-sidebar)',
+      borderRight: 'var(--border-default)',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
     }}>
 
       {/* Logo */}
-      <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ padding: '18px 16px 14px', borderBottom: 'var(--border-default)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, background: 'var(--accent)', borderRadius: 'var(--radius-6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 28, height: 28, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--card)"/>
+              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--surface-canvas)"/>
             </svg>
           </div>
           <div>
@@ -184,11 +184,11 @@ export default function Sidebar({
           <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
             {['pct', 'dollar'].map(m => (
               <button key={m} onClick={() => setInputMode(m)} style={{
-                flex: 1, padding: '5px 0', borderRadius: 'var(--radius-6)', fontSize: 10,
+                flex: 1, padding: '5px 0', fontSize: 10,
                 fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
-                background: inputMode === m ? 'var(--accent)' : 'var(--card-2)',
-                color: inputMode === m ? 'var(--card)' : 'var(--text-muted)',
-                border: '1px solid var(--border)', transition: 'all 0.15s',
+                background: inputMode === m ? 'var(--signal-positive)' : 'var(--surface-elevated)',
+                color: inputMode === m ? 'var(--surface-canvas)' : 'var(--text-muted)',
+                border: 'var(--border-default)', transition: 'all 0.15s',
               }}>
                 {m === 'pct' ? '% Split' : '$ Amount'}
               </button>
@@ -204,14 +204,14 @@ export default function Sidebar({
                   <div key={ticker} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <TickerLabel ticker={ticker} weight={weights[i]} />
-                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--signal-positive)' }}>
                         {weightPct[i]}%
                         {isLast && <span style={{ fontSize: 9, marginLeft: 4, color: 'var(--text-muted)' }}>auto</span>}
                       </span>
                     </div>
                     {isLast ? (
-                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${weightPct[i]}%`, background: 'var(--text-muted)', borderRadius: 'var(--radius-xs)', opacity: 0.5 }} />
+                      <div style={{ height: 4, background: 'var(--surface-elevated)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${weightPct[i]}%`, background: 'var(--text-muted)', opacity: 0.5 }} />
                       </div>
                     ) : (
                       <input
@@ -223,7 +223,7 @@ export default function Sidebar({
                   </div>
                 )
               })}
-              <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 2 }}>100% allocated</div>
+              <div style={{ fontSize: 10, color: 'var(--signal-positive)', marginTop: 2 }}>100% allocated</div>
             </>
           )}
 
@@ -232,13 +232,13 @@ export default function Sidebar({
             <>
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                marginBottom: 10, padding: '6px 10px', borderRadius: 'var(--radius-6)',
-                background: 'var(--card-2)', border: '1px solid var(--border)',
+                marginBottom: 10, padding: '6px 10px',
+                background: 'var(--surface-elevated)', border: 'var(--border-default)',
               }}>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
                 <span style={{
                   fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13,
-                  color: Math.abs(totalDollar - portfolioValue) < 1 ? 'var(--accent)' : 'var(--warning)',
+                  color: Math.abs(totalDollar - portfolioValue) < 1 ? 'var(--signal-positive)' : 'var(--signal-caution)',
                 }}>
                   ${Math.round(totalDollar).toLocaleString()}
                   <span style={{ fontSize: 9, color: 'var(--text-muted)', marginLeft: 4 }}>/ ${portfolioValue.toLocaleString()}</span>
@@ -251,14 +251,14 @@ export default function Sidebar({
                   <div key={ticker} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <TickerLabel ticker={ticker} weight={weights[i]} />
-                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--accent)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', color: isLast ? 'var(--text-muted)' : 'var(--signal-positive)' }}>
                         ${Math.round(dollarAmts[i]).toLocaleString()}
                         {isLast && <span style={{ fontSize: 9, marginLeft: 4, color: 'var(--text-muted)' }}>auto</span>}
                       </span>
                     </div>
                     {isLast ? (
-                      <div style={{ height: 4, background: 'var(--card-3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${(dollarAmts[i] / portfolioValue) * 100}%`, background: 'var(--text-muted)', borderRadius: 'var(--radius-xs)', opacity: 0.4 }} />
+                      <div style={{ height: 4, background: 'var(--surface-elevated)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${(dollarAmts[i] / portfolioValue) * 100}%`, background: 'var(--text-muted)', opacity: 0.4 }} />
                       </div>
                     ) : (
                       <input type="range" min={0} max={portfolioValue}
@@ -285,10 +285,10 @@ export default function Sidebar({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 8 }}>
             {PERIODS.map(p => (
               <button key={p} onClick={() => { setPeriod(p); setUseCustomDate(false) }} style={{
-                padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10, fontWeight: 600,
-                background: period === p && !useCustomDate ? 'var(--accent)' : 'var(--card-2)',
-                color: period === p && !useCustomDate ? 'var(--card)' : 'var(--text-muted)',
-                border: '1px solid var(--border)', transition: 'all 0.15s',
+                padding: '5px 0', fontSize: 10, fontWeight: 600,
+                background: period === p && !useCustomDate ? 'var(--signal-positive)' : 'var(--surface-elevated)',
+                color: period === p && !useCustomDate ? 'var(--surface-canvas)' : 'var(--text-muted)',
+                border: 'var(--border-default)', transition: 'all 0.15s',
               }}>{p}</button>
             ))}
           </div>
@@ -296,10 +296,10 @@ export default function Sidebar({
           <button
             onClick={() => setUseCustomDate(v => !v)}
             style={{
-              width: '100%', padding: '5px 0', borderRadius: 'var(--radius-5)', fontSize: 10, fontWeight: 600,
-              background: useCustomDate ? 'var(--accent)' : 'var(--card-2)',
-              color: useCustomDate ? 'var(--card)' : 'var(--text-muted)',
-              border: '1px solid var(--border)', transition: 'all 0.15s', marginBottom: useCustomDate ? 8 : 0,
+              width: '100%', padding: '5px 0', fontSize: 10, fontWeight: 600,
+              background: useCustomDate ? 'var(--signal-positive)' : 'var(--surface-elevated)',
+              color: useCustomDate ? 'var(--surface-canvas)' : 'var(--text-muted)',
+              border: 'var(--border-default)', transition: 'all 0.15s', marginBottom: useCustomDate ? 8 : 0,
             }}
           >
             Custom dates
@@ -350,20 +350,20 @@ export default function Sidebar({
         <Section label="6. Benchmark">
           <div onClick={() => setShowBenchmark(!showBenchmark)} style={{
             display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-            padding: '7px 10px', borderRadius: 'var(--radius-6)',
-            background: showBenchmark ? 'rgba(var(--signal-positive-rgb),0.12)' : 'var(--card-2)',
-            border: `1px solid ${showBenchmark ? 'var(--accent)' : 'var(--border)'}`,
+            padding: '7px 10px',
+            background: showBenchmark ? 'rgba(var(--signal-positive-rgb),0.12)' : 'var(--surface-elevated)',
+            border: `1px solid ${showBenchmark ? 'var(--signal-positive)' : 'var(--line-hairline)'}`,
             transition: 'all 0.15s',
           }}>
             <div style={{
-              width: 16, height: 16, borderRadius: 'var(--radius-4)',
-              background: showBenchmark ? 'var(--accent)' : 'var(--card-3)',
+              width: 16, height: 16,
+              background: showBenchmark ? 'var(--signal-positive)' : 'var(--surface-elevated)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.15s',
             }}>
               {showBenchmark && (
                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                  <path d="M1 4L3.5 6.5L9 1" stroke="var(--card)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M1 4L3.5 6.5L9 1" stroke="var(--surface-canvas)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </div>
@@ -376,7 +376,7 @@ export default function Sidebar({
       </div>
 
       {/* Run button */}
-      <div style={{ padding: 14, borderTop: '1px solid var(--border)' }}>
+      <div style={{ padding: 14, borderTop: 'var(--border-default)' }}>
         <button
           data-tour="run-analysis"
           className="btn-primary"
@@ -404,7 +404,10 @@ export default function Sidebar({
 function Section({ label, children, tourId }) {
   return (
     <div style={{ marginBottom: 18 }} data-tour={tourId}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
+      <div style={{
+        fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
+        textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 8,
+      }}>
         {label}
       </div>
       {children}

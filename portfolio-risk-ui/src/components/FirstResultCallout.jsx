@@ -39,20 +39,19 @@ export default function FirstResultCallout() {
     <div style={{
       position: 'fixed', top: rect.bottom + 10, left: rect.left,
       zIndex: 999, width: 250,
-      background: 'var(--card)', border: '1px solid var(--accent)',
-      borderRadius: 'var(--radius-10)', padding: '12px 14px',
-      boxShadow: '0 12px 32px rgba(var(--black-rgb),0.45)',
+      background: 'var(--surface-card)', border: '1px solid var(--signal-positive)',
+      padding: '12px 14px',
     }}>
       <div style={{
         position: 'absolute', top: -7, left: 24,
         width: 0, height: 0,
         borderLeft: '7px solid transparent',
         borderRight: '7px solid transparent',
-        borderBottom: '7px solid var(--accent)',
+        borderBottom: '7px solid var(--signal-positive)',
       }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.55 }}>
-          <strong style={{ color: 'var(--accent)' }}>This is your Sharpe ratio.</strong>{' '}
+          <strong style={{ color: 'var(--signal-positive)' }}>This is your Sharpe ratio.</strong>{' '}
           Above 1.0 means you're being paid well for the risk you're taking.
         </div>
         <button

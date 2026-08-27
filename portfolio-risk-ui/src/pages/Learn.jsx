@@ -66,18 +66,17 @@ function TierToggle({ tier, onChange }) {
   return (
     <div style={{
       display: 'inline-flex', gap: 4, padding: 4,
-      background: 'var(--card-2)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-10)',
+      background: 'var(--surface-elevated)', border: 'var(--border-default)',
     }}>
       {TIERS.map(t => (
         <button
           key={t.key}
           onClick={() => onChange(t.key)}
           style={{
-            padding: '8px 18px', borderRadius: 'var(--radius-7)', fontSize: 12, fontWeight: 700,
+            padding: '8px 18px', fontSize: 12, fontWeight: 700,
             letterSpacing: '0.02em', border: 'none', cursor: 'pointer',
-            background: tier === t.key ? 'var(--accent)' : 'transparent',
-            color: tier === t.key ? 'var(--card)' : 'var(--text-muted)',
+            background: tier === t.key ? 'var(--signal-positive)' : 'transparent',
+            color: tier === t.key ? 'var(--surface-canvas)' : 'var(--text-muted)',
             transition: 'background 0.15s, color 0.15s',
           }}
         >
@@ -100,7 +99,6 @@ export default function Learn() {
           padding: '12px 16px',
           background: 'rgba(var(--signal-positive-rgb),0.08)',
           border: '1px solid rgba(var(--signal-positive-rgb),0.25)',
-          borderRadius: 'var(--radius-sm)',
           fontSize: 12,
           color: 'var(--text-secondary)',
           lineHeight: 1.6,
@@ -111,7 +109,7 @@ export default function Learn() {
 
         <div style={{
           marginBottom: 24, position: 'sticky', top: 0, zIndex: 5,
-          background: 'var(--bg)', paddingBottom: 10, paddingTop: 2,
+          background: 'var(--surface-canvas)', paddingBottom: 10, paddingTop: 2,
         }}>
           <TierToggle tier={tier} onChange={setTier} />
         </div>
@@ -124,10 +122,10 @@ export default function Learn() {
               fontWeight: 700,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              color: 'var(--accent)',
+              color: 'var(--signal-positive)',
               marginBottom: 12,
               paddingBottom: 8,
-              borderBottom: '1px solid var(--border)',
+              borderBottom: 'var(--border-default)',
             }}>
               {section.category}
             </div>
@@ -167,7 +165,7 @@ export default function Learn() {
           color: 'var(--text-muted)',
           textAlign: 'center',
           padding: '16px 0 8px',
-          borderTop: '1px solid var(--border)',
+          borderTop: 'var(--border-default)',
         }}>
           This tool is for educational purposes only and does not constitute financial advice.
           Past performance does not guarantee future results.

@@ -25,8 +25,8 @@ function CustomTooltip({ active, payload, label, prefix = '', pct = false }) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
+      background: 'var(--surface-elevated)', border: 'var(--border-emphasis)',
+      padding: '8px 12px', fontSize: 'var(--text-body-sm)', fontFamily: 'var(--font-primary)',
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
@@ -92,9 +92,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
           <div key={i} style={{
-            fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-            background: 'rgba(var(--white-rgb),0.07)', border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-4)', padding: '3px 8px', color: 'var(--text-muted)',
+            fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
+            background: 'var(--surface-elevated)', border: 'var(--border-default)',
+            padding: '3px 8px', color: 'var(--text-muted)',
             fontFamily: 'var(--font-mono)',
           }}>
             {pill}
@@ -138,17 +138,17 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
         {/* Growth chart */}
         <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
               Portfolio growth
             </div>
             <div style={{ display: 'flex', gap: 10, fontSize: 10 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
-                <span style={{ width: 20, height: 2, background: 'var(--accent)', display: 'inline-block', borderRadius: 'var(--radius-1)' }} />
+                <span style={{ width: 20, height: 2, background: 'var(--signal-positive)', display: 'inline-block' }} />
                 Your portfolio
               </span>
               {bench && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
-                  <span style={{ width: 20, height: 2, display: 'inline-block', borderRadius: 'var(--radius-1)', opacity: 0.6, borderBottom: '2px dashed var(--text-muted)' }} />
+                  <span style={{ width: 20, height: 2, display: 'inline-block', opacity: 0.6, borderBottom: '2px dashed var(--text-muted)' }} />
                   S&P 500
                 </span>
               )}
@@ -158,24 +158,18 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             {sectorLoading ? (
               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <svg className="spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="3" strokeDasharray="40 20" />
+                  <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20" />
                 </svg>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Loading chart…</div>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="gPort" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="var(--signal-positive)" stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor="var(--signal-positive)" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
                   <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
-                  <ReferenceLine y={0} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4" />
+                  <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
                   <Tooltip content={<CustomTooltip pct />} />
-                  <Area type="monotone" dataKey="portfolio" stroke="var(--signal-positive)" strokeWidth={2} fill="url(#gPort)" dot={false} name="Portfolio" />
+                  <Area type="monotone" dataKey="portfolio" stroke="var(--signal-positive)" strokeWidth={1.5} fill="var(--signal-positive)" fillOpacity={0.08} dot={false} name="Portfolio" />
                   {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
                 </ComposedChart>
               </ResponsiveContainer>
@@ -199,28 +193,22 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           />
 
           <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 10 }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
               Drawdown
             </div>
             <div style={{ flex: 1, minHeight: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="gDD" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="var(--signal-negative)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="var(--signal-negative)" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
                   <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                   <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
                   <Tooltip content={<CustomTooltip pct />} />
-                  <Area type="monotone" dataKey="drawdown" stroke="var(--signal-negative)" strokeWidth={1.5} fill="url(#gDD)" dot={false} name="Drawdown" />
+                  <Area type="monotone" dataKey="drawdown" stroke="var(--signal-negative)" strokeWidth={1.5} fill="var(--signal-negative)" fillOpacity={0.08} dot={false} name="Drawdown" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div style={{ fontSize: 11, marginTop: 8 }}>
               <span style={{ color: 'var(--text-muted)' }}>Worst drop: </span>
-              <span style={{ color: 'var(--negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
+              <span style={{ color: 'var(--signal-negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
             </div>
           </div>
 

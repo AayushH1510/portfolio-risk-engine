@@ -31,17 +31,16 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: 360, background: 'var(--card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-14)', padding: '28px 28px 24px',
-          boxShadow: '0 24px 64px rgba(var(--black-rgb),0.5)',
+          width: 360, background: 'var(--surface-card)',
+          border: 'var(--border-emphasis)',
+          padding: '28px 28px 24px',
         }}
       >
         {/* Logo + title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-          <div style={{ width: 32, height: 32, background: 'var(--accent)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 32, height: 32, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--card)"/>
+              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--surface-canvas)"/>
             </svg>
           </div>
           <div>
@@ -64,14 +63,14 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
             <button
               onClick={onSignInGoogle}
               style={{
-                width: '100%', padding: '10px 0', borderRadius: 'var(--radius-sm)',
+                width: '100%', padding: '10px 0',
                 fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                background: 'var(--card-2)', border: '1px solid var(--border)',
+                background: 'var(--surface-elevated)', border: 'var(--border-default)',
                 color: 'var(--text-primary)', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', gap: 10, marginBottom: 16, transition: 'all 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--signal-positive)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--line-hairline)'}
             >
               <svg width="18" height="18" viewBox="0 0 18 18">
                 <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
@@ -84,9 +83,9 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
 
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
+              <div style={{ flex: 1, height: 1, background: 'var(--line-hairline)' }}/>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>or</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
+              <div style={{ flex: 1, height: 1, background: 'var(--line-hairline)' }}/>
             </div>
 
             {/* Email + password */}
@@ -105,7 +104,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
             </div>
 
             {error && (
-              <div style={{ fontSize: 12, color: 'var(--negative)', marginBottom: 10, padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)', borderRadius: 'var(--radius-6)' }}>
+              <div style={{ fontSize: 12, color: 'var(--signal-negative)', marginBottom: 10, padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)' }}>
                 {error}
               </div>
             )}
@@ -123,7 +122,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
               {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
               <span
                 onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null) }}
-                style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}
+                style={{ color: 'var(--signal-positive)', cursor: 'pointer', fontWeight: 600 }}
               >
                 {mode === 'signin' ? 'Sign up' : 'Sign in'}
               </span>

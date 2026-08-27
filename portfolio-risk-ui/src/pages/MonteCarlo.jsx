@@ -25,15 +25,15 @@ function ScenarioToggle({ scenario, onChange }) {
             onClick={() => onChange(s.key)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              padding: '8px 0', borderRadius: 'var(--radius-sm)',
-              border: `1px solid ${active ? s.color : 'var(--border)'}`,
-              background: active ? s.bg : 'rgba(var(--white-rgb),0.03)',
+              padding: '8px 0',
+              border: `1px solid ${active ? s.color : 'var(--line-hairline)'}`,
+              background: active ? s.bg : 'rgba(var(--text-primary-rgb),0.03)',
               cursor: 'pointer', transition: 'all 0.15s',
             }}
           >
             <span style={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: active ? s.color : 'var(--text-muted)',
+              fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)',
+              fontFamily: 'var(--font-primary)', color: active ? s.color : 'var(--text-muted)',
             }}>
               {s.label}
             </span>
@@ -115,7 +115,7 @@ export default function MonteCarlo({ data }) {
 
         {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, flexShrink:0 }}>
-          <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--text-secondary)' }}>
+          <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)' }}>
             {n_simulations.toLocaleString()} simulated futures — next 12 months
           </div>
           <div style={{ display:'flex', gap:14, fontSize:10 }}>
@@ -132,7 +132,7 @@ export default function MonteCarlo({ data }) {
               </span>
             ))}
             <span style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-muted)' }}>
-              <div style={{ width:16, height:1.5, background:'rgba(var(--chart-sage-rgb),0.2)', borderRadius:'var(--radius-1)' }}/>
+              <div style={{ width:16, height:1.5, background:'rgba(var(--chart-sage-rgb),0.2)' }}/>
               Simulated paths
             </span>
           </div>
@@ -157,9 +157,9 @@ export default function MonteCarlo({ data }) {
               <Tooltip
                 formatter={(v, n) => [fmtD(v), n === 'p5' ? 'Bad scenario' : n === 'p50' ? 'Median' : 'Good scenario']}
                 labelFormatter={l => `Day ${l}`}
-                contentStyle={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', fontSize:11 }}
+                contentStyle={{ background:'var(--surface-elevated)', border:'var(--border-emphasis)', fontSize:11 }}
               />
-              <ReferenceLine y={portfolio_value} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4"
+              <ReferenceLine y={portfolio_value} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4"
                 label={{ value:'Start', fill:'var(--text-muted)', fontSize:9, position:'right' }} />
               <Line type="monotone" dataKey="p5"  stroke="var(--signal-negative)" strokeWidth={1.5} dot={false} strokeDasharray="5 4" />
               <Line type="monotone" dataKey="p50" stroke="var(--signal-positive)" strokeWidth={2}   dot={false} />

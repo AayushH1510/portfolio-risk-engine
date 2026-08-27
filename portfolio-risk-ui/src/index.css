@@ -1,6 +1,105 @@
 @import "tailwindcss";
 
 :root {
+  /* ═══════════════════════════════════════════════════════════════
+     VARENSE DESIGN SYSTEM — locked values from DESIGN.md.
+     See THEMING.md at the project root for "what to edit to retheme."
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Surfaces */
+  --surface-canvas:    #0f0d0b;
+  --surface-sidebar:   #161310;
+  --surface-card:      #211e1b;
+  --surface-card-rgb:  33, 30, 27;
+  --surface-elevated:  #2c2825;
+
+  /* Lines */
+  --line-hairline:     #4d4947;
+  --line-hairline-top: #665f58;
+  --line-emphasis:     #5f5a57;
+  --line-faint:        #2e2b29;
+  --line-faint-rgb:    46, 43, 41;
+
+  /* Text */
+  --text-primary:      #f2efec;
+  --text-primary-rgb:  242, 239, 236;
+  --text-secondary:    #a39d98;
+  --text-muted:        #7a736e;
+  --text-faint:        #5a544f;
+
+  /* Signal */
+  --signal-positive:       #52b788;
+  --signal-negative:       #e0574f;
+  --signal-caution:        #d99a3c;
+  --signal-positive-rgb:   82, 183, 136;
+  --signal-negative-rgb:   224, 87, 79;
+  --signal-caution-rgb:    217, 154, 60;
+  --signal-positive-wash:  #52b7881a;
+  --signal-negative-wash:  #e0574f1a;
+  --signal-caution-wash:   #d99a3c1a;
+
+  /* Fonts */
+  --font-primary: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Type scale — role: size / tracking / weight / line-height */
+  --text-caption:      10px;  --tracking-caption:      0.08em;  --weight-caption:      500; --leading-caption:      1.4;
+  --text-micro:        11px;  --tracking-micro:        0.04em;  --weight-micro:        400; --leading-micro:        1.45;
+  --text-body-sm:      12px;  --tracking-body-sm:      0;       --weight-body-sm:      400; --leading-body-sm:      1.5;
+  --text-body:         14px;  --tracking-body:        -0.005em; --weight-body:         400; --leading-body:         1.55;
+  --text-heading-sm:   18px;  --tracking-heading-sm:  -0.02em;  --weight-heading-sm:   500; --leading-heading-sm:   1.3;
+  --text-heading:      24px;  --tracking-heading:     -0.035em; --weight-heading:      500; --leading-heading:      1.2;
+  --text-heading-lg:   32px;  --tracking-heading-lg:  -0.045em; --weight-heading-lg:   600; --leading-heading-lg:   1.12;
+  --text-display:      48px;  --tracking-display:     -0.055em; --weight-display:      600; --leading-display:      1.04;
+  --text-display-lg:   64px;  --tracking-display-lg:  -0.06em;  --weight-display-lg:   600; --leading-display-lg:   1.0;
+  --tracking-tab:      0.06em;   /* Tab Bar component spec — distinct from body-sm's default 0 tracking */
+
+  /* Spacing (4px base unit) */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 20px;  --space-6: 24px;
+  --space-8: 32px;  --space-10: 40px; --space-12: 48px;
+  --space-16: 64px; --space-20: 80px;
+
+  /* Shape — single source of truth for "no radius," see the global reset below */
+  --radius: 0;
+  --border-default:  1px solid var(--line-hairline);
+  --border-top:      1px solid var(--line-hairline-top);
+  --border-emphasis: 1px solid var(--line-emphasis);
+  --border-faint:    1px solid var(--line-faint);
+
+  /* Layout */
+  --page-max-width: 1440px;
+  --sidebar-width:  260px;
+  --section-gap:    48px;
+  --card-padding:   16px 20px;
+  --element-gap:    12px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:     120ms;
+  --duration-standard: 220ms;
+  --duration-slow:     300ms;
+  --duration-draw:     700ms;
+
+  /* Grain texture (feTurbulence noise, applied per-surface via .grain-canvas /
+     .grain-surface, see below) */
+  --grain-opacity-canvas:  0.07;
+  --grain-opacity-surface: 0.04;
+  --grain-tile-size:       180px;
+
+  /* Vignette — named so retuning is a variable edit, not a string hunt.
+     Locked spec: see DESIGN.md "Surface Texture". */
+  --vignette-center:   #1a1613;
+  --vignette-edge:     #050403;
+  --vignette-shape:    ellipse 1600px 1400px;
+  --vignette-position: 56% 38%;
+  --vignette-stop:     65%;
+
+  /* ─────────────────────────────────────────────────────────────
+     LEGACY — old light-theme tokens, kept only until every consumer
+     below is migrated off them. Do not add new usages. Once nothing
+     in src/ references these, delete this block entirely.
+     ───────────────────────────────────────────────────────────── */
   --bg:            #d8e8d8;
   --bg-deep:       #ccdccc;
   --card:          #1e2420;
@@ -10,16 +109,12 @@
   --accent-dark:   #2d6a4f;
   --accent-light:  #b7e4c7;
   --accent-light-rgb: 183, 228, 199;
-  --text-primary:  #eef2ee;
-  --text-secondary:#8aaa8a;
-  --text-muted:    #5a7a5a;
   --text-dark:     #1a241a;
   --border:        rgba(255,255,255,0.07);
   --border-light:  rgba(0,0,0,0.08);
   --positive:      #52b788;
   --negative:      #e05c5c;
   --warning:       #e09a30;
-  --radius:        12px;
   --radius-sm:     8px;
   --radius-lg:     16px;
 
@@ -45,6 +140,7 @@
   --signal-negative-strong: #b03a3a;   /* 99%-confidence VaR/CVaR red */
   --signal-negative-strong-rgb: 176, 58, 58;
   --signal-positive-soft:   #74c69d;   /* "low severity" light green */
+  --signal-positive-soft-rgb: 116, 198, 157;
   --text-on-accent:         #0d1a10;   /* text/icons sitting on a green fill */
 
   /* Chart-specific colours (Frontier optimal marker, Comparison's
@@ -131,6 +227,11 @@
   --report-border:     #c8d8c8;   /* watermark border */
 }
 
+/* Single source of truth for "zero radius everywhere" — DESIGN.md Core Rule #1.
+   Applied broadly here; do not add per-component border-radius overrides,
+   remove them instead if you find one. */
+*, *::before, *::after { border-radius: 0 !important; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
@@ -140,57 +241,86 @@ html, body, #root {
 }
 
 body {
-  background: var(--bg);
-  color: var(--text-dark);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); }
+
+/* Shared grain texture — one definition, reused via .grain-canvas (page
+   background, ~7% opacity) and .grain-surface (sidebar/cards, ~4% opacity).
+   Each is a ::before on the surface itself (z-index -1 relative to that
+   surface) rather than one global layer, since opaque components would
+   otherwise fully occlude a shared canvas-level layer — see DESIGN.md
+   "Surface Texture". Host element needs position: relative. */
+.grain-canvas, .grain-surface, .card, .card-light { position: relative; }
+.grain-canvas::before, .grain-surface::before, .card::before, .card-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeComponentTransfer in='t' result='c'%3E%3CfeFuncA type='gamma' amplitude='1' exponent='2.5' offset='0'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix in='c' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: var(--grain-tile-size) var(--grain-tile-size);
+}
+.grain-canvas::before  { opacity: var(--grain-opacity-canvas); }
+.grain-surface::before,
+.card::before, .card-light::before { opacity: var(--grain-opacity-surface); }
+
+/* Vignette — fixed, full-viewport, sits beneath the grain + all components.
+   See --vignette-* tokens above. Add this class once to the app shell root. */
+.vignette-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(var(--vignette-shape) at var(--vignette-position), var(--vignette-center) 0%, var(--vignette-edge) var(--vignette-stop));
+}
 
 .card {
-  background: var(--card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  background: rgba(var(--surface-card-rgb), 0.9);
+  border: 1px solid var(--line-hairline);
+  border-top-color: var(--line-hairline-top);
 }
 
 .card-light {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(8px);
-  border-radius: var(--radius);
-  border: 1px solid var(--border-light);
+  background: rgba(var(--surface-card-rgb), 0.9);
+  border: 1px solid var(--line-hairline);
+  border-top-color: var(--line-hairline-top);
 }
 
 .mono {
-  font-family: var(--font-mono-rich);
+  font-family: var(--font-mono);
 }
 
-.positive { color: var(--positive); }
-.negative { color: var(--negative); }
-.warning  { color: var(--warning); }
+.positive { color: var(--signal-positive); }
+.negative { color: var(--signal-negative); }
+.warning  { color: var(--signal-caution); }
 
 input, select {
-  background: var(--card-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  border: 1px solid var(--line-hairline);
   color: var(--text-primary);
-  padding: 7px 10px;
+  font-family: var(--font-primary);
+  padding: 10px 12px;
   font-size: 13px;
   outline: none;
   width: 100%;
 }
 input:focus, select:focus {
-  border-color: var(--accent);
+  border-color: var(--signal-positive);
 }
 
 input[type="range"] {
   -webkit-appearance: none;
-  background: var(--card-3);
+  background: var(--surface-elevated);
   height: 4px;
-  border-radius: 2px;
   border: none;
   padding: 0;
   cursor: pointer;
@@ -199,8 +329,7 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  background: var(--accent);
+  background: var(--signal-positive);
   cursor: pointer;
 }
 

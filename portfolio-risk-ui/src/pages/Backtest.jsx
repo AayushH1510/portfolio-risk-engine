@@ -17,8 +17,8 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: 'var(--card)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 11,
+      background: 'var(--surface-elevated)', border: 'var(--border-default)',
+      padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
@@ -31,7 +31,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 function Row({ label, value, tone }) {
-  const color = { good: 'var(--positive)', warning: 'var(--warning)', bad: 'var(--negative)' }[tone] || 'var(--text-primary)'
+  const color = { good: 'var(--signal-positive)', warning: 'var(--signal-caution)', bad: 'var(--signal-negative)' }[tone] || 'var(--text-primary)'
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
@@ -42,12 +42,12 @@ function Row({ label, value, tone }) {
 
 function StrategyCard({ label, color, sub, stats, borderTone }) {
   const { annualised_return, sharpe_ratio, max_drawdown } = stats
-  const borderColor = borderTone === 'good' ? 'var(--positive)' : borderTone === 'bad' ? 'var(--negative)' : color
+  const borderColor = borderTone === 'good' ? 'var(--signal-positive)' : borderTone === 'bad' ? 'var(--signal-negative)' : color
 
   return (
     <div className="card" style={{ padding: '14px 16px', borderTop: `2px solid ${borderColor}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           {label}
         </div>
         {sub && (
@@ -66,18 +66,18 @@ function ReturnsTable({ backtest }) {
 
   return (
     <div className="card" style={{ padding: '14px 16px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', marginBottom: 12 }}>
+      <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
         Year-by-year returns
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: 'var(--font-mono)' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 10px 8px 4px', borderBottom: '1px solid var(--border)' }}>
+              <th style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 10px 8px 4px', borderBottom: 'var(--border-default)' }}>
                 Year
               </th>
               {STRATEGIES.map(s => (
-                <th key={s.key} style={{ textAlign: 'right', fontSize: 10, fontWeight: 700, color: s.color, padding: '4px 10px 8px', borderBottom: '1px solid var(--border)' }}>
+                <th key={s.key} style={{ textAlign: 'right', fontSize: 10, fontWeight: 700, color: s.color, padding: '4px 10px 8px', borderBottom: 'var(--border-default)' }}>
                   {s.label}
                 </th>
               ))}
@@ -86,7 +86,7 @@ function ReturnsTable({ backtest }) {
           <tbody>
             {years.map(y => (
               <tr key={y}>
-                <td style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '7px 10px 7px 4px', borderBottom: '1px solid rgba(var(--white-rgb),0.04)' }}>
+                <td style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '7px 10px 7px 4px', borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)' }}>
                   {y}
                 </td>
                 {STRATEGIES.map(s => {
@@ -94,8 +94,8 @@ function ReturnsTable({ backtest }) {
                   return (
                     <td key={s.key} style={{
                       textAlign: 'right', fontSize: 12, fontWeight: 600, padding: '7px 10px',
-                      borderBottom: '1px solid rgba(var(--white-rgb),0.04)',
-                      color: v >= 0 ? 'var(--positive)' : 'var(--negative)',
+                      borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)',
+                      color: v >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)',
                     }}>
                       {fmtPct(v)}
                     </td>
@@ -158,7 +158,7 @@ export default function Backtest({ data, tickers }) {
       {/* Cumulative return chart */}
       <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             Cumulative return — {backtest.period.start} to {backtest.period.end}
           </div>
           <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
@@ -177,7 +177,7 @@ export default function Backtest({ data, tickers }) {
             <LineChart data={chartData} style={CHART_STYLE} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
               <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
-              <ReferenceLine y={0} stroke="rgba(var(--white-rgb),0.1)" strokeDasharray="4 4" />
+              <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
               <Tooltip content={<CustomTooltip />} />
               {STRATEGIES.map(s => (
                 <Line
