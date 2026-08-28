@@ -255,10 +255,25 @@ body {
 
 /* Shared grain texture — one definition, reused via .grain-canvas (page
    background, ~7% opacity) and .grain-surface (sidebar/cards, ~4% opacity).
-   Each is a ::before on the surface itself (z-index -1 relative to that
-   surface) rather than one global layer, since opaque components would
-   otherwise fully occlude a shared canvas-level layer — see DESIGN.md
-   "Surface Texture". Host element needs position: relative.
+   Each is a ::before on the surface itself rather than one global layer,
+   since opaque components would otherwise fully occlude a shared
+   canvas-level layer — see DESIGN.md "Surface Texture". Host element
+   needs position: relative.
+
+   z-index MUST be >= 1 here, not -1 or 0. The host (.grain-canvas / .card
+   / etc.) is position:relative with no z-index of its own, so it never
+   establishes a local stacking context — at z-index -1 or 0 the pseudo
+   loses the resulting paint-order tiebreak against the host's own box and
+   renders completely invisible, even though getComputedStyle reports
+   every property (opacity, background-image, position) as correct. This
+   is a measured browser paint-order effect, not something derivable from
+   the CSS spec alone, and it does not show up by inspecting computed
+   styles — it only shows up by measuring actual rendered pixels. If you
+   touch this value, verify with rendered pixels again, not just
+   getComputedStyle. Confirmed safe at z-index 1 despite tying with the
+   app's own zIndex:1 content wrapper (App.jsx): this pseudo is still
+   painted before that wrapper in DOM/tree order, so it stays visually
+   behind every card, the sidebar, and all interactive elements.
 
    Pre-rendered 64x64 grayscale PNG noise tile, base64-encoded (~4.2KB), in
    place of an feTurbulence SVG filter — see src/assets/generate_grain.py
@@ -271,7 +286,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
   background-image: url("data:image/png;base64,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");
   background-repeat: repeat;
