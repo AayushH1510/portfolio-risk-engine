@@ -175,7 +175,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
             {/* Run button */}
             <button
               className="btn-primary"
-              onClick={runComparison}
+              onClick={() => runComparison()}
               disabled={loading}
               style={{ whiteSpace: 'nowrap', padding: '10px 20px' }}
             >
@@ -228,7 +228,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
           </button>
           <button
             className="btn-primary"
-            onClick={runComparison}
+            onClick={() => runComparison()}
             disabled={loading}
             style={{ marginLeft: 8, padding: '5px 14px', fontSize: 11 }}
           >
