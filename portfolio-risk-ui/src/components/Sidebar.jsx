@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import SavedPortfolios from './SavedPortfolios'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
@@ -17,6 +18,7 @@ export default function Sidebar({
   setPortfolioValue, setShowBenchmark, setRollingWindow,
   onRun, loading, onTickerClick,
 }) {
+  const [logoHovered, setLogoHovered]     = useState(false)
   const [tickerInput, setTickerInput]     = useState(tickers.join(', '))
   const [inputMode, setInputMode]         = useState('pct')
   const [useCustomDate, setUseCustomDate] = useState(false)
@@ -124,17 +126,22 @@ export default function Sidebar({
 
       {/* Logo */}
       <div style={{ padding: '18px 16px 14px', borderBottom: 'var(--border-default)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Link
+          to="/"
+          onMouseEnter={() => setLogoHovered(true)}
+          onMouseLeave={() => setLogoHovered(false)}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: 'pointer' }}
+        >
           <div style={{ width: 28, height: 28, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--surface-canvas)"/>
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Varense</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: logoHovered ? 'var(--signal-positive)' : 'var(--text-primary)', letterSpacing: '-0.01em', transition: 'color 0.15s' }}>Varense</div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>v1.0</div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Settings */}
