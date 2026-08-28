@@ -18,13 +18,13 @@ SIZE = 64
 # outside it clips to pure black/white, giving more, sharper-looking specks
 # at the same element opacity.
 #
-# 2.5 was too aggressive once the visibility bug got fixed (z-index -1 -> 1)
-# and opacity got tuned up to compensate for it — ~62% of pixels clipping to
-# pure 0/255 read as blocky at any opacity high enough to actually see it.
-# 1.3 is a light touch: still a bit more separation than pure uniform noise
-# (helps individual specks read at very low opacity), without clipping most
-# of the tile to flat black/white.
-CONTRAST = 1.3
+# 2.5, then 1.3, both still read as blotchy/messy against the reference
+# (/style-preview's original feTurbulence grain) even after opacity was cut
+# hard — any stretch at all pushes enough pixels toward the extremes to read
+# as visible specks rather than fine, smooth material noise. CONTRAST = 1.0
+# is no stretch: the plain random.randint(0, 255) distribution, full range
+# but not reshaped. Intensity is opacity's job alone now, not the tile's.
+CONTRAST = 1.0
 
 def stretch(v):
     x = (v - 127.5) * CONTRAST + 127.5
