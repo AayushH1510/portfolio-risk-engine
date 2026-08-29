@@ -210,8 +210,8 @@ export const landingPage: LandingPage = {
       type: 'hero',
       eyebrow: ['Portfolio risk engine', 'v1.0'],
       headline: [
-        { text: 'Know how your portfolio behaves', break: true },
-        { text: 'before', emphasis: true },
+        { text: 'Know how your portfolio behaves' },
+        { text: 'before', emphasis: true, break: true },
         { text: ' the market tells you.' },
       ],
       lead: 'Varense runs correlated Monte Carlo, historical crisis replay, and full risk decomposition across your holdings — the arithmetic an institutional desk runs on a book of billions, applied to a portfolio of three tickers.',
@@ -463,7 +463,7 @@ export const landingPage: LandingPage = {
         links: [
           { label: 'Privacy', href: '/privacy' },
           { label: 'Terms', href: '/terms' },
-          { label: 'Disclosures', href: '/disclosures' },
+          { label: 'Disclosures', href: '/terms' },
         ],
       },
     ],

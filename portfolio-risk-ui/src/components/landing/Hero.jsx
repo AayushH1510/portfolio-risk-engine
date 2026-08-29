@@ -36,7 +36,7 @@ export default function Hero({ block }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '150px 40px 0',
+        padding: 'clamp(100px, 14vh, 150px) 40px 0',
       }}
     >
       <div style={{ position: 'absolute', inset: '-10% -5% 0', zIndex: 0, overflow: 'hidden' }}>
