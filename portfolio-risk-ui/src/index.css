@@ -1,4 +1,15 @@
 @import "tailwindcss";
+/* Landing page theme — generated from design/tokens.json, do not hand-edit.
+   See scripts/tokens-to-css.mjs (runs in prebuild/predev). */
+@import "./landing-theme.css";
+
+/* Hero eyebrow's blinking status dot — a keyframes curve, not a design
+   token, so it lives here rather than in the generated theme. Colour and
+   sizing stay on the element itself via var(--color-accent-mint) etc. */
+@keyframes varense-eyebrow-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
 
 :root {
   /* ═══════════════════════════════════════════════════════════════
