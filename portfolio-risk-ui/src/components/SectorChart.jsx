@@ -35,7 +35,7 @@ export default function SectorChart({ sectorData, loading }) {
   if (loading) {
     return (
       <div className="card" style={{
-        padding: '14px 16px', height: 120, display: 'flex', flexDirection: 'column',
+        padding: '10px 16px', height: 96, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0,
       }}>
         <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -52,8 +52,8 @@ export default function SectorChart({ sectorData, loading }) {
   const hasExcluded = totalWeight < 0.995
 
   return (
-    <div className="card" style={{ padding: '14px 16px', height: 120, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+    <div className="card" style={{ padding: '10px 16px', height: 96, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           Sector exposure
         </div>
