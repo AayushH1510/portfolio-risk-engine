@@ -1,4 +1,4 @@
-export default function InsightBox({ label, text, tone = 'neutral' }) {
+export default function InsightBox({ label, text, tone = 'neutral', compact = false }) {
   const colors = {
     good:    { border: 'var(--signal-positive)', label: 'var(--signal-positive)', wash: 'var(--signal-positive-wash)' },
     bad:     { border: 'var(--signal-negative)', label: 'var(--signal-negative)', wash: 'var(--signal-negative-wash)' },
@@ -11,12 +11,12 @@ export default function InsightBox({ label, text, tone = 'neutral' }) {
     <div style={{
       borderLeft: `3px solid ${c.border}`,
       background: c.wash,
-      padding: '12px 16px',
-      marginTop: 8,
+      padding: compact ? '8px 14px' : '12px 16px',
+      marginTop: compact ? 6 : 8,
     }}>
       <div style={{
         fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
-        textTransform: 'uppercase', color: c.label, fontFamily: 'var(--font-primary)', marginBottom: 5,
+        textTransform: 'uppercase', color: c.label, fontFamily: 'var(--font-primary)', marginBottom: compact ? 3 : 5,
       }}>
         {label}
       </div>

@@ -136,8 +136,8 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 10, flex: 1, minHeight: 0 }}>
 
         {/* Growth chart */}
-        <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div className="card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
               Portfolio growth
             </div>
@@ -179,6 +179,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           <InsightBox
             label="Return"
             tone={retColor}
+            compact
             text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>. ${ba ? `Beat the S&P 500 by <strong>${fmt(ret - ba.benchmark_return)}</strong>.` : ''} Median 1-year projection: <strong>${fmtD(medianFinal || 0)}</strong> (${Math.round((profitProb || 0) * 100)}% chance of profit).`}
           />
         </div>
@@ -192,11 +193,11 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             varPct={var_cvar.var_pct}
           />
 
-          <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
               Drawdown
             </div>
-            <div style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+            <div style={{ flex: 1, minHeight: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                   <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
