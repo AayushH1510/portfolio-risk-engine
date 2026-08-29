@@ -36,6 +36,10 @@ export default function Sidebar({
     setDollarAmts(tickers.map(() => portfolioValue / tickers.length))
   }, [tickers.length, portfolioValue])
 
+  useEffect(() => {
+    setTickerInput(tickers.join(', '))
+  }, [tickers.join(',')])
+
   const handleTickerBlur = () => {
     const parsed = tickerInput.split(',').map(t => t.trim().toUpperCase()).filter(Boolean)
     if (parsed.length > 0) setTickers(parsed.slice(0, 5))
