@@ -134,10 +134,10 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
   }, [score])
 
   return (
-    <div style={{ display:'flex', flexDirection:'column' }}>
+    <div className="card" style={{ padding:'14px 16px', display:'flex', flexDirection:'column' }}>
       <div style={{
         fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase',
-        letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:6,
+        letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:10,
       }}>
         Risk Gauge
       </div>
