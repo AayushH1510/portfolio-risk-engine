@@ -1,9 +1,16 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import '@fontsource-variable/newsreader'
+import '@fontsource-variable/newsreader/wght-italic.css'
+import '@fontsource/ibm-plex-sans/300.css'
+import '@fontsource/ibm-plex-sans/400.css'
+import '@fontsource/ibm-plex-sans/500.css'
+import '@fontsource/ibm-plex-mono/400.css'
+import '@fontsource/ibm-plex-mono/500.css'
 import './index.css'
 import App from './App.jsx'
-import LandingRetail from './pages/LandingRetail.jsx'
+import Landing from './pages/Landing.jsx'
 import LandingPro from './pages/LandingPro.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
@@ -13,7 +20,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingRetail />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/pro" element={<LandingPro />} />
         <Route path="/app" element={<App />} />
         <Route path="/privacy" element={<Privacy />} />

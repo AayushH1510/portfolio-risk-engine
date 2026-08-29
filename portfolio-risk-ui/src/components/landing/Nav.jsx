@@ -1,0 +1,119 @@
+import { useRef, useState } from 'react'
+import { typeStyle } from './tokens'
+
+function LogoMark({ size = '26px' }) {
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 'var(--radius-md)',
+        background: 'linear-gradient(145deg, var(--color-accent-mint), var(--color-accent-mintDeep))',
+        display: 'block',
+        flexShrink: 0,
+        boxShadow: '0 0 22px rgb(from var(--color-accent-mint) r g b / 0.35)',
+      }}
+    />
+  )
+}
+
+function NavLink({ href, children }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <a
+      href={href}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...typeStyle('monoNav'),
+        color: hovered ? 'var(--color-text-body)' : 'var(--color-text-faint)',
+        transition: `color var(--motion-surfaceTint-duration) var(--motion-surfaceTint-easing)`,
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+function NavAction({ link }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <a
+      href={link.href}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...typeStyle('monoNav'),
+        letterSpacing: '0.06em',
+        padding: '10px 20px',
+        border: '1px solid var(--color-accent-mint)',
+        borderRadius: 'var(--radius-xs)',
+        background: hovered ? 'var(--color-accent-mint)' : 'transparent',
+        color: hovered ? 'var(--color-bg-base)' : 'var(--color-accent-mint)',
+        whiteSpace: 'nowrap',
+        transition: `background var(--motion-surfaceTint-duration) var(--motion-surfaceTint-easing), color var(--motion-surfaceTint-duration) var(--motion-surfaceTint-easing)`,
+      }}
+    >
+      {link.label}
+    </a>
+  )
+}
+
+export default function Nav({ brand, nav, navAction, onScrollRef }) {
+  const [scrolled, setScrolled] = useState(false)
+  const ref = useRef(null)
+
+  // Registered by the page via onScrollRef so a single scroll-motion tick
+  // drives the nav crossfade too — see README > Interactions > Nav.
+  if (onScrollRef) {
+    onScrollRef.current = (scrollY) => setScrolled(scrollY > 24)
+  }
+
+  return (
+    <nav
+      ref={ref}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        minHeight: 'var(--layout-navHeight)',
+        background: scrolled ? 'var(--color-alpha-scrim)' : 'transparent',
+        backdropFilter: scrolled ? 'var(--motion-navTransition-blur)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'var(--motion-navTransition-blur)' : 'none',
+        borderBottom: `1px solid ${scrolled ? 'var(--color-line-subtle)' : 'transparent'}`,
+        transition: `background var(--motion-navTransition-duration) var(--motion-navTransition-easing), border-color var(--motion-navTransition-duration) var(--motion-navTransition-easing), backdrop-filter var(--motion-navTransition-duration) var(--motion-navTransition-easing)`,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 'var(--layout-maxWidth)',
+          margin: '0 auto',
+          padding: `0 var(--layout-gutter)`,
+          minHeight: 'var(--layout-navHeight)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'clamp(16px, 2.5vw, 40px)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--color-text-body)' }}>
+          <LogoMark />
+          <span style={{ ...typeStyle('monoAction'), fontSize: '15px', letterSpacing: '0.02em', color: 'var(--color-text-body)' }}>
+            {brand.name}
+          </span>
+        </a>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(16px, 2vw, 34px)', flexWrap: 'wrap' }}>
+          {nav.map((link) => (
+            <NavLink key={link.href} href={link.href}>{link.label}</NavLink>
+          ))}
+        </div>
+
+        <NavAction link={navAction} />
+      </div>
+    </nav>
+  )
+}
