@@ -175,6 +175,15 @@ Portfolio Risk Analysis Engine/
 - Diversification score on Dashboard (dynamic second metrics row)
 - VaR/CVaR at 95% and 99% on Risk Analysis tab
 - 5-ticker support across all views
+- Redis caching (Upstash) — `cache.py` wraps `fetch_closing_prices` and
+  `fetch_with_benchmark` (`data_fetcher.py`) at a 24hr TTL, and
+  `_fetch_ticker_fundamentals` (`api.py`, backs `/api/fundamentals`) at a 1hr
+  TTL. Fail-open by design: if `REDIS_URL` is unset or Redis is unreachable,
+  every cache op silently no-ops and the app runs exactly as it would with no
+  cache. Known gap: `/api/stress-test` doesn't use this layer yet — it still
+  fetches each crisis-window's price data fresh on every call. Worth adding
+  the same `@cached` wrapper there, not a missing feature so much as an
+  unfinished rollout.
 
 ---
 
@@ -185,8 +194,6 @@ Portfolio Risk Analysis Engine/
    per ticker. Fetch after analysis runs, aggregate by sector weighted by portfolio weights,
    display as horizontal bar chart on Dashboard. Preferred approach: call fundamentals
    inside `App.jsx` after analysis completes, pass `sectorData` as prop to Dashboard.
-2. **Redis caching** — wrap `data_fetcher.py` with 24hr cache on yfinance calls.
-   Add `cache.py`, modify `data_fetcher.py`. No frontend changes.
 
 ### After rebrand:
 - Rebrand to **Varense** — name, logo (`/public/favicon.ico`), `index.html` title,
@@ -202,7 +209,7 @@ Portfolio Risk Analysis Engine/
 ### Deploy:
 - Frontend → **Vercel**
 - Backend → **Render**
-- Redis → Render Redis add-on or Upstash
+- Redis → **Upstash**, wired via `REDIS_URL` (see `cache.py`)
 - Add rate limiting to `/api/analyse` before going public
 
 ---

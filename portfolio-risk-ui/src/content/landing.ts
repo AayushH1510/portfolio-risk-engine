@@ -455,7 +455,7 @@ export const landingPage: LandingPage = {
         links: [
           { label: 'Methodology', href: '#method' },
           { label: 'FAQ', href: '#faq' },
-          { label: 'Learn', href: `${APP_URL}/learn` },
+          { label: 'Learn', href: APP_URL },
         ],
       },
       {
