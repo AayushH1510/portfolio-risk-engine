@@ -39,7 +39,11 @@ export default function App() {
   const [showAuth, setShowAuth]         = useState(false)
   const [drawerTicker, setDrawerTicker] = useState(null)
   const [drawerWeight, setDrawerWeight] = useState(null)
-  const [sectorData, setSectorData]     = useState([])
+  // null = not fetched yet (or the fetch itself failed) — render nothing.
+  // [] = fetched successfully but no ticker resolved to a usable sector
+  // (e.g. an all-ETF portfolio) — SectorChart shows an explanatory empty
+  // state for that case, distinct from "haven't checked".
+  const [sectorData, setSectorData]     = useState(null)
   const [sectorLoading, setSectorLoading] = useState(false)
 
   const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
@@ -50,7 +54,7 @@ export default function App() {
 
   useEffect(() => {
     if (!data || !tickers.length) {
-      setSectorData([])
+      setSectorData(null)
       setSectorLoading(false)
       return
     }
@@ -75,7 +79,7 @@ export default function App() {
             .sort((a, b) => b.weight - a.weight)
         )
       })
-      .catch(() => { if (!cancelled) setSectorData([]) })
+      .catch(() => { if (!cancelled) setSectorData(null) })
       .finally(() => { if (!cancelled) setSectorLoading(false) })
     return () => { cancelled = true }
   }, [data])
