@@ -1,5 +1,24 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import SectionFrame from './SectionFrame'
 import { typeStyle } from './tokens'
+
+// Internal paths (starting with "/") route client-side via react-router;
+// anything else (anchors, external) stays a plain <a> — same convention as
+// the rest of the landing page's content-driven links.
+function MoreLink({ link }) {
+  const [hovered, setHovered] = useState(false)
+  const style = {
+    ...typeStyle('monoAction'),
+    color: hovered ? 'var(--color-accent-mint)' : 'var(--color-text-secondary)',
+    transition: `color var(--motion-surfaceTint-duration) var(--motion-surfaceTint-easing)`,
+    textDecoration: 'none',
+  }
+  const props = { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false), style }
+  return link.href.startsWith('/')
+    ? <Link to={link.href} {...props}>{link.label}</Link>
+    : <a href={link.href} {...props}>{link.label}</a>
+}
 
 export default function Pillars({ block }) {
   return (
@@ -21,6 +40,11 @@ export default function Pillars({ block }) {
             </div>
           ))}
         </div>
+        {block.moreLink && (
+          <div style={{ marginTop: '50px', paddingTop: 'var(--space-8)', borderTop: '1px solid var(--color-line-subtle)' }}>
+            <MoreLink link={block.moreLink} />
+          </div>
+        )}
       </SectionFrame>
     </section>
   )

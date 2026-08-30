@@ -51,7 +51,6 @@ class AnalyseRequest(BaseModel):
     start_date: str
     end_date: str
     portfolio_value: float = 10_000
-    confidence: float = 0.95
     rolling_window: int = 30
     show_benchmark: bool = True
 

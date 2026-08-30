@@ -116,6 +116,10 @@ export interface PillarsBlock {
   label: string;
   heading: string;
   pillars: Array<{ title: string; body: string }>;
+  /** Optional continuation link below the pillar grid — e.g. the full
+   *  technical methodology page. A natural "keep reading" for this section,
+   *  not a nav item. */
+  moreLink?: Link;
 }
 
 export interface PricingBlock {
@@ -372,7 +376,7 @@ export const landingPage: LandingPage = {
         },
         {
           title: 'Published math',
-          body: 'Every metric follows a standard textbook definition — parametric and historical VaR, Cholesky-factored GBM, Markowitz optimization. The formulas are documented, not proprietary.',
+          body: 'Every metric follows a standard textbook definition — historical VaR and CVaR, Cholesky-correlated Monte Carlo, Markowitz-style frontier simulation. The formulas are documented, not proprietary — down to the exact constants.',
         },
         {
           title: 'Real market data',
@@ -383,6 +387,7 @@ export const landingPage: LandingPage = {
           body: 'Varense is an analysis tool, not an advisor. It produces no recommendations, holds no assets, and takes no position on what you should do next.',
         },
       ],
+      moreLink: { label: 'Read the full methodology →', href: '/methodology', variant: 'quiet' },
     },
 
     {
