@@ -26,7 +26,7 @@ export default function SectionFrame({ index, label, children, style }) {
       >
         {index} — {label}
       </div>
-      <div>{children}</div>
+      <div style={{ minWidth: 0 }}>{children}</div>
     </div>
   )
 }

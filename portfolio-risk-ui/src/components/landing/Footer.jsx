@@ -66,7 +66,7 @@ export default function Footer({ brand, footer }) {
                 {col.heading}
               </span>
               {col.links.map((link) => (
-                <FooterLink key={link.href} link={link} />
+                <FooterLink key={link.label} link={link} />
               ))}
             </div>
           ))}

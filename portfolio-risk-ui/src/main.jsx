@@ -13,6 +13,7 @@ import './index.css'
 import App from './App.jsx'
 import Landing from './pages/Landing.jsx'
 import LandingPro from './pages/LandingPro.jsx'
+import Methodology from './pages/Methodology.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import StylePreview from './pages/StylePreview.jsx'
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/pro" element={<LandingPro />} />
+        <Route path="/methodology" element={<Methodology />} />
         <Route path="/app" element={<App />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
