@@ -424,6 +424,13 @@ async def analyse(req: AnalyseRequest):
                 "dates":  cum_rets.index.strftime("%Y-%m-%d").tolist(),
                 "values": [round(v, 6) for v in cum_rets.values.tolist()],
             },
+            "per_ticker_cumulative_returns": {
+                ticker: {
+                    "dates":  series.index.strftime("%Y-%m-%d").tolist(),
+                    "values": [round(v, 6) for v in series.values.tolist()],
+                }
+                for ticker, series in m["per_ticker_cumulative_returns"].items()
+            },
             "drawdown_series": {
                 "dates":  dd_series.index.strftime("%Y-%m-%d").tolist(),
                 "values": [round(v, 6) for v in dd_series.values.tolist()],

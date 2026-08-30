@@ -660,6 +660,10 @@ def compute_all_metrics(
     """Full pipeline: prices → returns → all metrics."""
     returns           = compute_returns(prices)
     portfolio_returns = compute_portfolio_returns(returns, weights)
+    per_ticker_cumulative_returns = {
+        ticker: (1 + returns[ticker]).cumprod() - 1
+        for ticker in returns.columns
+    }
     cov_matrix        = compute_volatility_matrix(returns)
     corr_matrix       = compute_correlation_matrix(returns)
     drawdown_result   = compute_max_drawdown(portfolio_returns)
@@ -693,6 +697,7 @@ def compute_all_metrics(
         "cov_matrix":            cov_matrix,
         "returns":               returns,
         "portfolio_returns":     portfolio_returns,
+        "per_ticker_cumulative_returns": per_ticker_cumulative_returns,
         "drawdown_series":       drawdown_result["drawdown_series"],
         "diversification_score": div_score,
         "tooltips":              METRIC_TOOLTIPS,
