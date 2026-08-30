@@ -11,7 +11,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 from cache import cached
-from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError
+from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError, TickerNotFoundError
 
 DAY = 60 * 60 * 24
 
@@ -90,15 +90,18 @@ def fetch_closing_prices(
     if isinstance(prices, pd.Series):
         prices = prices.to_frame(name=tickers[0])
 
-    # A rate-limited ticker can come back missing entirely, or present but
-    # all-NaN, without yf.download() ever raising. Catch that here instead
-    # of letting it crash downstream in the maths layer.
+    # A ticker can come back missing entirely, or present but all-NaN,
+    # without yf.download() ever raising — no YFRateLimitError was thrown
+    # anywhere above, so this isn't a rate-limit case. It means the symbol
+    # itself doesn't exist or isn't fetchable (e.g. "SPX" instead of
+    # "^GSPC") — catch that here instead of letting it crash downstream in
+    # the maths layer, and instead of misreporting it as rate limiting.
     failed_tickers = [
         t for t in tickers
         if t not in prices.columns or prices[t].isna().all()
     ]
     if failed_tickers:
-        raise YFinanceRateLimitError(failed_tickers)
+        raise TickerNotFoundError(failed_tickers)
 
     # Drop any rows where ALL tickers have NaN (e.g. market holidays).
     # Keep rows where at least one ticker has data.
@@ -116,6 +119,15 @@ def validate_tickers(tickers: list[str]) -> tuple[list[str], list[str]]:
 
     How it works: fetches just the last 5 days of data.
     If a ticker returns empty data, it's invalid (delisted, misspelled, etc.)
+
+    Goes through with_yfinance_retry so a transient rate-limit blip doesn't
+    get a genuinely valid ticker wrongly bucketed as invalid — matches
+    fetch_closing_prices' retry-then-distinguish handling. There's no
+    message field in this function's (valid, invalid) contract to report
+    "still rate-limited after retry" separately from "not found", so both
+    still land in `invalid` here; the accurate distinction lives in
+    fetch_closing_prices, which is what actually surfaces an error message
+    to the user.
     """
     valid, invalid = [], []
 
@@ -126,8 +138,11 @@ def validate_tickers(tickers: list[str]) -> tuple[list[str], list[str]]:
     for ticker in tickers:
         ticker = ticker.strip().upper()
         try:
-            test = yf.download(ticker, start=start, end=end,
-                               auto_adjust=True, progress=False)
+            test = with_yfinance_retry(
+                lambda: yf.download(ticker, start=start, end=end,
+                                     auto_adjust=True, progress=False),
+                [ticker],
+            )
             if test.empty:
                 invalid.append(ticker)
             else:
