@@ -184,10 +184,10 @@ export default function Methodology() {
         <p style={{ ...typeStyle('lead'), color: 'var(--color-text-muted)', maxWidth: '700px', margin: 0 }}>
           This page exists for readers who want to see the actual arithmetic before trusting a number on a dashboard.
           For every metric Varense computes, it states the standard textbook formula, then what the code literally
-          does — pulled from <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>stats_engine.py</code>,{' '}
-          not from memory of convention — including every place the implementation diverges from the textbook version,
-          and why that divergence exists where the code says why. Where the code doesn't say why, this page doesn't
-          guess.
+          does, pulled from <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>our code directly</code>,{' '}
+          not from memory of convention. Where the implementation diverges from the textbook version, that divergence
+          is named. Where the code documents why, the reasoning is included. Where it doesn't, this page says so
+          rather than inventing one.
         </p>
       </header>
 
