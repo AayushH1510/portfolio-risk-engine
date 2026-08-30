@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
+import InsightBox from './InsightBox'
 
 const truncate = (label, max = 24) =>
   label.length > max ? `${label.slice(0, max - 1)}…` : label
@@ -46,7 +47,28 @@ export default function SectorChart({ sectorData, loading }) {
     )
   }
 
-  if (!sectorData?.length) return null
+  // null: haven't fetched yet, or the fetch itself failed — say nothing.
+  // []: fetch succeeded but no ticker resolved to a usable sector, most
+  // commonly an all-ETF/fund portfolio — that's a real, expected outcome,
+  // not a loading gap, so it gets its own explanatory state below rather
+  // than silently rendering nothing.
+  if (sectorData == null) return null
+
+  if (!sectorData.length) {
+    return (
+      <div className="card" style={{ padding: '10px 16px', flexShrink: 0 }}>
+        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 5 }}>
+          Sector exposure
+        </div>
+        <InsightBox
+          tone="neutral"
+          compact
+          label="Not applicable"
+          text="Your portfolio is made up of funds and ETFs, which each hold many companies across different sectors, so a single sector breakdown doesn't apply. Sector Exposure works best with individual stock holdings."
+        />
+      </div>
+    )
+  }
 
   const totalWeight = sectorData.reduce((sum, d) => sum + d.weight, 0)
   const hasExcluded = totalWeight < 0.995
