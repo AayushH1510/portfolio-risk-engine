@@ -173,7 +173,7 @@ export default function Sidebar({
             style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}
           />
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
-            Comma separated Tickets · Max 5 (Works best with 3)
+            Comma separated Tickers · Max 5 (Works best with 3)
           </div>
         </Section>
 

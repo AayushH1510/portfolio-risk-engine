@@ -242,7 +242,10 @@ export default function App() {
               <svg className="spin" width="32" height="32" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20"/>
               </svg>
-              <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-muted)' }}>Fetching data and running analysis...</div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-muted)' }}>Fetching data and running analysis...</div>
+                <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>Taking longer than expected? Refresh the page to retry.</div>
+              </div>
             </div>
           )}
 
