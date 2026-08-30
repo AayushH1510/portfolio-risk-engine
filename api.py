@@ -21,7 +21,7 @@ from data_fetcher import (
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError
 from cache import cached
-from yfinance_utils import YFinanceRateLimitError
+from yfinance_utils import YFinanceRateLimitError, TickerNotFoundError
 
 HOUR = 60 * 60
 
@@ -303,6 +303,16 @@ async def stress_test(req: StressTestRequest):
 
         return { "scenarios": scenarios, "portfolio_value": req.portfolio_value }
 
+    except TickerNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except YFinanceRateLimitError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
+                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
+            ),
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -476,6 +486,8 @@ async def analyse(req: AnalyseRequest):
 
     except HTTPException:
         raise
+    except TickerNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except YFinanceRateLimitError as e:
         raise HTTPException(
             status_code=503,
