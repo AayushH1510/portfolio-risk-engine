@@ -4,7 +4,7 @@
 
 Varense runs correlated Monte Carlo simulation, historical crisis replay, and full risk decomposition across a stock portfolio — the kind of analysis that normally sits behind an institutional terminal.
 
-**Live:** [portfolio-risk-engine.vercel.app](https://portfolio-risk-engine.vercel.app)
+**Live:** [varense.vercel.app](https://varense.vercel.app)
 
 > Educational tool only. Not financial advice. Past performance does not guarantee future results.
 
