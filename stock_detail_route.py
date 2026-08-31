@@ -25,7 +25,9 @@
 import os
 
 import requests
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+
+from rate_limit import limiter
 
 router = APIRouter()  # or use your existing `app` directly
 
@@ -51,7 +53,8 @@ def _finnhub_get(path: str, params: dict) -> dict:
 
 
 @router.get("/stock-detail/{ticker}")
-async def stock_detail(ticker: str):
+@limiter.limit("30/minute")
+async def stock_detail(request: Request, ticker: str):
     """
     Returns current price, daily change, and key fundamentals for a single
     ticker. Sourced from Finnhub — see module docstring for the field mapping
