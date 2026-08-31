@@ -22,6 +22,7 @@
 #                                  StockDrawer.jsx already renders no chart when
 #                                  sparkline is empty.
 
+import logging
 import os
 
 import requests
@@ -31,8 +32,17 @@ from rate_limit import limiter
 
 router = APIRouter()  # or use your existing `app` directly
 
+logger = logging.getLogger(__name__)
+
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
 FINNHUB_BASE = "https://finnhub.io/api/v1"
+
+# Shown to the client for any unhandled error — the real exception is logged
+# server-side via logger.exception() right before this gets raised, so
+# nothing about the failure (message, internal state, stack trace) reaches
+# the response body. Kept in sync with api.py's GENERIC_ERROR_DETAIL — not
+# imported from there to avoid a circular import (api.py imports this module).
+GENERIC_ERROR_DETAIL = "Something went wrong processing your request. Please try again."
 
 
 class FinnhubRateLimitError(Exception):
@@ -119,7 +129,8 @@ async def stock_detail(request: Request, ticker: str):
     except requests.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Finnhub request failed: {e}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error in /stock-detail/%s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
 
 
 # ─────────────────────────────────────────────
