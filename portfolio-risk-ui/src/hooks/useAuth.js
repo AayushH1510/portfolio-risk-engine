@@ -20,10 +20,14 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // AuthModal only ever renders from /app (see App.jsx), so both of these
+  // send the user back to /app rather than window.location.origin's bare
+  // domain — otherwise Google OAuth (and the email confirmation link) land
+  // the user on the marketing landing page (/) instead of back in the app.
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/app` },
     })
   }
 
@@ -36,7 +40,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/app` },
     })
     return error
   }
