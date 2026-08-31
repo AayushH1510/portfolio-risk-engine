@@ -5,14 +5,17 @@ FastAPI backend that wraps stats_engine.py and data_fetcher.py.
 Run with: uvicorn api:app --reload --port 8000
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, timedelta
 import os
 import pandas as pd
 import numpy as np
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from data_fetcher import (
     fetch_with_benchmark, fetch_closing_prices, validate_tickers,
@@ -22,6 +25,7 @@ from stats_engine import compute_all_metrics, compute_stress_scenario, compute_m
 from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError
 from cache import cached
 from yfinance_utils import YFinanceRateLimitError, TickerNotFoundError
+from rate_limit import limiter
 
 HOUR = 60 * 60
 
@@ -41,6 +45,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Per-IP rate limiting (slowapi) for the endpoints that hit an external data
+# provider (yfinance, Finnhub) and cost real compute per request. See
+# rate_limit.py for the shared Limiter instance and each @limiter.limit(...)
+# call below for the per-endpoint ceiling.
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    # Shaped like every other error response in this API ({"detail": "..."})
+    # so the frontend's existing error handling (lib/errorMessage.js) picks
+    # it up automatically — no client-side changes needed.
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": (
+                f"Too many requests ({exc.detail}). "
+                "Please wait a moment and try again."
+            )
+        },
+    )
+
 
 app.include_router(stock_router)
 
@@ -234,7 +262,8 @@ def _fetch_ticker_fundamentals(ticker: str) -> dict:
 
 
 @app.get("/api/fundamentals")
-async def fundamentals(tickers: str):
+@limiter.limit("30/minute")
+async def fundamentals(request: Request, tickers: str):
     try:
         ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
         results = []
@@ -256,7 +285,8 @@ async def fundamentals(tickers: str):
 
 
 @app.post("/api/stress-test")
-async def stress_test(req: StressTestRequest):
+@limiter.limit("20/minute")
+async def stress_test(request: Request, req: StressTestRequest):
     try:
         tickers = [t.strip().upper() for t in req.tickers]
         scenarios = []
@@ -368,7 +398,8 @@ def _serialize_backtest(bt: dict) -> dict:
 
 
 @app.post("/api/analyse")
-async def analyse(req: AnalyseRequest):
+@limiter.limit("20/minute")
+async def analyse(request: Request, req: AnalyseRequest):
     try:
         portfolio_prices, benchmark_prices = fetch_with_benchmark(
             tickers=req.tickers,
