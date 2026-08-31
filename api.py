@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, timedelta
+import logging
 import os
 import pandas as pd
 import numpy as np
@@ -26,6 +27,14 @@ from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRate
 from cache import cached
 from yfinance_utils import YFinanceRateLimitError, TickerNotFoundError
 from rate_limit import limiter
+
+logger = logging.getLogger(__name__)
+
+# Shown to the client for any unhandled error — the real exception is logged
+# server-side via logger.exception() right before this gets raised, so
+# nothing about the failure (message, internal state, stack trace) reaches
+# the response body.
+GENERIC_ERROR_DETAIL = "Something went wrong processing your request. Please try again."
 
 HOUR = 60 * 60
 
@@ -281,7 +290,8 @@ async def fundamentals(request: Request, tickers: str):
         return { "tickers": results }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error in /api/fundamentals: %s", e)
+        raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
 
 
 @app.post("/api/stress-test")
@@ -343,7 +353,8 @@ async def stress_test(request: Request, req: StressTestRequest):
             ),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error in /api/stress-test: %s", e)
+        raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
 
 
 def _serialize_var_cvar(vc: dict) -> dict:
@@ -534,4 +545,5 @@ async def analyse(request: Request, req: AnalyseRequest):
             ),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Unhandled error in /api/analyse: %s", e)
+        raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
