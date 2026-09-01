@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SavedPortfolios from './SavedPortfolios'
+import Logo from './Logo'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
@@ -134,17 +135,14 @@ export default function Sidebar({
           to="/"
           onMouseEnter={() => setLogoHovered(true)}
           onMouseLeave={() => setLogoHovered(false)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', cursor: 'pointer' }}
+          style={{ display: 'inline-block', textDecoration: 'none', cursor: 'pointer' }}
         >
-          <div style={{ width: 28, height: 28, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--surface-canvas)"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: logoHovered ? 'var(--signal-positive)' : 'var(--text-primary)', letterSpacing: '-0.01em', transition: 'color 0.15s' }}>Varense</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>v1.0</div>
-          </div>
+          <Logo
+            variant="horizontal"
+            size={28}
+            ink={logoHovered ? 'var(--signal-positive)' : 'var(--text-primary)'}
+          />
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em', marginTop: 4 }}>v1.0</div>
         </Link>
       </div>
 

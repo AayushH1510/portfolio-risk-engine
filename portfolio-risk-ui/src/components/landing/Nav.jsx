@@ -1,21 +1,6 @@
 import { useRef, useState } from 'react'
 import { typeStyle } from './tokens'
-
-function LogoMark({ size = '26px' }) {
-  return (
-    <span
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 'var(--radius-md)',
-        background: 'linear-gradient(145deg, var(--color-accent-mint), var(--color-accent-mintDeep))',
-        display: 'block',
-        flexShrink: 0,
-        boxShadow: '0 0 22px rgb(from var(--color-accent-mint) r g b / 0.35)',
-      }}
-    />
-  )
-}
+import Logo from '../Logo'
 
 function NavLink({ href, children }) {
   const [hovered, setHovered] = useState(false)
@@ -100,7 +85,7 @@ export default function Nav({ brand, nav, navAction, onScrollRef }) {
         }}
       >
         <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--color-text-body)' }}>
-          <LogoMark />
+          <Logo variant="mark" size={26} ink="var(--color-text-body)" />
           <span style={{ ...typeStyle('monoAction'), fontSize: '15px', letterSpacing: '0.02em', color: 'var(--color-text-body)' }}>
             {brand.name}
           </span>

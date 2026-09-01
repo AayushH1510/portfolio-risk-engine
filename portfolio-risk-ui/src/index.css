@@ -191,8 +191,11 @@
   /* Typography — today's actual stacks. --font-mono intentionally
      matches the generic `monospace` keyword used almost everywhere
      inline today, NOT the richer stack .mono uses below; unifying those
-     is a Step 2 decision, not a Step 1 one. */
-  --font-primary:           'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+     is a Step 2 decision, not a Step 1 one.
+     --font-primary is NOT redeclared here — it's set once, above (Fonts),
+     as Geist Sans. A stale second declaration used to shadow it with an
+     unloaded 'Inter' stack, silently falling back to the OS system font
+     everywhere var(--font-primary) is used. Removed — do not re-add. */
   --font-mono:               monospace;
   --font-mono-rich:         'IBM Plex Mono', 'Roboto Mono', monospace;
   --font-sans-generic:      sans-serif;

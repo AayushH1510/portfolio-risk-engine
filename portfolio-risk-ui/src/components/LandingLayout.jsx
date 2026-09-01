@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
 
 export const LANDING_BG = 'var(--surface-canvas)'
 
@@ -22,15 +23,8 @@ export function LandingHeader({ crossLinkLabel, crossLinkTo }) {
       padding: '20px 48px', maxWidth: 1140, margin: '0 auto', width: '100%',
       flexShrink: 0,
     }}>
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-        <div style={{ width: 30, height: 30, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--text-on-accent)"/>
-          </svg>
-        </div>
-        <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-          Varense
-        </span>
+      <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+        <Logo variant="horizontal" size={30} ink="var(--text-primary)" />
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
