@@ -4,6 +4,7 @@ import { useWindowScroll } from '../hooks/useWindowScroll'
 import { typeStyle } from '../components/landing/tokens'
 import SectionFrame from '../components/landing/SectionFrame'
 import Footer from '../components/landing/Footer'
+import Logo from '../components/Logo'
 import { landingPage } from '../content/landing'
 import { constants, divergencesCallout, dataSourcing, metrics, APP_URL } from '../content/methodology'
 
@@ -85,7 +86,7 @@ function MethodologyNav() {
           onMouseLeave={() => setHovered(false)}
           style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--color-text-body)', textDecoration: 'none' }}
         >
-          <span style={{ width: '26px', height: '26px', borderRadius: 'var(--radius-md)', background: 'linear-gradient(145deg, var(--color-accent-mint), var(--color-accent-mintDeep))', display: 'block', flexShrink: 0 }} />
+          <Logo variant="mark" size={26} ink="var(--color-text-body)" />
           <span style={{ ...typeStyle('monoAction'), fontSize: '15px', letterSpacing: '0.02em', color: hovered ? 'var(--color-accent-mint)' : 'var(--color-text-body)', transition: 'color 200ms ease' }}>
             Varense
           </span>

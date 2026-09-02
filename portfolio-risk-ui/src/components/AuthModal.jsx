@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Logo from './Logo'
 
 export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail, onClose }) {
   const [mode, setMode]       = useState('signin') // signin | signup
@@ -37,16 +38,9 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
         }}
       >
         {/* Logo + title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-          <div style={{ width: 32, height: 32, background: 'var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L14 6V10L8 14L2 10V6L8 2Z" fill="var(--surface-canvas)"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Varense</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{mode === 'signin' ? 'Sign in to your account' : 'Create your account'}</div>
-          </div>
+        <div style={{ marginBottom: 22 }}>
+          <Logo variant="horizontal" size={30} ink="var(--text-primary)" />
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{mode === 'signin' ? 'Sign in to your account' : 'Create your account'}</div>
         </div>
 
         {sent ? (
