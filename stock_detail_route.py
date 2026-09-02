@@ -50,6 +50,19 @@ class FinnhubRateLimitError(Exception):
     pass
 
 
+class FinnhubAuthError(Exception):
+    """
+    Raised when Finnhub returns 401 — the API key itself is being rejected
+    (missing, invalid, revoked, or a plan/quota issue Finnhub reports as an
+    auth failure rather than a 429), not a problem with any one ticker.
+    Every ticker in a batch fails identically when this happens, so callers
+    should treat it as one service-level problem, not N unrelated failures —
+    and it must never surface as "ticker not found", which is what letting
+    this fall through to a bare requests.HTTPError used to look like.
+    """
+    pass
+
+
 def _finnhub_get(path: str, params: dict) -> dict:
     resp = requests.get(
         f"{FINNHUB_BASE}/{path}",
@@ -58,6 +71,8 @@ def _finnhub_get(path: str, params: dict) -> dict:
     )
     if resp.status_code == 429:
         raise FinnhubRateLimitError()
+    if resp.status_code == 401:
+        raise FinnhubAuthError()
     resp.raise_for_status()
     return resp.json()
 
@@ -126,8 +141,13 @@ async def stock_detail(request: Request, ticker: str):
             status_code=503,
             detail="Finnhub rate limit reached (60 calls/minute). Please try again in a minute.",
         )
+    except FinnhubAuthError:
+        logger.error("Finnhub rejected the API key (401) fetching /stock-detail/%s — "
+                      "check FINNHUB_API_KEY in the environment", ticker)
+        raise HTTPException(status_code=503, detail=GENERIC_ERROR_DETAIL)
     except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Finnhub request failed: {e}")
+        logger.exception("Finnhub request failed in /stock-detail/%s: %s", ticker, e)
+        raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
     except Exception as e:
         logger.exception("Unhandled error in /stock-detail/%s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)

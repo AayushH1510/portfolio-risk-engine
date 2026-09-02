@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import Sidebar from './components/Sidebar'
+import Logo from './components/Logo'
 import Dashboard from './pages/Dashboard'
 import RiskAnalysis from './pages/RiskAnalysis'
 import MonteCarlo from './pages/MonteCarlo'
@@ -255,11 +256,7 @@ export default function App() {
 
           {!loading && !hasRun && activeTab !== 'learn' && activeTab !== 'valuation' && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', flexDirection: 'column', gap: 16, textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, background: 'var(--signal-positive-wash)', border: '1px solid var(--signal-positive)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 17L9 11L13 15L21 7" stroke="var(--signal-positive)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+              <Logo variant="mark" size={48} ink="var(--signal-positive)" />
               <div>
                 <div style={{ fontFamily: 'var(--font-primary)', fontSize: 'var(--text-heading-sm)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-heading-sm)', color: 'var(--text-primary)', marginBottom: 6 }}>Varense</div>
                 <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-secondary)', maxWidth: 380, lineHeight: 1.6 }}>

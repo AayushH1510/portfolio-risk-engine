@@ -11,6 +11,21 @@ const WINDOWS = [
   { val: 90, label: '90d - long term' },
 ]
 
+const SIDEBAR_MIN = 220
+const SIDEBAR_MAX = 400
+const SIDEBAR_STORAGE_KEY = 'varense-sidebar-width'
+
+// index.css's --sidebar-width is the source of truth for the default (see
+// DESIGN.md) — only read a hardcoded fallback here for the rare case this
+// runs before the stylesheet has applied (or in a non-browser context).
+function getInitialSidebarWidth() {
+  if (typeof window === 'undefined') return 260
+  const stored = parseInt(localStorage.getItem(SIDEBAR_STORAGE_KEY), 10)
+  if (!Number.isNaN(stored)) return Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, stored))
+  const cssValue = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'), 10)
+  return Number.isNaN(cssValue) ? 260 : cssValue
+}
+
 export default function Sidebar({
   tickers, weights, period, portfolioValue,
   showBenchmark, rollingWindow,
@@ -20,6 +35,7 @@ export default function Sidebar({
   onRun, loading, onTickerClick,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
+  const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
   const [tickerInput, setTickerInput]     = useState(tickers.join(', '))
   const [inputMode, setInputMode]         = useState('pct')
   const [useCustomDate, setUseCustomDate] = useState(false)
@@ -40,6 +56,42 @@ export default function Sidebar({
   useEffect(() => {
     setTickerInput(tickers.join(', '))
   }, [tickers.join(',')])
+
+  // --sidebar-width (index.css) is the source of truth other CSS could key
+  // off of — keep it live so a drag actually resizes the aside below rather
+  // than a hardcoded pixel value doing the work.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
+  }, [sidebarWidth])
+
+  const handleResizeStart = (e) => {
+    e.preventDefault()
+    const startX     = e.clientX
+    const startWidth = sidebarWidth
+
+    const onMove = (moveEvent) => {
+      const next = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, startWidth + (moveEvent.clientX - startX)))
+      setSidebarWidth(next)
+    }
+    const onUp = () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      // Persist only on drag end, not every intermediate mousemove — a
+      // functional update so this reads whatever the latest width actually
+      // settled on rather than a value closed over at drag-start.
+      setSidebarWidth(w => {
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(w))
+        return w
+      })
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   const handleTickerBlur = () => {
     const parsed = tickerInput.split(',').map(t => t.trim().toUpperCase()).filter(Boolean)
@@ -123,7 +175,7 @@ export default function Sidebar({
 
   return (
     <aside className="grain-surface" style={{
-      width: 240, minWidth: 240, height: '100%',
+      width: 'var(--sidebar-width)', minWidth: 'var(--sidebar-width)', flexShrink: 0, height: '100%',
       background: 'var(--surface-sidebar)',
       borderRight: 'var(--border-default)',
       display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
@@ -406,6 +458,19 @@ export default function Sidebar({
           ) : 'Run Analysis'}
         </button>
       </div>
+
+      {/* Resize handle — invisible until hover, drags --sidebar-width live */}
+      <div
+        onMouseDown={handleResizeStart}
+        title="Drag to resize"
+        style={{
+          position: 'absolute', top: 0, right: -3, width: 6, height: '100%',
+          cursor: 'col-resize', zIndex: 10, background: 'transparent',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--signal-positive-rgb),0.4)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+      />
     </aside>
   )
 }
