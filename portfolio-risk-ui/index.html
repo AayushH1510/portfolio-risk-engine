@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Varense</title>
+    <!-- Multi-resolution .ico first — the universal fallback older browsers,
+         Windows shortcuts/taskbar, and crawlers look for at the site root
+         even with no <link> tag at all; bundles 16x16/32x32/48x48 in one file. -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- 256x256 source, not a literal 32x32 bitmap, so HiDPI tabs/taskbars downscale instead of upscaling a blurry small source -->
     <link rel="icon" href="/favicon-256.png" sizes="256x256" type="image/png" />
