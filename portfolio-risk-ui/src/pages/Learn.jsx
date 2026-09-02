@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { learnContent } from '../content/learnContent'
 
 const TIERS = [
-  { key: 'baby',       label: 'Baby Language' },
-  { key: 'individual', label: 'Individual Investor' },
-  { key: 'expert',     label: 'Expert' },
+  { key: 'baby',       label: 'Beginner Investor' },
+  { key: 'individual', label: 'Retail Investor' },
+  { key: 'expert',     label: 'Expert Investor' },
 ]
 
 const SECTIONS = [
@@ -92,86 +92,84 @@ export default function Learn() {
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
-      <div style={{ maxWidth: 820 }}>
 
-        <div style={{
-          marginBottom: 16,
-          padding: '12px 16px',
-          background: 'rgba(var(--signal-positive-rgb),0.08)',
-          border: '1px solid rgba(var(--signal-positive-rgb),0.25)',
-          fontSize: 12,
-          color: 'var(--text-secondary)',
-          lineHeight: 1.6,
-        }}>
-          Every concept used in this tool, explained at three levels. Pick the one that matches how
-          deep you want to go, you can switch anytime.
-        </div>
-
-        <div style={{
-          marginBottom: 24, position: 'sticky', top: 0, zIndex: 5,
-          background: 'var(--surface-canvas)', paddingBottom: 10, paddingTop: 2,
-        }}>
-          <TierToggle tier={tier} onChange={setTier} />
-        </div>
-
-        {SECTIONS.map(section => (
-          <div key={section.category} style={{ marginBottom: 28 }}>
-
-            <div style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'var(--signal-positive)',
-              marginBottom: 12,
-              paddingBottom: 8,
-              borderBottom: 'var(--border-default)',
-            }}>
-              {section.category}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {section.items.map(item => {
-                const content = learnContent[item.key]
-                if (!content) return null
-                return (
-                  <div key={item.key} className="card" style={{ padding: '14px 16px' }}>
-                    <div style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: 'var(--text-primary)',
-                      marginBottom: 6,
-                    }}>
-                      {item.label}
-                    </div>
-
-                    <div style={{
-                      fontSize: 12,
-                      color: 'var(--text-secondary)',
-                      lineHeight: 1.65,
-                    }}>
-                      {content[tier]}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-          </div>
-        ))}
-
-        <div style={{
-          fontSize: 10,
-          color: 'var(--text-muted)',
-          textAlign: 'center',
-          padding: '16px 0 8px',
-          borderTop: 'var(--border-default)',
-        }}>
-          This tool is for educational purposes only and does not constitute financial advice.
-          Past performance does not guarantee future results.
-        </div>
-
+      <div style={{
+        marginBottom: 16,
+        padding: '12px 16px',
+        background: 'rgba(var(--signal-positive-rgb),0.08)',
+        border: '1px solid rgba(var(--signal-positive-rgb),0.25)',
+        fontSize: 12,
+        color: 'var(--text-secondary)',
+        lineHeight: 1.6,
+      }}>
+        Every concept used in this tool, explained at three levels. Pick the one that matches how
+        deep you want to go, you can switch anytime.
       </div>
+
+      <div style={{
+        marginBottom: 24, position: 'sticky', top: 0, zIndex: 5,
+        background: 'var(--surface-canvas)', paddingBottom: 10, paddingTop: 2,
+      }}>
+        <TierToggle tier={tier} onChange={setTier} />
+      </div>
+
+      {SECTIONS.map(section => (
+        <div key={section.category} style={{ marginBottom: 28 }}>
+
+          <div style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--signal-positive)',
+            marginBottom: 12,
+            paddingBottom: 8,
+            borderBottom: 'var(--border-default)',
+          }}>
+            {section.category}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {section.items.map(item => {
+              const content = learnContent[item.key]
+              if (!content) return null
+              return (
+                <div key={item.key} className="card" style={{ padding: '14px 16px' }}>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    marginBottom: 6,
+                  }}>
+                    {item.label}
+                  </div>
+
+                  <div style={{
+                    fontSize: 12,
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.65,
+                  }}>
+                    {content[tier]}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+        </div>
+      ))}
+
+      <div style={{
+        fontSize: 10,
+        color: 'var(--text-muted)',
+        textAlign: 'center',
+        padding: '16px 0 8px',
+        borderTop: 'var(--border-default)',
+      }}>
+        This tool is for educational purposes only and does not constitute financial advice.
+        Past performance does not guarantee future results.
+      </div>
+
     </div>
   )
 }
