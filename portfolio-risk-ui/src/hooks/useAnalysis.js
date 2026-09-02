@@ -50,7 +50,14 @@ export function useAnalysis() {
       setData(res.data)
       setHasRun(true)
     } catch (err) {
-      setError(errorMessage(err, 'Something went wrong. Check your tickers and try again.'))
+      // errorMessage() surfaces the backend's actual detail whenever the
+      // server responded at all (invalid-ticker 404, rate-limit 503, or our
+      // own generic 500 all carry their own accurate message already — see
+      // api.py). This fallback only fires when there was no response to
+      // read a detail from at all — a real network failure, a timeout, or
+      // the request never reaching the server — so it must not imply the
+      // user did anything wrong; the tickers may be completely fine.
+      setError(errorMessage(err, 'Something went wrong loading data. Please try again in a moment.'))
     } finally {
       setLoading(false)
     }

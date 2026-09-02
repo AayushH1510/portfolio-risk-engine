@@ -58,7 +58,12 @@ export function useComparison() {
       setData(res.data)
       setHasRun(true)
     } catch (err) {
-      setError(errorMessage(err, 'Analysis failed. Check your tickers.'))
+      // Same reasoning as useAnalysis.js: errorMessage() surfaces the
+      // backend's real detail whenever it responded at all. This fallback
+      // only fires when there's no response to read one from — a network
+      // failure or timeout, not a tickers problem — so it must not imply
+      // the user did anything wrong.
+      setError(errorMessage(err, 'Something went wrong loading data. Please try again in a moment.'))
     } finally {
       setLoading(false)
     }
