@@ -11,7 +11,12 @@ function NavLink({ href, children }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         ...typeStyle('monoNav'),
-        color: hovered ? 'var(--color-text-body)' : 'var(--color-text-faint)',
+        // --color-text-faint reads fine on the flat card surfaces it's
+        // designed for ("metric tile labels" per design/tokens.json), but
+        // nav sits over Hero's animated smoke field — needs the brightest
+        // text token to stay legible regardless of what's drifting behind
+        // it, with the established accent-mint highlight on hover.
+        color: hovered ? 'var(--color-accent-mint)' : 'var(--color-text-primary)',
         transition: `color var(--motion-surfaceTint-duration) var(--motion-surfaceTint-easing)`,
       }}
     >

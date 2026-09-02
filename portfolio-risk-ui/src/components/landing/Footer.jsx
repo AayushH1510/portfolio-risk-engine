@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Logo from '../Logo'
 
 function FooterLink({ link }) {
   const [hovered, setHovered] = useState(false)
@@ -35,15 +36,7 @@ export default function Footer({ brand, footer }) {
       >
         <div style={{ maxWidth: '380px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-5)' }}>
-            <span
-              style={{
-                width: '22px',
-                height: '22px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'linear-gradient(145deg, var(--color-accent-mint), var(--color-accent-mintDeep))',
-                display: 'block',
-              }}
-            />
+            <Logo variant="mark" size={22} ink="var(--color-text-body)" />
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-body)' }}>{brand.name}</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-quiet)' }}>{brand.version}</span>
           </div>
