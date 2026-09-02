@@ -266,13 +266,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
             <MetricPill
               label={<MetricTooltip metricKey="var_95">VaR</MetricTooltip>}
-              value={`−${fmt(var_cvar.var_pct)}`}
+              value={`−${fmt(Math.abs(var_cvar.var_pct))}`}
               color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.var_dollar).toFixed(0)} per day`}
             />
             <MetricPill
               label={<MetricTooltip metricKey="var_99">VaR</MetricTooltip>}
-              value={`−${fmt(var_cvar_99?.var_pct ?? 0)}`}
+              value={`−${fmt(Math.abs(var_cvar_99?.var_pct ?? 0))}`}
               color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)} per day`}
             />
@@ -282,13 +282,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
             <MetricPill
               label={<MetricTooltip metricKey="cvar_95">CVaR (avg tail)</MetricTooltip>}
-              value={`−${fmt(var_cvar.cvar_pct)}`}
+              value={`−${fmt(Math.abs(var_cvar.cvar_pct))}`}
               color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.cvar_dollar).toFixed(0)} avg`}
             />
             <MetricPill
               label={<MetricTooltip metricKey="cvar_99">CVaR (avg tail)</MetricTooltip>}
-              value={`−${fmt(var_cvar_99?.cvar_pct ?? 0)}`}
+              value={`−${fmt(Math.abs(var_cvar_99?.cvar_pct ?? 0))}`}
               color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.cvar_dollar ?? 0).toFixed(0)} avg`}
             />
