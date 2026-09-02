@@ -73,8 +73,17 @@ export default function SectorChart({ sectorData, loading }) {
   const totalWeight = sectorData.reduce((sum, d) => sum + d.weight, 0)
   const hasExcluded = totalWeight < 0.995
 
+  // Recharts' category YAxis divides the plot height evenly per row and
+  // silently drops a tick label (though not its bar) once rows get packed
+  // too tight to fit — invisible with the 1-2 sectors a 3-ticker tech
+  // portfolio usually produces, but a 4-5 ticker portfolio spanning three
+  // or more sectors (e.g. tech + financials + energy) routinely hits it.
+  // Scale the card to the row count instead of a fixed height so every
+  // sector always gets enough room to keep its label.
+  const chartHeight = Math.max(96, 34 + sectorData.length * 24)
+
   return (
-    <div className="card" style={{ padding: '10px 16px', height: 96, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+    <div className="card" style={{ padding: '10px 16px', height: chartHeight, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           Sector exposure

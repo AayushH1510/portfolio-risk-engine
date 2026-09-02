@@ -101,6 +101,18 @@ def fetch_closing_prices(
         if t not in prices.columns or prices[t].isna().all()
     ]
     if failed_tickers:
+        # Every requested ticker failing together, or "^GSPC" specifically
+        # failing, can't be "the user typed a bad symbol": ^GSPC is a
+        # hardcoded constant fetch_with_benchmark appends itself, never user
+        # input, so it failing at all is proof this is a fetch-level failure
+        # (most likely yf.download() silently swallowing a rate-limit/IP
+        # block instead of raising YFRateLimitError — retried above, but not
+        # every failure mode raises that specific exception). Same logic for
+        # every ticker in the request failing at once: vanishingly unlikely
+        # to all be typos simultaneously. Don't misreport either as a bad
+        # ticker — surface it as the retryable, honest rate-limit error.
+        if "^GSPC" in failed_tickers or len(failed_tickers) == len(tickers):
+            raise YFinanceRateLimitError(failed_tickers)
         raise TickerNotFoundError(failed_tickers)
 
     # Drop any rows where ALL tickers have NaN (e.g. market holidays).
