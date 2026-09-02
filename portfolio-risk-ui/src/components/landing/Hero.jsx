@@ -91,12 +91,16 @@ export default function Hero({ block }) {
             ))}
           </div>
 
-          <h1 style={{ ...typeStyle('displayXL'), margin: '0 0 var(--space-8)', color: 'var(--color-text-primary)', textWrap: 'balance' }}>
+          <h1 style={{ ...typeStyle('displayXLHero'), margin: '0 0 var(--space-8)', color: 'var(--color-text-primary)', textWrap: 'balance' }}>
             {block.headline.map((seg, i) => (
               <span key={i}>
                 {seg.break && <br />}
                 {seg.emphasis ? (
-                  <span style={{ fontStyle: 'italic', color: 'var(--color-text-secondary)' }}>{seg.text}</span>
+                  // Stays on the display family/weight (Newsreader, 200) even
+                  // though the H1 itself moved to displayXLHero's Lora 400 —
+                  // pinned explicitly rather than inherited, since it would
+                  // otherwise follow the parent's new font-family/weight.
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--type-displayXL-weight)', fontStyle: 'italic', color: 'var(--color-text-secondary)' }}>{seg.text}</span>
                 ) : (
                   seg.text
                 )}
