@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Varense">
   <rect x="0" y="0" width="64" height="64" fill="#0f0d0b"></rect>
-  <g transform="translate(32 32) scale(0.8) translate(-32 -29.5)">
-    <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
-    <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+  <g transform="translate(32 32) scale(0.8) translate(-32 -27.5)">
+    <path d="M5.6,43 A27,30 0 1 1 58.4,43" fill="none" stroke="#F6F1EA" stroke-width="6"></path>
+    <path d="M16,48 L36,29 L56,48 Z" fill="#F6F1EA"></path>
+    <path d="M4,48 L60,48" fill="none" stroke="#F6F1EA" stroke-width="6"></path>
   </g>
 </svg>
