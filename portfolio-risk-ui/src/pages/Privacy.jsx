@@ -5,12 +5,12 @@ export default function Privacy() {
     <TrustPage title="Privacy Policy" updated="August 26, 2026">
       <TrustSection heading="What we collect">
         <p style={{ marginBottom: 12 }}>
-          If you sign in, we collect your <strong>email address</strong> through Supabase Authentication —
+          If you sign in, we collect your <strong>email address</strong> through Supabase Authentication -
           we never see or store your password directly.
         </p>
         <p style={{ marginBottom: 12 }}>
           If you save a portfolio, we store the <strong>tickers and weights</strong> you chose to save,
-          along with the portfolio value and time period you configured. That's it — we don't collect
+          along with the portfolio value and time period you configured. That's it - we don't collect
           your name, address, phone number, or anything else beyond what's needed to make "saved portfolios"
           work.
         </p>
@@ -23,8 +23,8 @@ export default function Privacy() {
         <p style={{ marginBottom: 12 }}>
           Varense uses two third-party market data providers, each for a different part of the app.{' '}
           <strong>yfinance</strong> (Yahoo Finance) powers portfolio analysis, backtesting, and Monte Carlo
-          simulation — the historical price data your risk metrics are calculated from.{' '}
-          <strong>Finnhub</strong> powers the individual stock drawer and the Valuation tab — real-time
+          simulation - the historical price data your risk metrics are calculated from.{' '}
+          <strong>Finnhub</strong> powers the individual stock drawer and the Valuation tab - real-time
           quotes and company fundamentals for a ticker you click into.
         </p>
         <p>
@@ -57,7 +57,7 @@ export default function Privacy() {
       <TrustSection heading="Changes to this policy">
         <p>
           Varense is an early-stage, actively developed product. We may update this policy as the product
-          evolves — significant changes will be reflected by updating the date at the top of this page.
+          evolves - significant changes will be reflected by updating the date at the top of this page.
         </p>
       </TrustSection>
 

@@ -4,8 +4,8 @@ import { errorMessage } from '../lib/errorMessage'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-const fmtPct    = v => v == null ? '—' : `${(v * 100).toFixed(1)}%`
-const fmtDollar = v => v == null ? '—' : `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+const fmtPct    = v => v == null ? '-' : `${(v * 100).toFixed(1)}%`
+const fmtDollar = v => v == null ? '-' : `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
 function ScenarioCard({ scenario, portfolioValue }) {
   const { name, period, portfolio_return, worst_day, recovery_days, excluded_tickers } = scenario
@@ -63,7 +63,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
 
           {excluded_tickers?.length > 0 && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-              Excludes {excluded_tickers.join(', ')} — no data for this period
+              Excludes {excluded_tickers.join(', ')} - no data for this period
             </div>
           )}
         </>
@@ -90,7 +90,7 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
   return (
     <div className="card" style={{ padding: '14px 16px' }}>
       <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
-        Stress test — historical scenarios
+        Stress test - historical scenarios
       </div>
 
       {loading && (

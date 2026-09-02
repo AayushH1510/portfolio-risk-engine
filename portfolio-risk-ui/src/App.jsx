@@ -301,7 +301,7 @@ export default function App() {
           padding: '6px 20px', fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
           borderTop: 'var(--border-default)', background: 'transparent', flexShrink: 0,
         }}>
-          <span>Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
+          <span>Varense - educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
           <span style={{ display: 'flex', gap: 12, flexShrink: 0, marginLeft: 12 }}>
             <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
             <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>

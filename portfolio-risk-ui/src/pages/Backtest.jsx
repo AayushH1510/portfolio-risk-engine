@@ -159,7 +159,7 @@ export default function Backtest({ data, tickers }) {
       <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0 }}>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-            Cumulative return — {backtest.period.start} to {backtest.period.end}
+            Cumulative return - {backtest.period.start} to {backtest.period.end}
           </div>
           <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
             {STRATEGIES.map(s => (

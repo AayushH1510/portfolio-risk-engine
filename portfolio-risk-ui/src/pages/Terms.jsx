@@ -3,10 +3,10 @@ import { TrustPage, TrustSection } from '../components/LandingLayout'
 export default function Terms() {
   return (
     <TrustPage title="Terms of Service" updated="August 24, 2026">
-      <TrustSection heading="Educational tool only — not financial advice">
+      <TrustSection heading="Educational tool only - not financial advice">
         <p style={{ marginBottom: 12 }}>
-          Varense is an educational portfolio analysis tool. Everything it shows you — risk metrics,
-          Monte Carlo simulations, backtests, stress tests, the efficient frontier, valuation flags — is
+          Varense is an educational portfolio analysis tool. Everything it shows you - risk metrics,
+          Monte Carlo simulations, backtests, stress tests, the efficient frontier, valuation flags - is
           computed from historical and simulated data for informational purposes only.
         </p>
         <p>
@@ -21,7 +21,7 @@ export default function Terms() {
         <p>
           Varense is currently in beta. Features, calculations, and data sources may change, be added, or
           be removed without notice as we continue building and testing the product. You may encounter
-          bugs, inaccuracies, or temporary downtime — if you spot something off, we'd genuinely appreciate
+          bugs, inaccuracies, or temporary downtime - if you spot something off, we'd genuinely appreciate
           you reporting it via the feedback button in the app.
         </p>
       </TrustSection>
@@ -29,7 +29,7 @@ export default function Terms() {
       <TrustSection heading="No warranty">
         <p>
           Varense is provided "as is" and "as available," without warranty of any kind, express or
-          implied — including, without limitation, warranties of accuracy, completeness, or fitness for a
+          implied - including, without limitation, warranties of accuracy, completeness, or fitness for a
           particular purpose. We don't guarantee the data or calculations are error-free.
         </p>
       </TrustSection>
@@ -44,8 +44,8 @@ export default function Terms() {
 
       <TrustSection heading="Changes to the service">
         <p>
-          Because Varense is in active beta development, the service — including its features, pricing
-          (currently free), and availability — may change at any time. We'll try to communicate major
+          Because Varense is in active beta development, the service - including its features, pricing
+          (currently free), and availability - may change at any time. We'll try to communicate major
           changes, but we don't guarantee advance notice during this phase.
         </p>
       </TrustSection>

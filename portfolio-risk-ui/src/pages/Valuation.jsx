@@ -12,9 +12,9 @@ const COLUMNS = [
   { label: 'P/S',         tip: 'Price-to-Sales ratio. How much investors pay per $1 of revenue. Lower = cheaper relative to sales. High-growth companies often have high P/S.' },
   { label: 'EV/EBITDA',   tip: 'Enterprise Value divided by earnings before interest, tax, depreciation and amortisation. A measure of overall company value vs operating profit. Lower = cheaper. Negative means the company has negative EBITDA (unprofitable at operating level).' },
   { label: 'Gross Margin',tip: 'Revenue kept after subtracting the direct cost of goods sold. Higher = stronger pricing power and more money left for R&D, sales, and profit. Software companies often exceed 70%. Manufacturers are typically 20–40%.' },
-  { label: 'Rev Growth',  tip: 'Year-over-year revenue growth. How fast the company is growing its top line. Green = strong growth (15%+). Red = shrinking revenue — a serious warning sign.' },
-  { label: 'Mkt Cap',     tip: 'Market capitalisation — total value of all shares outstanding. Gives context for scale: mega-cap ($1T+), large-cap ($10B+), mid-cap ($2B+), small-cap (under $2B).' },
-  { label: 'V/G Score',   tip: 'Value/Growth Score = P/S ÷ Revenue Growth %. Lower is better — it means you are getting more growth per dollar of valuation. Think of it as a revenue-based PEG ratio. A score below 0.15 is excellent.' },
+  { label: 'Rev Growth',  tip: 'Year-over-year revenue growth. How fast the company is growing its top line. Green = strong growth (15%+). Red = shrinking revenue - a serious warning sign.' },
+  { label: 'Mkt Cap',     tip: 'Market capitalisation - total value of all shares outstanding. Gives context for scale: mega-cap ($1T+), large-cap ($10B+), mid-cap ($2B+), small-cap (under $2B).' },
+  { label: 'V/G Score',   tip: 'Value/Growth Score = P/S ÷ Revenue Growth %. Lower is better - it means you are getting more growth per dollar of valuation. Think of it as a revenue-based PEG ratio. A score below 0.15 is excellent.' },
 ]
 
 function ColHeader({ label, tip }) {
@@ -125,7 +125,7 @@ export default function Valuation({ tickers }) {
           Relative Valuation
         </div>
         <div style={{ fontSize:11, color:'var(--text-muted)' }}>
-          Ranked by Value/Growth score — lowest = most growth per dollar of valuation
+          Ranked by Value/Growth score - lowest = most growth per dollar of valuation
         </div>
       </div>
 
@@ -180,7 +180,7 @@ export default function Valuation({ tickers }) {
                       )}
                     </div>
                     <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {stock.name || stock.industry || '—'}
+                      {stock.name || stock.industry || '-'}
                     </div>
                   </td>
 
@@ -235,7 +235,7 @@ export default function Valuation({ tickers }) {
           {/* Metrics breakdown */}
           <div className="card" style={{ padding:'14px 16px' }}>
             <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:12 }}>
-              {selectedStock.ticker} — Key metrics
+              {selectedStock.ticker} - Key metrics
             </div>
             {[
               { label:'P/S Ratio',      val: fmtX(selectedStock.ps_ratio),       note:'Price per $1 of revenue' },
@@ -314,11 +314,11 @@ export default function Valuation({ tickers }) {
               <div style={{ display:'flex', gap:12 }}>
                 <div>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Sector</div>
-                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '—'}</div>
+                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '-'}</div>
                 </div>
                 <div style={{ borderLeft:'1px solid rgba(var(--text-primary-rgb),0.06)', paddingLeft:12 }}>
                   <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Industry</div>
-                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.industry || '—'}</div>
+                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.industry || '-'}</div>
                 </div>
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function Valuation({ tickers }) {
 
       {/* Disclaimer */}
       <div style={{ fontSize:10, color:'var(--text-muted)', paddingBottom:8, lineHeight:1.6 }}>
-        Fundamental data sourced from Finnhub. Risk flags are rule-based and for educational purposes only — not financial advice. Always verify figures with primary sources.
+        Fundamental data sourced from Finnhub. Risk flags are rule-based and for educational purposes only - not financial advice. Always verify figures with primary sources.
       </div>
 
     </div>

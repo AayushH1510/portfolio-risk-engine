@@ -104,18 +104,18 @@ export function SimulationPathsVisual() {
           borderTop: '1px solid var(--color-line-default)',
         }}
       >
-        <span style={{ color: 'var(--color-signal-negative)' }}>Bad (5th) — $9,823</span>
-        <span style={{ color: 'var(--color-accent-mint)' }}>Median — $13,603</span>
-        <span>Good (95th) — $18,909</span>
+        <span style={{ color: 'var(--color-signal-negative)' }}>Bad (5th) - $9,823</span>
+        <span style={{ color: 'var(--color-accent-mint)' }}>Median - $13,603</span>
+        <span>Good (95th) - $18,909</span>
       </div>
     </div>
   )
 }
 
 const STRESS_ROWS = [
-  { label: '2008 — GLOBAL FINANCIAL CRISIS', pct: '−48.2%', width: '96%', deep: 'var(--color-signal-negativeDeep)', signal: 'var(--color-signal-negative)' },
-  { label: '2020 — COVID CRASH', pct: '−31.7%', width: '63%', deep: 'var(--color-signal-negativeDeep)', signal: 'var(--color-signal-negative)' },
-  { label: '2022 — RATE SHOCK', pct: '−24.1%', width: '48%', deep: 'var(--color-signal-warningDeep)', signal: 'var(--color-signal-warning)' },
+  { label: '2008 - GLOBAL FINANCIAL CRISIS', pct: '−48.2%', width: '96%', deep: 'var(--color-signal-negativeDeep)', signal: 'var(--color-signal-negative)' },
+  { label: '2020 - COVID CRASH', pct: '−31.7%', width: '63%', deep: 'var(--color-signal-negativeDeep)', signal: 'var(--color-signal-negative)' },
+  { label: '2022 - RATE SHOCK', pct: '−24.1%', width: '48%', deep: 'var(--color-signal-warningDeep)', signal: 'var(--color-signal-warning)' },
 ]
 
 export function StressBarsVisual() {

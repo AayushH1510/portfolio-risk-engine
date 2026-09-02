@@ -132,7 +132,7 @@ export function LandingFooter() {
       borderTop: 'var(--border-default)', marginTop: 'auto', flexShrink: 0,
     }}>
       <div style={{ marginBottom: 8 }}>
-        Varense — educational tool only. Not financial advice. Past performance does not guarantee future results.
+        Varense - educational tool only. Not financial advice. Past performance does not guarantee future results.
       </div>
       <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
         <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>

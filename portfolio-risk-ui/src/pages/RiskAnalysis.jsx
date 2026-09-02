@@ -303,7 +303,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             On your worst <strong style={{ color: 'rgba(var(--text-primary-rgb),0.7)' }}>5% of days</strong>, expect to lose up to{' '}
             <strong style={{ color: 'var(--signal-negative)' }}>${Math.abs(var_cvar.var_dollar).toFixed(0)}</strong>.
             {' '}The 99% threshold rises to{' '}
-            <strong style={{ color: 'var(--signal-negative-strong)' }}>${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)}</strong> — the worst 1 in 100 days.
+            <strong style={{ color: 'var(--signal-negative-strong)' }}>${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)}</strong> - the worst 1 in 100 days.
           </div>
         </div>
 
@@ -318,7 +318,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             background: 'rgba(var(--text-primary-rgb),0.02)',
             border: '1px solid rgba(var(--text-primary-rgb),0.05)',
           }}>
-            High correlation means your stocks move together — <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>less diversification</strong> than you might think.
+            High correlation means your stocks move together - <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>less diversification</strong> than you might think.
           </div>
         </div>
       </div>

@@ -230,7 +230,7 @@ export default function Methodology() {
 
       {/* Data sourcing */}
       <section style={{ padding: '80px var(--layout-gutter)', borderBottom: '1px solid var(--color-line-subtle)' }}>
-        <SectionFrame index="—" label="Data">
+        <SectionFrame index="" label="Data">
           <h2 style={{ ...typeStyle('displayM'), margin: '0 0 var(--space-8)', color: 'var(--color-text-primary)', maxWidth: '720px' }}>
             {dataSourcing.heading}
           </h2>

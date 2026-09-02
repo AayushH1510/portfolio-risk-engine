@@ -183,7 +183,7 @@ export interface LandingPage {
 const APP_URL = import.meta.env?.VITE_APP_URL ?? '/app';
 
 export const landingPage: LandingPage = {
-  brand: { name: 'Varense', version: 'v1.0', appUrl: APP_URL },
+  brand: { name: 'Varense', version: 'v1.2', appUrl: APP_URL },
 
   nav: [
     { label: 'What', href: '#what' },
@@ -200,7 +200,7 @@ export const landingPage: LandingPage = {
     {
       id: 'top',
       type: 'hero',
-      eyebrow: ['Portfolio risk engine', 'v1.0'],
+      eyebrow: ['Portfolio risk engine', 'v1.2'],
       headline: [
         { text: 'Know how your portfolio behaves', break: true },
         { text: 'before', emphasis: true },

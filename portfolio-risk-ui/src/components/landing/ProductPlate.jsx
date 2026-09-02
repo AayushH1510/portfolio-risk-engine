@@ -130,7 +130,7 @@ export default function ProductPlate({ block }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.16em', color: 'var(--color-text-faint)' }}>PORTFOLIO GROWTH</span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-ghost)', display: 'flex', gap: '16px' }}>
-                    <span style={{ color: 'var(--color-accent-mint)' }}>— Your portfolio</span>
+                    <span style={{ color: 'var(--color-accent-mint)' }}>- Your portfolio</span>
                     <span>--- S&amp;P 500</span>
                   </span>
                 </div>
