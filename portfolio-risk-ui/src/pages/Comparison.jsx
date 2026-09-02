@@ -179,13 +179,13 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
       <div className="card" style={{ padding: '14px 16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-            Monte Carlo — median outcomes
+            Monte Carlo - median outcomes
           </div>
           <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
             {[[A_COLOR, nameA, dataA.monte_carlo.p50_final], [B_COLOR, nameB, dataB.monte_carlo.p50_final]].map(([c, n, v]) => (
               <span key={n} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
                 <div style={{ width: 16, height: 2, background: c }} />
-                {n} — <span style={{ color: c, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>${Math.round(v).toLocaleString()}</span>
+                {n} - <span style={{ color: c, fontFamily: 'var(--font-mono)', fontWeight: 600 }}>${Math.round(v).toLocaleString()}</span>
               </span>
             ))}
           </div>

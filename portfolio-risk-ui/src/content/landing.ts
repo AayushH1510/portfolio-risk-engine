@@ -195,7 +195,7 @@ export interface LandingPage {
 const APP_URL = import.meta.env?.VITE_APP_URL ?? '/app';
 
 export const landingPage: LandingPage = {
-  brand: { name: 'Varense', version: 'v1.0', appUrl: APP_URL },
+  brand: { name: 'Varense', version: 'v1.2', appUrl: APP_URL },
 
   nav: [
     { label: 'What', href: '#what' },
@@ -212,13 +212,13 @@ export const landingPage: LandingPage = {
     {
       id: 'top',
       type: 'hero',
-      eyebrow: ['Portfolio risk engine', 'v1.0'],
+      eyebrow: ['Portfolio risk engine', 'v1.2'],
       headline: [
         { text: 'Know how your portfolio behaves' },
         { text: 'before', emphasis: true, break: true },
         { text: ' the market tells you.' },
       ],
-      lead: 'Varense runs correlated Monte Carlo, historical crisis replay, and full risk decomposition across your holdings — the arithmetic an institutional desk runs on a book of billions, applied to a portfolio of three tickers.',
+      lead: 'Varense runs correlated Monte Carlo, historical crisis replay, and full risk decomposition across your holdings - the arithmetic an institutional desk runs on a book of billions, applied to a portfolio of three tickers.',
       actions: [
         { label: 'Launch the app', href: APP_URL, variant: 'primary' },
         { label: 'Read the methodology', href: '#method', variant: 'secondary' },
@@ -259,7 +259,7 @@ export const landingPage: LandingPage = {
       heading: 'A risk engine. Not a stock picker.',
       paragraphs: [
         'Varense takes the portfolio you already hold and answers a single question in a dozen ways: **what can this lose, and how often?**',
-        'Enter your tickers and weights. The engine pulls real fundamentals and price history, builds the covariance structure between your holdings, and runs the full risk stack — value at risk, tail expectation, correlated Monte Carlo, crisis replay, frontier optimization — in a single pass. No recommendations. No signals. Just the distribution you are actually exposed to.',
+        'Enter your tickers and weights. The engine pulls real fundamentals and price history, builds the covariance structure between your holdings, and runs the full risk stack - value at risk, tail expectation, correlated Monte Carlo, crisis replay, frontier optimization - in a single pass. No recommendations. No signals. Just the distribution you are actually exposed to.',
       ],
     },
 
@@ -274,7 +274,7 @@ export const landingPage: LandingPage = {
           ordinal: '01',
           tone: 'negative',
           title: 'Returns are the part you can see',
-          body: 'A green line tells you what happened once. It says nothing about the ninety-nine other years that could have happened instead — including the ones that would have taken you out.',
+          body: 'A green line tells you what happened once. It says nothing about the ninety-nine other years that could have happened instead - including the ones that would have taken you out.',
         },
         {
           ordinal: '02',
@@ -286,7 +286,7 @@ export const landingPage: LandingPage = {
           ordinal: '03',
           tone: 'positive',
           title: 'The tail is where accounts end',
-          body: 'Average outcomes are comfortable and useless. What matters is the worst 5% — its depth, its duration, and whether you could sit through it.',
+          body: 'Average outcomes are comfortable and useless. What matters is the worst 5% - its depth, its duration, and whether you could sit through it.',
         },
       ],
     },
@@ -313,7 +313,7 @@ export const landingPage: LandingPage = {
         {
           ordinal: '03',
           title: 'Read the verdict',
-          body: 'Eight views of the same portfolio — risk, simulation, frontier, valuation, comparison, backtest — each written in plain language underneath the chart. Export to PDF or CSV.',
+          body: 'Eight views of the same portfolio - risk, simulation, frontier, valuation, comparison, backtest - each written in plain language underneath the chart. Export to PDF or CSV.',
           annotation: ['VaR · CVaR · β · α', 'Sharpe · Sortino', 'Treynor · Info ratio', 'PDF / CSV export'],
         },
       ],
@@ -338,7 +338,7 @@ export const landingPage: LandingPage = {
           kicker: 'Monte Carlo · Cholesky-correlated',
           kickerTone: 'positive',
           heading: 'A thousand versions of next year.',
-          body: 'Uncorrelated simulation is a lie that flatters your portfolio. Varense factors the covariance matrix so every simulated path preserves the real relationships between your holdings — then runs the year a thousand times under bear, base, and bull drift.',
+          body: 'Uncorrelated simulation is a lie that flatters your portfolio. Varense factors the covariance matrix so every simulated path preserves the real relationships between your holdings, then runs the year a thousand times under bear, base, and bull drift.',
           tags: ['Chance of profit', 'Chance of −10%', 'Percentile bands'],
           visual: 'simulationPaths',
           visualSide: 'left',
@@ -347,7 +347,7 @@ export const landingPage: LandingPage = {
           kicker: 'Historical stress testing',
           kickerTone: 'warning',
           heading: 'Crises you have already lived through, replayed against what you hold now.',
-          body: "Simulation assumes tomorrow resembles the distribution. History doesn't. Varense replays 2008, the COVID crash, and the 2022 drawdown across your current book to show the loss you would have carried — and how long it took to come back.",
+          body: "Simulation assumes tomorrow resembles the distribution. History doesn't. Varense replays 2008, the COVID crash, and the 2022 drawdown across your current book to show the loss you would have carried, and how long it took to come back.",
           visual: 'stressBars',
           visualSide: 'right',
         },
@@ -376,7 +376,7 @@ export const landingPage: LandingPage = {
         },
         {
           title: 'Published math',
-          body: 'Every metric follows a standard textbook definition — historical VaR and CVaR, Cholesky-correlated Monte Carlo, Markowitz-style frontier simulation. The formulas are documented, not proprietary — down to the exact constants.',
+          body: 'Every metric follows a standard textbook definition - historical VaR and CVaR, Cholesky-correlated Monte Carlo, Markowitz-style frontier simulation. The formulas are documented, not proprietary - down to the exact constants.',
         },
         {
           title: 'Real market data',
@@ -397,7 +397,7 @@ export const landingPage: LandingPage = {
       label: 'Pricing',
       heading: 'Free while we’re in beta.',
       notice: {
-        lead: 'Every early user gets full access to the entire engine — Monte Carlo, stress testing, the efficient frontier, backtesting, all of it — at no cost. Paid plans will follow once the beta ends, but nothing you run today will be billed retroactively.',
+        lead: 'Every early user gets full access to the entire engine - Monte Carlo, stress testing, the efficient frontier, backtesting, all of it - at no cost. Paid plans will follow once the beta ends, but nothing you run today will be billed retroactively.',
         action: { label: 'Start using Varense', href: APP_URL, variant: 'primary' },
         note: 'Pricing coming soon. Beta users keep full access at no charge.',
       },
@@ -419,15 +419,15 @@ export const landingPage: LandingPage = {
         },
         {
           question: 'Why is there a limit on how many tickers I can add?',
-          answer: 'Correlated simulation cost grows with the square of the position count, and market data is metered per symbol, so the engine currently caps a portfolio at five tickers (it works best with two or three). That limit applies to everyone during the beta — there is no paid tier to unlock more today.',
+          answer: 'Correlated simulation cost grows with the square of the position count, and market data is metered per symbol, so the engine currently caps a portfolio at five tickers (it works best with two or three). That limit applies to everyone during the beta - there is no paid tier to unlock more today.',
         },
         {
           question: 'How accurate is a Monte Carlo projection?',
-          answer: 'It is a model, and every model is wrong in a specific way. Geometric Brownian motion understates fat tails and assumes correlations hold. That is precisely why Varense pairs it with historical crisis replay — the two disagree, and the disagreement is informative.',
+          answer: 'It is a model, and every model is wrong in a specific way. Geometric Brownian motion understates fat tails and assumes correlations hold. That is precisely why Varense pairs it with historical crisis replay - the two disagree, and the disagreement is informative.',
         },
         {
           question: 'Where does the market data come from?',
-          answer: 'Two sources, split by purpose. Finnhub provides real-time quotes and company fundamentals, powering the stock detail view and the valuation screen. Yahoo Finance provides the historical price series behind portfolio analysis, backtesting, and Monte Carlo simulation. Both are pulled live on each run, over the window you select — up to the maximum available history.',
+          answer: 'Two sources, split by purpose. Finnhub provides real-time quotes and company fundamentals, powering the stock detail view and the valuation screen. Yahoo Finance provides the historical price series behind portfolio analysis, backtesting, and Monte Carlo simulation. Both are pulled live on each run, over the window you select, up to the maximum available history.',
         },
       ],
     },

@@ -67,7 +67,7 @@ export default function Features({ block }) {
             marginBottom: 'var(--space-9)',
           }}
         >
-          {block.index} — {block.label}
+          {block.index} - {block.label}
         </div>
         {block.features.map((feature, i) => (
           <FeatureRow key={feature.heading} feature={feature} isLast={i === block.features.length - 1} />

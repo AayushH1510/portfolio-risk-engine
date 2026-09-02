@@ -116,13 +116,13 @@ export default function MonteCarlo({ data }) {
         {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, flexShrink:0 }}>
           <div style={{ fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase', letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)' }}>
-            {n_simulations.toLocaleString()} simulated futures — next 12 months
+            {n_simulations.toLocaleString()} simulated futures - next 12 months
           </div>
           <div style={{ display:'flex', gap:14, fontSize:10 }}>
             {[
-              { color:'var(--signal-negative)', label:`Bad (5th) — ${fmtD(p5_final)}`,   dash:true },
-              { color:'var(--signal-positive)', label:`Median — ${fmtD(p50_final)}`,      dash:false },
-              { color:'var(--accent-light)', label:`Good (95th) — ${fmtD(p95_final)}`, dash:true },
+              { color:'var(--signal-negative)', label:`Bad (5th) - ${fmtD(p5_final)}`,   dash:true },
+              { color:'var(--signal-positive)', label:`Median - ${fmtD(p50_final)}`,      dash:false },
+              { color:'var(--accent-light)', label:`Good (95th) - ${fmtD(p95_final)}`, dash:true },
             ].map(l => (
               <span key={l.label} style={{ display:'flex', alignItems:'center', gap:5, color:'var(--text-muted)' }}>
                 <svg width="20" height="2" style={{ flexShrink:0 }}>
@@ -174,7 +174,7 @@ export default function MonteCarlo({ data }) {
         <InsightBox
           label="Monte Carlo insight"
           tone={tone}
-          text={`Based on ${n_simulations.toLocaleString()} simulations, <strong>${Math.round(prob_profit*100)}%</strong> of futures end the year profitable. The median outcome is <strong>${fmtD(p50_final)}</strong> — a ${gainPct > 0 ? 'gain' : 'loss'} of <strong>${fmtD(Math.abs(gain))}</strong>. Good year: <strong>${fmtD(p95_final)}</strong>. Bad year: <strong>${fmtD(p5_final)}</strong>. ${prob_loss_10pct > 0.2 ? `Note: <strong>${Math.round(prob_loss_10pct*100)}% chance of losing 10%+</strong> — ensure you can hold through that.` : 'Past performance does not guarantee future results.'}`}
+          text={`Based on ${n_simulations.toLocaleString()} simulations, <strong>${Math.round(prob_profit*100)}%</strong> of futures end the year profitable. The median outcome is <strong>${fmtD(p50_final)}</strong> - a ${gainPct > 0 ? 'gain' : 'loss'} of <strong>${fmtD(Math.abs(gain))}</strong>. Good year: <strong>${fmtD(p95_final)}</strong>. Bad year: <strong>${fmtD(p5_final)}</strong>. ${prob_loss_10pct > 0.2 ? `Note: <strong>${Math.round(prob_loss_10pct*100)}% chance of losing 10%+</strong> - ensure you can hold through that.` : 'Past performance does not guarantee future results.'}`}
         />
       </div>
     </div>

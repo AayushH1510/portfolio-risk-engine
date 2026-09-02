@@ -24,7 +24,7 @@ export default function SectionFrame({ index, label, children, style }) {
           borderTop: '1px solid var(--color-line-default)',
         }}
       >
-        {index} — {label}
+        {index} - {label}
       </div>
       <div style={{ minWidth: 0 }}>{children}</div>
     </div>

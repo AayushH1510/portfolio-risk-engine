@@ -103,7 +103,7 @@ function PricingNotice({ block }) {
             marginBottom: 'var(--space-8)',
           }}
         >
-          {block.index} — {block.label}
+          {block.index} - {block.label}
         </div>
         <h2 data-reveal style={{ ...typeStyle('displayM'), margin: '0 0 var(--space-6)', color: 'var(--color-text-primary)' }}>
           {block.heading}

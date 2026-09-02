@@ -37,7 +37,7 @@ export default function FeedbackButton({ user }) {
     setSubmitting(false)
 
     if (insertError) {
-      setError('Could not send feedback — please try again.')
+      setError('Could not send feedback - please try again.')
       return
     }
 

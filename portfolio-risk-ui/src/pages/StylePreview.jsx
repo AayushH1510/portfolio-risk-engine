@@ -349,8 +349,8 @@ export default function StylePreview() {
           ))}
 
           <div className="sp-caption" style={{ marginTop: 20, marginBottom: 8 }}>Settings</div>
-          <div className="sp-body-sm" style={{ padding: '6px 0' }}>Period — 1Y</div>
-          <div className="sp-body-sm" style={{ padding: '6px 0' }}>Benchmark — S&amp;P 500</div>
+          <div className="sp-body-sm" style={{ padding: '6px 0' }}>Period - 1Y</div>
+          <div className="sp-body-sm" style={{ padding: '6px 0' }}>Benchmark - S&amp;P 500</div>
         </div>
 
         {/* Main */}
@@ -371,7 +371,7 @@ export default function StylePreview() {
 
           {/* Display headline */}
           <div style={{ marginTop: 40, marginBottom: 40 }}>
-            <div className="sp-caption" style={{ marginBottom: 12 }}>Display headline — 64px / 600 / -0.06em</div>
+            <div className="sp-caption" style={{ marginBottom: 12 }}>Display headline - 64px / 600 / -0.06em</div>
             <div style={{
               fontFamily: 'var(--font-primary)', fontSize: 64, fontWeight: 600,
               letterSpacing: '-0.06em', lineHeight: 1.05, color: 'var(--text-primary)',

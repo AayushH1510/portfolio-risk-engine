@@ -266,7 +266,7 @@ Pricing, and FAQ all use it.
 
 - `min-height: 100vh`, flex column, centred, `padding: 150px 40px 0`.
 - **Background:** absolutely-positioned `<canvas>` at `inset: -10% -5% 0`, sized 110% wide and offset `left: -5%` so the plume bleeds past the viewport edge. `filter: saturate(1.15)`. Above it, two gradient scrims (values in the Interactions section — do not darken them further; the plume was clipped to black twice during design).
-- **Eyebrow:** blinking 6px mint dot (2.8s ease-in-out), then `Portfolio risk engine / v1.0` in `monoEyebrow`, `text.ghost`. Bottom margin 34px.
+- **Eyebrow:** blinking 6px mint dot (2.8s ease-in-out), then `Portfolio risk engine / v1.2` in `monoEyebrow`, `text.ghost`. Bottom margin 34px.
 - **Headline:** `displayXL`, `text.primary`, max-width 880px, `text-wrap: balance`. "before" is italic in `text.secondary`. Bottom margin 34px.
 - **Lead:** `lead` type, `text.muted`, max-width 640px, bottom margin 46px.
 - **Actions:** flex, gap 16px, wrap. Primary is mint fill on `bg.base` text with `shadow.action`, lifting 2px on hover. Secondary is `line.interactive` border → `line.hover`. Then the reassurance line in `monoCaption`, `text.ghost`.

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
 
-const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '—'
-const fmtN = (v, d = 2) => v != null ? v.toFixed(d) : '—'
+const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '-'
+const fmtN = (v, d = 2) => v != null ? v.toFixed(d) : '-'
 
 function sharpeColor(pct, alpha = 1) {
   const stops = [
@@ -45,7 +45,7 @@ function drawCrosshair(ctx, cx, cy, size, color) {
 function getInsight(gap, yourSharpe, max_sharpe_sharpe, max_sharpe_weights, tickers, weights) {
   if (gap < 0.05) return {
     tone: 'good', headline: 'Well-positioned',
-    body: `Your portfolio is operating near peak efficiency with a Sharpe ratio of ${fmtN(yourSharpe)}. The gap to the theoretical optimum is negligible — your current allocation reflects strong risk-adjusted decision-making.`,
+    body: `Your portfolio is operating near peak efficiency with a Sharpe ratio of ${fmtN(yourSharpe)}. The gap to the theoretical optimum is negligible - your current allocation reflects strong risk-adjusted decision-making.`,
   }
   if (gap < 0.2) return {
     tone: 'good', headline: 'Strong allocation',
@@ -357,7 +357,7 @@ export default function Frontier({ data, tickers, weights }) {
           color="var(--signal-positive)"
         />
         <WeightCard
-          title={`Optimal — Sharpe ${fmtN(max_sharpe_sharpe)}`}
+          title={`Optimal - Sharpe ${fmtN(max_sharpe_sharpe)}`}
           weights={optimalWeights}
           color="var(--signal-caution)"
           highlightBorderColor="rgba(var(--signal-caution-rgb),0.19)"

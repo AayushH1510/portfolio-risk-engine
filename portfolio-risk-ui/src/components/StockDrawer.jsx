@@ -5,16 +5,16 @@ import {
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '—'
+const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '-'
 const fmtM = v => {
-  if (v == null) return '—'
+  if (v == null) return '-'
   if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`
   if (v >= 1e9)  return `$${(v / 1e9).toFixed(1)}B`
   if (v >= 1e6)  return `$${(v / 1e6).toFixed(1)}M`
   return `$${v.toLocaleString()}`
 }
-const fmtP = v => v != null ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'
-const fmtN = v => v != null ? v.toFixed(2) : '—'
+const fmtP = v => v != null ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'
+const fmtN = v => v != null ? v.toFixed(2) : '-'
 
 function Row({ label, value, accent }) {
   return (
@@ -264,12 +264,12 @@ export default function StockDrawer({ ticker, weight, onClose }) {
                 </div>
                 <Row label="Market Cap"     value={fmtM(stock.market_cap)} />
                 <Row label="P/E Ratio"      value={fmtN(stock.pe_ratio)} />
-                <Row label="EPS (TTM)"      value={stock.eps != null ? `$${stock.eps.toFixed(2)}` : '—'} />
+                <Row label="EPS (TTM)"      value={stock.eps != null ? `$${stock.eps.toFixed(2)}` : '-'} />
                 <Row label="52w High"       value={fmtP(stock.week_52_high)} accent="var(--signal-positive)" />
                 <Row label="52w Low"        value={fmtP(stock.week_52_low)}  accent="var(--signal-negative)" />
                 <Row label="Beta"           value={fmtN(stock.beta)} />
                 <Row label="Dividend Yield" value={stock.dividend_yield ? fmt(stock.dividend_yield) : 'None'} />
-                <Row label="Avg Volume"     value={stock.avg_volume != null ? `${(stock.avg_volume / 1e6).toFixed(1)}M` : '—'} />
+                <Row label="Avg Volume"     value={stock.avg_volume != null ? `${(stock.avg_volume / 1e6).toFixed(1)}M` : '-'} />
               </div>
             </>
           )}

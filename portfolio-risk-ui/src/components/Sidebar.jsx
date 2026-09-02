@@ -5,10 +5,10 @@ import Logo from './Logo'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
-  { val: 20, label: '20d — reactive' },
-  { val: 30, label: '30d — standard' },
-  { val: 60, label: '60d — smooth' },
-  { val: 90, label: '90d — long term' },
+  { val: 20, label: '20d - reactive' },
+  { val: 30, label: '30d - standard' },
+  { val: 60, label: '60d - smooth' },
+  { val: 90, label: '90d - long term' },
 ]
 
 export default function Sidebar({
@@ -142,7 +142,7 @@ export default function Sidebar({
             size={28}
             ink={logoHovered ? 'var(--signal-positive)' : 'var(--text-primary)'}
           />
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em', marginTop: 4 }}>v1.0</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em', marginTop: 4 }}>v1.2</div>
         </Link>
       </div>
 

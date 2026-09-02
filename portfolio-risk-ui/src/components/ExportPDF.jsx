@@ -65,7 +65,7 @@ function ReportTemplate({ data, tickers, weights }) {
           <div style={{ fontSize:16, fontWeight:700, color:'var(--white)' }}>Varense Portfolio Report</div>
           <div style={{ fontSize:11, color:'var(--text-secondary)', marginTop:3 }}>{date}</div>
           <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:5, fontFamily:'var(--font-mono)' }}>
-            {data.period.start} — {data.period.end} · {data.period.n_days} days
+            {data.period.start} - {data.period.end} · {data.period.n_days} days
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ function ReportTemplate({ data, tickers, weights }) {
           </div>
 
           <div>
-            <div style={{ fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color:"var(--text-muted)", marginBottom:8 }}>Monte Carlo — 1 Year</div>
+            <div style={{ fontSize:10, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em", color:"var(--text-muted)", marginBottom:8 }}>Monte Carlo - 1 Year</div>
             <div style={{ background:"var(--white)", borderRadius:'var(--radius-sm)', padding:14, boxShadow:"0 1px 3px rgba(var(--black-rgb),0.06)" }}>
               <ResponsiveContainer width="100%" height={90}>
                 <LineChart data={mcData} margin={{ top:4, right:4, bottom:0, left:38 }}>
@@ -349,7 +349,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
         <div style="text-align:right">
           <div style="font-size:18px;font-weight:700;color:var(--white)">Varense Portfolio Report</div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">${date}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-family:var(--font-mono)">${d.period.start} — ${d.period.end} · ${d.period.n_days} days</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-family:var(--font-mono)">${d.period.start} - ${d.period.end} · ${d.period.n_days} days</div>
         </div>
       </div>
 
@@ -387,7 +387,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
             <div style="background:var(--white);border-radius:var(--radius-sm);padding:16px">${allocBars}</div>
           </div>
           <div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px">Monte Carlo — 1 Year</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px">Monte Carlo - 1 Year</div>
             <div style="background:var(--white);border-radius:var(--radius-sm);padding:16px">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${mcItems}</div>
               <div style="margin-top:10px;font-size:10px;color:var(--text-secondary)">Based on ${mc.n_simulations?.toLocaleString() || '1,000'} simulations. Median: ${fmtD(mc.p50_final)} · Good: ${fmtD(mc.p95_final)} · Bad: ${fmtD(mc.p5_final)}</div>
@@ -510,7 +510,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
               </div>
               <button onclick="document.getElementById('modal-overlay').style.display='none';window.print();"
                 style="width:100%;padding:12px;background:var(--accent-dark);color:var(--white);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.03em;">
-                Got it — open print dialog
+                Got it - open print dialog
               </button>
             </div>
           </div>
