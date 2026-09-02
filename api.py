@@ -23,7 +23,7 @@ from data_fetcher import (
     MIN_ROWS_TO_CACHE,
 )
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
-from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError
+from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError, FinnhubAuthError
 from cache import cached
 from yfinance_utils import YFinanceRateLimitError, TickerNotFoundError
 from rate_limit import limiter
@@ -283,8 +283,18 @@ async def fundamentals(request: Request, tickers: str):
             except FinnhubRateLimitError:
                 results.append({ "ticker": ticker, "error":
                     "Finnhub rate limit reached (60 calls/minute). Please try again in a minute." })
+            except FinnhubAuthError:
+                # Every remaining ticker in this batch will fail the exact
+                # same way — this is Finnhub rejecting the API key, not a
+                # per-ticker data problem — so log it loudly once per
+                # occurrence rather than let it look like N unrelated
+                # "ticker not found"-style failures.
+                logger.error("Finnhub rejected the API key (401) fetching fundamentals for %s — "
+                              "check FINNHUB_API_KEY in the environment", ticker)
+                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now." })
             except Exception as e:
-                results.append({ "ticker": ticker, "error": str(e) })
+                logger.exception("Error fetching fundamentals for %s: %s", ticker, e)
+                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now." })
 
         results.sort(key=lambda r: (r.get("vg_score") is None, r.get("vg_score") or 999))
         return { "tickers": results }
