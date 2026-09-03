@@ -94,7 +94,12 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
       </div>
 
       {loading && (
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Running historical scenarios...</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Running historical scenarios...</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
+            Running the full simulation, this can take up to a minute.
+          </div>
+        </div>
       )}
 
       {error && (

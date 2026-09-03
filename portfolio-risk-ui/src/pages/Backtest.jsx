@@ -1,6 +1,7 @@
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
+import HeavyTierPending from '../components/HeavyTierPending'
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
 
@@ -110,16 +111,25 @@ function ReturnsTable({ backtest }) {
   )
 }
 
-export default function Backtest({ data, tickers }) {
+export default function Backtest({ data, tickers, heavyError }) {
   if (!data) return null
 
   const backtest = data.backtest
+  // backtest is null two different ways: benchmark comparison is off (a
+  // real, permanent state — benchmark_cumulative is absent too in that
+  // case), or it just hasn't arrived from the background /api/analyse-full
+  // call yet (benchmark_cumulative IS present already, since that's fast-
+  // tier — only backtest itself is heavy). Tell those apart instead of
+  // showing the "enable benchmark" message while it's simply still loading.
   if (!backtest) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>
-        Enable "Compare vs S&P 500" in the sidebar and rerun the analysis to see the backtest.
-      </div>
-    )
+    if (!data.benchmark_cumulative) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>
+          Enable "Compare vs S&P 500" in the sidebar and rerun the analysis to see the backtest.
+        </div>
+      )
+    }
+    return <HeavyTierPending label="Loading backtest results..." error={heavyError} />
   }
 
   const sharpes = {

@@ -418,130 +418,190 @@ def _serialize_backtest(bt: dict) -> dict:
     }
 
 
-@app.post("/api/analyse")
-@limiter.limit("20/minute")
-async def analyse(request: Request, req: AnalyseRequest):
-    try:
-        portfolio_prices, benchmark_prices = fetch_with_benchmark(
-            tickers=req.tickers,
-            start_date=req.start_date,
-            end_date=req.end_date,
-        )
+def _serialize_fast_tier(m: dict, req: AnalyseRequest, benchmark_prices) -> dict:
+    """
+    The subset of compute_all_metrics()'s output that's cheap regardless of
+    include_heavy — annualised return/volatility, Sharpe/Sortino/Treynor/
+    Information ratios, VaR/CVaR at both confidences, max drawdown, beta/
+    alpha, diversification score, correlation matrix, cumulative/rolling
+    series. Shared verbatim between /api/analyse-summary and the full
+    response so a number on screen never differs depending on which
+    endpoint produced it.
+    """
+    port_rets  = m["portfolio_returns"]
+    cum_rets   = (1 + port_rets).cumprod() - 1
+    dd_series  = m["max_drawdown"]["drawdown_series"]
+    roll_vol   = m["rolling"]["rolling_volatility"].dropna()
+    roll_sh    = m["rolling"]["rolling_sharpe"].dropna()
+    ds         = m["diversification_score"]
 
-        if len(portfolio_prices) < MIN_ROWS_TO_CACHE:
-            raise HTTPException(
-                status_code=400,
-                detail="Insufficient price data for the selected period — try a wider date range.",
-            )
+    result = {
+        "period":                m["period"],
+        "annualised_return":     round(m["annualised_return"], 6),
+        "annualised_volatility": round(m["annualised_volatility"], 6),
+        "sharpe_ratio":          round(m["sharpe_ratio"], 4),
+        "sortino_ratio":         round(m["sortino_ratio"], 4),
+        "var_cvar":              _serialize_var_cvar(m["var_cvar"]),
+        "var_cvar_99":           _serialize_var_cvar(m["var_cvar_99"]),
+        "max_drawdown":          round(m["max_drawdown"]["max_drawdown"], 6),
+        "beta_alpha":            m["beta_alpha"],
+        "treynor_ratio":         round(m["treynor_ratio"], 4)     if m["treynor_ratio"]     is not None else None,
+        "information_ratio":     round(m["information_ratio"], 4) if m["information_ratio"] is not None else None,
+        "diversification_score": {
+            "score":             ds["score"],
+            "avg_pairwise_corr": ds["avg_pairwise_corr"],
+            "label":             ds["label"],
+        },
 
-        m = compute_all_metrics(
-            prices=portfolio_prices,
-            weights=req.weights,
-            portfolio_value=req.portfolio_value,
-            benchmark_prices=benchmark_prices if req.show_benchmark else None,
-            rolling_window=req.rolling_window,
-        )
+        "portfolio_returns": [round(v, 6) for v in port_rets.values.tolist()],
+        "cumulative_returns": {
+            "dates":  cum_rets.index.strftime("%Y-%m-%d").tolist(),
+            "values": [round(v, 6) for v in cum_rets.values.tolist()],
+        },
+        "per_ticker_cumulative_returns": {
+            ticker: {
+                "dates":  series.index.strftime("%Y-%m-%d").tolist(),
+                "values": [round(v, 6) for v in series.values.tolist()],
+            }
+            for ticker, series in m["per_ticker_cumulative_returns"].items()
+        },
+        "drawdown_series": {
+            "dates":  dd_series.index.strftime("%Y-%m-%d").tolist(),
+            "values": [round(v, 6) for v in dd_series.values.tolist()],
+        },
+        "rolling_volatility": {
+            "dates":  roll_vol.index.strftime("%Y-%m-%d").tolist(),
+            "values": [round(v, 6) for v in roll_vol.values.tolist()],
+        },
+        "rolling_sharpe": {
+            "dates":  roll_sh.index.strftime("%Y-%m-%d").tolist(),
+            "values": [round(v, 6) for v in roll_sh.values.tolist()],
+        },
+        "correlation_matrix": {
+            "tickers": list(m["correlation_matrix"].columns),
+            "values":  m["correlation_matrix"].round(4).values.tolist(),
+        },
+    }
 
-        port_rets  = m["portfolio_returns"]
-        cum_rets   = (1 + port_rets).cumprod() - 1
-        dd_series  = m["max_drawdown"]["drawdown_series"]
-        roll_vol   = m["rolling"]["rolling_volatility"].dropna()
-        roll_sh    = m["rolling"]["rolling_sharpe"].dropna()
-        ef         = m["efficient_frontier"]
-        mc         = m["monte_carlo"]
-        ds         = m["diversification_score"]
-
-        result = {
-            "period":                m["period"],
-            "annualised_return":     round(m["annualised_return"], 6),
-            "annualised_volatility": round(m["annualised_volatility"], 6),
-            "sharpe_ratio":          round(m["sharpe_ratio"], 4),
-            "sortino_ratio":         round(m["sortino_ratio"], 4),
-            "var_cvar":              _serialize_var_cvar(m["var_cvar"]),
-            "var_cvar_99":           _serialize_var_cvar(m["var_cvar_99"]),
-            "max_drawdown":          round(m["max_drawdown"]["max_drawdown"], 6),
-            "beta_alpha":            m["beta_alpha"],
-            "treynor_ratio":         round(m["treynor_ratio"], 4)     if m["treynor_ratio"]     is not None else None,
-            "information_ratio":     round(m["information_ratio"], 4) if m["information_ratio"] is not None else None,
-            "backtest":              _serialize_backtest(m["backtest"]) if m["backtest"] is not None else None,
-            "diversification_score": {
-                "score":             ds["score"],
-                "avg_pairwise_corr": ds["avg_pairwise_corr"],
-                "label":             ds["label"],
-            },
-
-            "portfolio_returns": [round(v, 6) for v in port_rets.values.tolist()],
-            "cumulative_returns": {
-                "dates":  cum_rets.index.strftime("%Y-%m-%d").tolist(),
-                "values": [round(v, 6) for v in cum_rets.values.tolist()],
-            },
-            "per_ticker_cumulative_returns": {
-                ticker: {
-                    "dates":  series.index.strftime("%Y-%m-%d").tolist(),
-                    "values": [round(v, 6) for v in series.values.tolist()],
-                }
-                for ticker, series in m["per_ticker_cumulative_returns"].items()
-            },
-            "drawdown_series": {
-                "dates":  dd_series.index.strftime("%Y-%m-%d").tolist(),
-                "values": [round(v, 6) for v in dd_series.values.tolist()],
-            },
-            "rolling_volatility": {
-                "dates":  roll_vol.index.strftime("%Y-%m-%d").tolist(),
-                "values": [round(v, 6) for v in roll_vol.values.tolist()],
-            },
-            "rolling_sharpe": {
-                "dates":  roll_sh.index.strftime("%Y-%m-%d").tolist(),
-                "values": [round(v, 6) for v in roll_sh.values.tolist()],
-            },
-            "correlation_matrix": {
-                "tickers": list(m["correlation_matrix"].columns),
-                "values":  m["correlation_matrix"].round(4).values.tolist(),
-            },
-            "efficient_frontier": {
-                "vols":               [round(v, 6) for v in ef["vols"].tolist()],
-                "returns":            [round(v, 6) for v in ef["returns"].tolist()],
-                "sharpes":            [round(v, 4) for v in ef["sharpes"].tolist()],
-                "max_sharpe_vol":     round(ef["max_sharpe_vol"], 6),
-                "max_sharpe_return":  round(ef["max_sharpe_return"], 6),
-                "max_sharpe_sharpe":  round(ef["max_sharpe_sharpe"], 4),
-                "max_sharpe_weights": ef["max_sharpe_weights"],
-                "min_vol_vol":        round(ef["min_vol_vol"], 6),
-                "min_vol_return":     round(ef["min_vol_return"], 6),
-                "min_vol_weights":    ef["min_vol_weights"],
-            },
-            "monte_carlo":      _serialize_monte_carlo(mc),
-            "monte_carlo_base": _serialize_monte_carlo(mc),
-            "monte_carlo_bear": _serialize_monte_carlo(compute_monte_carlo(
-                portfolio_returns=port_rets,
-                asset_returns=m["returns"],
-                weights=req.weights,
-                portfolio_value=req.portfolio_value,
-                n_simulations=mc["n_simulations"],
-                scenario="bear",
-            )),
-            "monte_carlo_bull": _serialize_monte_carlo(compute_monte_carlo(
-                portfolio_returns=port_rets,
-                asset_returns=m["returns"],
-                weights=req.weights,
-                portfolio_value=req.portfolio_value,
-                n_simulations=mc["n_simulations"],
-                scenario="bull",
-            )),
+    if req.show_benchmark and benchmark_prices is not None:
+        bench_rets   = benchmark_prices.pct_change().dropna().iloc[:, 0]
+        bench_cumret = (1 + bench_rets).cumprod() - 1
+        bench_cumret = bench_cumret.reindex(cum_rets.index)
+        result["benchmark_cumulative"] = {
+            "dates":  bench_cumret.index.strftime("%Y-%m-%d").tolist(),
+            "values": [round(v, 6) if not np.isnan(v) else None
+                       for v in bench_cumret.values.tolist()],
         }
 
-        if req.show_benchmark and benchmark_prices is not None:
-            bench_rets   = benchmark_prices.pct_change().dropna().iloc[:, 0]
-            bench_cumret = (1 + bench_rets).cumprod() - 1
-            bench_cumret = bench_cumret.reindex(cum_rets.index)
-            result["benchmark_cumulative"] = {
-                "dates":  bench_cumret.index.strftime("%Y-%m-%d").tolist(),
-                "values": [round(v, 6) if not np.isnan(v) else None
-                           for v in bench_cumret.values.tolist()],
-            }
+    return result
 
-        return result
 
+def _serialize_heavy_tier(m: dict, req: AnalyseRequest) -> dict:
+    """
+    The three expensive computations — efficient frontier, Monte Carlo
+    (base/bear/bull), and backtesting — shaped exactly as /api/analyse has
+    always returned them. Only called with include_heavy=True results, so
+    m["efficient_frontier"] / m["monte_carlo"] are never None here.
+    """
+    ef = m["efficient_frontier"]
+    mc = m["monte_carlo"]
+    port_rets = m["portfolio_returns"]
+
+    return {
+        "backtest": _serialize_backtest(m["backtest"]) if m["backtest"] is not None else None,
+        "efficient_frontier": {
+            "vols":               [round(v, 6) for v in ef["vols"].tolist()],
+            "returns":            [round(v, 6) for v in ef["returns"].tolist()],
+            "sharpes":            [round(v, 4) for v in ef["sharpes"].tolist()],
+            "max_sharpe_vol":     round(ef["max_sharpe_vol"], 6),
+            "max_sharpe_return":  round(ef["max_sharpe_return"], 6),
+            "max_sharpe_sharpe":  round(ef["max_sharpe_sharpe"], 4),
+            "max_sharpe_weights": ef["max_sharpe_weights"],
+            "min_vol_vol":        round(ef["min_vol_vol"], 6),
+            "min_vol_return":     round(ef["min_vol_return"], 6),
+            "min_vol_weights":    ef["min_vol_weights"],
+        },
+        "monte_carlo":      _serialize_monte_carlo(mc),
+        "monte_carlo_base": _serialize_monte_carlo(mc),
+        "monte_carlo_bear": _serialize_monte_carlo(compute_monte_carlo(
+            portfolio_returns=port_rets,
+            asset_returns=m["returns"],
+            weights=req.weights,
+            portfolio_value=req.portfolio_value,
+            n_simulations=mc["n_simulations"],
+            scenario="bear",
+        )),
+        "monte_carlo_bull": _serialize_monte_carlo(compute_monte_carlo(
+            portfolio_returns=port_rets,
+            asset_returns=m["returns"],
+            weights=req.weights,
+            portfolio_value=req.portfolio_value,
+            n_simulations=mc["n_simulations"],
+            scenario="bull",
+        )),
+    }
+
+
+def _fetch_and_check(req: AnalyseRequest):
+    """Shared price fetch + minimum-data guard for every /api/analyse* variant."""
+    portfolio_prices, benchmark_prices = fetch_with_benchmark(
+        tickers=req.tickers,
+        start_date=req.start_date,
+        end_date=req.end_date,
+    )
+    if len(portfolio_prices) < MIN_ROWS_TO_CACHE:
+        raise HTTPException(
+            status_code=400,
+            detail="Insufficient price data for the selected period — try a wider date range.",
+        )
+    return portfolio_prices, benchmark_prices
+
+
+def _compute_summary_analysis(req: AnalyseRequest) -> dict:
+    """
+    The fast tier only — everything /api/analyse has always returned except
+    efficient frontier, Monte Carlo, and backtesting. Backs
+    /api/analyse-summary: what the Dashboard needs to render immediately.
+    """
+    portfolio_prices, benchmark_prices = _fetch_and_check(req)
+    m = compute_all_metrics(
+        prices=portfolio_prices,
+        weights=req.weights,
+        portfolio_value=req.portfolio_value,
+        benchmark_prices=benchmark_prices if req.show_benchmark else None,
+        rolling_window=req.rolling_window,
+        include_heavy=False,
+    )
+    return _serialize_fast_tier(m, req, benchmark_prices)
+
+
+def _compute_full_analysis(req: AnalyseRequest) -> dict:
+    """
+    Fast tier + heavy tier together — identical to what /api/analyse has
+    always returned. Backs /api/analyse, kept unchanged for any existing
+    caller (the Compare tab's useComparison.js relies on this exact shape),
+    and /api/analyse-full, fired in the background right after the summary
+    resolves.
+    """
+    portfolio_prices, benchmark_prices = _fetch_and_check(req)
+    m = compute_all_metrics(
+        prices=portfolio_prices,
+        weights=req.weights,
+        portfolio_value=req.portfolio_value,
+        benchmark_prices=benchmark_prices if req.show_benchmark else None,
+        rolling_window=req.rolling_window,
+        include_heavy=True,
+    )
+    result = _serialize_fast_tier(m, req, benchmark_prices)
+    result.update(_serialize_heavy_tier(m, req))
+    return result
+
+
+def _handle_analyse_errors(fn, *args):
+    """Shared exception → HTTP mapping for every /api/analyse* variant, so
+    the three endpoints below can't drift out of sync on error handling."""
+    try:
+        return fn(*args)
     except HTTPException:
         raise
     except TickerNotFoundError as e:
@@ -555,5 +615,26 @@ async def analyse(request: Request, req: AnalyseRequest):
             ),
         )
     except Exception as e:
-        logger.exception("Unhandled error in /api/analyse: %s", e)
+        logger.exception("Unhandled error in analyse: %s", e)
         raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
+
+
+@app.post("/api/analyse")
+@limiter.limit("20/minute")
+async def analyse(request: Request, req: AnalyseRequest):
+    # Unchanged behaviour, still the full response — kept so nothing already
+    # calling this directly (useComparison.js's Compare tab) breaks. New
+    # callers should use /api/analyse-summary + /api/analyse-full instead.
+    return _handle_analyse_errors(_compute_full_analysis, req)
+
+
+@app.post("/api/analyse-summary")
+@limiter.limit("20/minute")
+async def analyse_summary(request: Request, req: AnalyseRequest):
+    return _handle_analyse_errors(_compute_summary_analysis, req)
+
+
+@app.post("/api/analyse-full")
+@limiter.limit("20/minute")
+async def analyse_full(request: Request, req: AnalyseRequest):
+    return _handle_analyse_errors(_compute_full_analysis, req)

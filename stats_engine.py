@@ -656,8 +656,21 @@ def compute_all_metrics(
     rolling_window: int = 30,
     n_frontier_portfolios: int = 5000,
     n_mc_simulations: int = 1_000,
+    include_heavy: bool = True,
 ) -> dict:
-    """Full pipeline: prices → returns → all metrics."""
+    """
+    Full pipeline: prices → returns → all metrics.
+
+    include_heavy=False skips the three computations expensive enough to be
+    worth deferring behind a fast "summary" response — efficient frontier
+    (n_frontier_portfolios simulated portfolios), Monte Carlo (a 252-day
+    Python loop per call), and backtesting (cheap on its own, but pointless
+    to compute without the other two since /api/analyse-summary's callers
+    don't render it) — leaving "efficient_frontier", "monte_carlo", and
+    "backtest" as None. Every other key is unaffected: the fast metrics are
+    identical whichever way this is called, so a caller merging a later
+    include_heavy=True response on top never sees any of them change.
+    """
     returns           = compute_returns(prices)
     portfolio_returns = compute_portfolio_returns(returns, weights)
     per_ticker_cumulative_returns = {
@@ -668,14 +681,14 @@ def compute_all_metrics(
     corr_matrix       = compute_correlation_matrix(returns)
     drawdown_result   = compute_max_drawdown(portfolio_returns)
     rolling           = compute_rolling_metrics(portfolio_returns, window=rolling_window)
-    frontier          = compute_efficient_frontier(returns, n_portfolios=n_frontier_portfolios)
+    frontier          = compute_efficient_frontier(returns, n_portfolios=n_frontier_portfolios) if include_heavy else None
     monte_carlo       = compute_monte_carlo(
         portfolio_returns=portfolio_returns,
         asset_returns=returns,
         weights=weights,
         portfolio_value=portfolio_value,
         n_simulations=n_mc_simulations,
-    )
+    ) if include_heavy else None
 
     risk_95 = compute_cvar(portfolio_returns, confidence=0.95, portfolio_value=portfolio_value)
     risk_99 = compute_cvar(portfolio_returns, confidence=0.99, portfolio_value=portfolio_value)
@@ -708,7 +721,7 @@ def compute_all_metrics(
         result["beta_alpha"]        = compute_beta_alpha(portfolio_returns, benchmark_returns)
         result["treynor_ratio"]     = compute_treynor_ratio(portfolio_returns, benchmark_returns)
         result["information_ratio"] = compute_information_ratio(portfolio_returns, benchmark_returns)
-        result["backtest"]          = compute_backtest(returns, weights, benchmark_returns)
+        result["backtest"]          = compute_backtest(returns, weights, benchmark_returns) if include_heavy else None
     else:
         result["beta_alpha"]        = None
         result["treynor_ratio"]     = None

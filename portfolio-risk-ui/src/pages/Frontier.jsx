@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
+import HeavyTierPending from '../components/HeavyTierPending'
 
 const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '-'
 const fmtN = (v, d = 2) => v != null ? v.toFixed(d) : '-'
@@ -93,29 +94,29 @@ function WeightCard({ title, weights, color, highlightBorderColor, highlight }) 
   )
 }
 
-export default function Frontier({ data, tickers, weights }) {
+export default function Frontier({ data, tickers, weights, heavyError }) {
   const canvasRef = useRef(null)
   const animRef   = useRef(null)
   const ptsRef    = useRef([])
   const specRef   = useRef([])
   const [tooltip, setTooltip] = useState(null)
 
-  if (!data) return null
-  const ef = data.efficient_frontier
-  if (!ef) return null
+  // Efficient frontier lives in the heavy tier — computed above hook calls
+  // so the hooks below always run in the same order every render, whether
+  // or not it's arrived yet (conditionally skipping useEffect based on data
+  // readiness would violate the Rules of Hooks once this can legitimately
+  // be absent on a render, which it couldn't before this endpoint split).
+  const ef = data?.efficient_frontier
+  const hasFrontier = !!(ef && ef.vols?.length && ef.returns?.length && ef.sharpes?.length)
 
-  const { vols, returns, sharpes, max_sharpe_vol, max_sharpe_return, max_sharpe_sharpe, max_sharpe_weights, min_vol_vol, min_vol_return } = ef
-  if (!vols?.length || !returns?.length || !sharpes?.length) return null
-
-  const yourVol    = data.annualised_volatility ?? 0
-  const yourReturn = data.annualised_return     ?? 0
-  const yourSharpe = data.sharpe_ratio          ?? 0
-  const gap        = (max_sharpe_sharpe ?? 0) - yourSharpe
-  const insight    = getInsight(gap, yourSharpe, max_sharpe_sharpe, max_sharpe_weights, tickers, weights)
-  const accentColor = insight.tone === 'good' ? 'var(--signal-positive)' : 'var(--signal-caution)'
-  const accentBorderColor = insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.15)' : 'rgba(var(--signal-caution-rgb),0.15)'
+  const yourVol    = data?.annualised_volatility ?? 0
+  const yourReturn = data?.annualised_return     ?? 0
+  const yourSharpe = data?.sharpe_ratio          ?? 0
 
   useEffect(() => {
+    if (!hasFrontier) return
+    const { vols, returns, sharpes, max_sharpe_vol, max_sharpe_return, max_sharpe_sharpe, min_vol_vol, min_vol_return } = ef
+
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -250,6 +251,21 @@ export default function Frontier({ data, tickers, weights }) {
     }
     return () => cancelAnimationFrame(animRef.current)
   }, [data])
+
+  if (!data) return null
+
+  // Efficient frontier is heavy-tier — not in the summary /api/analyse-
+  // summary renders from, filled in by the background /api/analyse-full
+  // call. Re-renders on its own once useAnalysis replaces `data`.
+  if (!hasFrontier) {
+    return <HeavyTierPending label="Building the efficient frontier..." error={heavyError} />
+  }
+
+  const { max_sharpe_sharpe, max_sharpe_weights } = ef
+  const gap        = (max_sharpe_sharpe ?? 0) - yourSharpe
+  const insight    = getInsight(gap, yourSharpe, max_sharpe_sharpe, max_sharpe_weights, tickers, weights)
+  const accentColor = insight.tone === 'good' ? 'var(--signal-positive)' : 'var(--signal-caution)'
+  const accentBorderColor = insight.tone === 'good' ? 'rgba(var(--signal-positive-rgb),0.15)' : 'rgba(var(--signal-caution-rgb),0.15)'
 
   const handleMouseMove = e => {
     const canvas = canvasRef.current; if (!canvas) return
