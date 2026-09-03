@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 
 from cache import cached
 from yfinance_utils import with_yfinance_retry, YFinanceRateLimitError, TickerNotFoundError
+from stock_detail_route import _finnhub_get
 
 DAY = 60 * 60 * 24
 
@@ -20,6 +21,34 @@ DAY = 60 * 60 * 24
 # there isn't enough data for a real analysis, so don't cache it: better to
 # retry on the next request than serve that failure for a full day.
 MIN_ROWS_TO_CACHE = 5
+
+
+# ─── Cross-vendor confirmation for a silent yfinance failure ─────────────────
+
+def _confirmed_nonexistent(ticker: str) -> bool:
+    """
+    yf.download() doesn't raise on a bad symbol OR on a transient per-symbol
+    Yahoo hiccup — both come back the same way: silently missing/empty. When
+    every ticker fails together, or the hardcoded benchmark fails, that's
+    provably not "the user mistyped it" (see fetch_closing_prices). But when
+    just one ticker among several fails and the rest come back fine, there's
+    no such shortcut — a real bad symbol and a one-off Yahoo blip on a real
+    symbol look identical from yfinance's side alone.
+
+    So ask a second, independent vendor: Finnhub's /quote for a real, actively
+    traded symbol returns a non-zero current price; for an unrecognised one it
+    returns an all-zero quote (same signal stock_detail_route.py's own
+    not-found check already relies on). Only Finnhub confirming the symbol
+    doesn't exist counts as real evidence here — if Finnhub also fails, is
+    rate-limited, or the key is misconfigured, that's not evidence of
+    anything, so default to NOT confirming non-existence: better to tell the
+    user to retry a fine ticker than to wrongly blame their input.
+    """
+    try:
+        quote = _finnhub_get("quote", {"symbol": ticker})
+        return not quote.get("c")
+    except Exception:
+        return False
 
 
 # ─── Main function ────────────────────────────────────────────────────────────
@@ -112,6 +141,18 @@ def fetch_closing_prices(
         # to all be typos simultaneously. Don't misreport either as a bad
         # ticker — surface it as the retryable, honest rate-limit error.
         if "^GSPC" in failed_tickers or len(failed_tickers) == len(tickers):
+            raise YFinanceRateLimitError(failed_tickers)
+
+        # A partial failure — one or two tickers silently empty, the rest of
+        # the request fine — is exactly as ambiguous as the cases above, it
+        # just lacks their built-in proof. A real bad ticker among good ones
+        # (e.g. "AAPL, GOGGLE") and Yahoo blipping on one good symbol out of
+        # several (e.g. "AAPL, MSFT, GOOGL" and only GOOGL comes back empty)
+        # produce the identical yfinance response, so don't guess — confirm
+        # against Finnhub. Only tickers Finnhub independently confirms don't
+        # exist get reported as not-found; if even one failed ticker isn't
+        # confirmed bad, the whole failure is a fetch problem, not a typo.
+        if any(not _confirmed_nonexistent(t) for t in failed_tickers):
             raise YFinanceRateLimitError(failed_tickers)
         raise TickerNotFoundError(failed_tickers)
 
