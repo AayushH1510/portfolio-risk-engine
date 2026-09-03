@@ -170,6 +170,17 @@ def _fetch_ticker_fundamentals(ticker: str) -> dict:
     industry      = profile.get('finnhubIndustry') or 'Unknown'
     name          = profile.get('name') or ticker
 
+    # Finnhub's /stock/profile2 and /stock/metric are company-fundamentals
+    # endpoints — an ETF/fund genuinely has no P/S ratio, gross margin, etc.
+    # of its own (those belong to its underlying holdings, not the fund
+    # wrapper), so both come back empty for a fund's ticker even though
+    # /quote succeeds (it trades and has a real price). That's not a fetch
+    # failure, it's Finnhub correctly having nothing to report — same
+    # signal App.jsx already uses to exclude funds from Sector Exposure,
+    # reused here rather than re-derived, so the two features never
+    # disagree about which tickers are funds.
+    is_fund = sector == 'Unknown'
+
     # Not available on Finnhub's free tier — see docstring.
     pct_insiders  = None
     short_pct     = None
@@ -265,6 +276,7 @@ def _fetch_ticker_fundamentals(ticker: str) -> dict:
         "beta":         round(beta, 2)          if beta          else None,
         "market_cap":   market_cap,
         "vg_score":     vg_score,
+        "is_fund":      is_fund,
         "flags":        flags,
         "positives":    positives,
     }
