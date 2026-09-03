@@ -59,7 +59,7 @@ Enter up to five tickers, set your weights, pick a time period, and Varense comp
 | Backend | FastAPI, NumPy, Pandas |
 | Auth & persistence | Supabase (email + Google OAuth, saved portfolios) |
 | Caching | Redis via Upstash, fail-open |
-| Market data | Finnhub (quotes, fundamentals), Yahoo Finance via yfinance (historical price series) |
+| Market data | Finnhub (quotes, fundamentals), Twelve Data (historical price series) |
 | Hosting | Vercel (frontend), Render (backend) |
 
 ---
@@ -72,7 +72,7 @@ varense/
 ├── stats_engine.py         # Pure maths layer, no HTTP, fully vectorised
 ├── data_fetcher.py         # Historical price fetching, Redis-cached
 ├── stock_detail_route.py   # Single-ticker quotes and fundamentals (Finnhub)
-├── yfinance_utils.py       # Shared retry + rate-limit handling
+├── twelvedata_utils.py     # Shared retry + rate-limit handling
 ├── cache.py                # Redis wrapper, degrades silently if unavailable
 └── portfolio-risk-ui/      # React frontend
     └── src/

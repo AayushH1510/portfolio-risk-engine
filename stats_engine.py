@@ -231,7 +231,7 @@ def compute_correlation_matrix(returns: pd.DataFrame) -> pd.DataFrame:
 # ─── Step 10: Period info ─────────────────────────────────────────────────────
 
 def compute_period(prices: pd.DataFrame) -> dict:
-    """Actual date range from the price data — reflects what yfinance returned."""
+    """Actual date range from the price data — reflects what Twelve Data returned."""
     return {
         "start":   prices.index[0].strftime("%Y-%m-%d"),
         "end":     prices.index[-1].strftime("%Y-%m-%d"),

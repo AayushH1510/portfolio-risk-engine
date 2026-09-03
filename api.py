@@ -25,7 +25,7 @@ from data_fetcher import (
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError, FinnhubAuthError
 from cache import cached
-from yfinance_utils import YFinanceRateLimitError, TickerNotFoundError
+from twelvedata_utils import TwelveDataRateLimitError, TwelveDataAuthError, TickerNotFoundError
 from rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ app.add_middleware(
 )
 
 # Per-IP rate limiting (slowapi) for the endpoints that hit an external data
-# provider (yfinance, Finnhub) and cost real compute per request. See
+# provider (Twelve Data, Finnhub) and cost real compute per request. See
 # rate_limit.py for the shared Limiter instance and each @limiter.limit(...)
 # call below for the per-endpoint ceiling.
 app.state.limiter = limiter
@@ -311,6 +311,18 @@ async def stress_test(request: Request, req: StressTestRequest):
         tickers = [t.strip().upper() for t in req.tickers]
         scenarios = []
 
+        # One combined fetch spanning every scenario's crash + recovery
+        # window, instead of one fetch per scenario. Three separate calls
+        # (N tickers each) reliably exceeded Twelve Data's free-tier
+        # 8-credits/minute cap on every single request — a 3-ticker
+        # portfolio alone is 3 x 3 = 9 credits, worse for 4-5 tickers.
+        # Twelve Data has no per-request cost for a wider date range (1
+        # credit/symbol regardless of row count), so fetching the full
+        # 2008-to-today span once, then slicing per scenario below, costs
+        # the same as a single scenario used to and stays under the cap.
+        earliest_start = min(s["start"] for s in STRESS_SCENARIOS)
+        combined_prices = fetch_closing_prices(tickers, start_date=earliest_start, end_date=date.today().isoformat())
+
         for scenario in STRESS_SCENARIOS:
             start = scenario["start"]
             crash_end = scenario["end"]
@@ -321,7 +333,16 @@ async def stress_test(request: Request, req: StressTestRequest):
                 date.fromisoformat(start) + timedelta(days=5 * 365),
             ).isoformat()
 
-            prices = fetch_closing_prices(tickers, start_date=start, end_date=extended_end)
+            # Slice the combined fetch down to exactly this scenario's own
+            # window before handing it to compute_stress_scenario() — it
+            # computes a cumulative wealth index over whatever range it's
+            # given (see its docstring), so passing the full 2008-to-today
+            # frame unsliced would make every scenario's "recovery" and
+            # "peak" compound from 2008 onward instead of from its own
+            # crash date, silently changing the results this endpoint
+            # returns. Slicing first reproduces exactly what a standalone
+            # per-scenario fetch used to hand it.
+            prices = combined_prices.loc[start:extended_end]
             result = compute_stress_scenario(
                 prices=prices,
                 crash_start=start,
@@ -354,14 +375,17 @@ async def stress_test(request: Request, req: StressTestRequest):
 
     except TickerNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except YFinanceRateLimitError as e:
+    except TwelveDataRateLimitError as e:
         raise HTTPException(
             status_code=503,
             detail=(
                 f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
-                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
+                "The market data provider's rate limit may have been reached. Please try again in a minute."
             ),
         )
+    except TwelveDataAuthError:
+        logger.error("Twelve Data rejected the API key (401) in /api/stress-test — check TWELVEDATA_API_KEY in the environment")
+        raise HTTPException(status_code=503, detail=GENERIC_ERROR_DETAIL)
     except Exception as e:
         logger.exception("Unhandled error in /api/stress-test: %s", e)
         raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
@@ -606,14 +630,17 @@ def _handle_analyse_errors(fn, *args):
         raise
     except TickerNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except YFinanceRateLimitError as e:
+    except TwelveDataRateLimitError as e:
         raise HTTPException(
             status_code=503,
             detail=(
                 f"Unable to fetch data for: {', '.join(e.failed_tickers)}. "
-                "Yahoo Finance may be rate-limiting this server. Please try again in a minute."
+                "The market data provider's rate limit may have been reached. Please try again in a minute."
             ),
         )
+    except TwelveDataAuthError:
+        logger.error("Twelve Data rejected the API key (401) in /api/analyse — check TWELVEDATA_API_KEY in the environment")
+        raise HTTPException(status_code=503, detail=GENERIC_ERROR_DETAIL)
     except Exception as e:
         logger.exception("Unhandled error in analyse: %s", e)
         raise HTTPException(status_code=500, detail=GENERIC_ERROR_DETAIL)
