@@ -51,7 +51,7 @@ export default function App() {
   const analysis = useAnalysis()
   const { portfolios, savePortfolio, deletePortfolio } = usePortfolios(user)
   const compB = useComparison()
-  const { data, loading, error, hasRun, runAnalysis, tickers, weights } = analysis
+  const { data, loading, error, hasRun, heavyLoading, heavyError, runAnalysis, tickers, weights } = analysis
 
   useEffect(() => {
     if (!data || !tickers.length) {
@@ -278,8 +278,8 @@ export default function App() {
             <div style={{ height: '100%' }} className="fade-up">
               {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} sectorLoading={sectorLoading} />}
               {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} />}
-              {activeTab === 'montecarlo' && <MonteCarlo  data={data} />}
-              {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} />}
+              {activeTab === 'montecarlo' && <MonteCarlo  data={data} heavyLoading={heavyLoading} heavyError={heavyError} />}
+              {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} />}
               {activeTab === 'valuation'  && <Valuation   tickers={tickers} onTickerClick={openDrawer} />}
               {activeTab === 'compare'    && (
                 <CompareWrapper
@@ -287,7 +287,7 @@ export default function App() {
                   compB={compB} portfolios={portfolios}
                 />
               )}
-              {activeTab === 'backtest'   && <Backtest data={data} tickers={tickers} weights={weights} />}
+              {activeTab === 'backtest'   && <Backtest data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} />}
               {activeTab === 'learn' && <Learn />}
             </div>
           )}

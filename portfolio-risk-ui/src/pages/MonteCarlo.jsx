@@ -5,6 +5,7 @@ import {
 } from 'recharts'
 import MetricCard from '../components/MetricCard'
 import InsightBox from '../components/InsightBox'
+import HeavyTierPending from '../components/HeavyTierPending'
 
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
@@ -75,10 +76,19 @@ function SimulatedPaths({ allPaths, xAxisMap, yAxisMap }) {
   return <g>{paths}</g>
 }
 
-export default function MonteCarlo({ data }) {
+export default function MonteCarlo({ data, heavyError }) {
   const [scenario, setScenario] = useState('base')
 
   if (!data) return null
+
+  // Monte Carlo lives in the heavy tier — the summary response Dashboard
+  // renders from doesn't include it yet, /api/analyse-full fills it in in
+  // the background right after. Show a scoped state here instead of
+  // crashing on the missing fields; this re-renders on its own the moment
+  // useAnalysis's background call resolves and replaces `data`.
+  if (!data.monte_carlo) {
+    return <HeavyTierPending label="Loading Monte Carlo simulation..." error={heavyError} />
+  }
 
   const mc = data[`monte_carlo_${scenario}`] || data.monte_carlo
   const {

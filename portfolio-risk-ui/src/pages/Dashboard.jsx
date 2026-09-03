@@ -253,7 +253,15 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             label="Return"
             tone={retColor}
             compact
-            text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>. ${ba ? `Beat the S&P 500 by <strong>${fmt(ret - ba.benchmark_return)}</strong>.` : ''} Median 1-year projection: <strong>${fmtD(medianFinal || 0)}</strong> (${Math.round((profitProb || 0) * 100)}% chance of profit).`}
+            text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>. ${ba ? `Beat the S&P 500 by <strong>${fmt(ret - ba.benchmark_return)}</strong>.` : ''}${
+              // Median 1-year projection comes from Monte Carlo, the heavy
+              // tier — it isn't in the fast summary this tab otherwise
+              // renders from, so say so plainly instead of a misleading
+              // "$0 (0% chance of profit)" for the moment before it arrives.
+              medianFinal != null
+                ? ` Median 1-year projection: <strong>${fmtD(medianFinal)}</strong> (${Math.round((profitProb || 0) * 100)}% chance of profit).`
+                : ' Median 1-year projection: running the full simulation...'
+            }`}
           />
         </div>
 

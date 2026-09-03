@@ -30,25 +30,52 @@ export function useAnalysis() {
   const [error, setError]       = useState(null)
   const [hasRun, setHasRun]     = useState(false)
 
+  // The heavy tier (Monte Carlo, Efficient Frontier, backtest) fetches in
+  // the background right after the fast summary resolves — hasRun/loading
+  // above track the fast tier only, so the Dashboard renders the moment
+  // /api/analyse-summary comes back instead of waiting on the full
+  // simulation too. These track that second, slower call separately so
+  // Monte Carlo/Frontier/Backtest can show their own scoped loading state
+  // instead of blocking the whole app.
+  const [heavyLoading, setHeavyLoading] = useState(false)
+  const [heavyError, setHeavyError]     = useState(null)
+
   const runAnalysis = useCallback(async (customDates = null) => {
     setLoading(true)
     setError(null)
+    setHeavyError(null)
 
     const startDate = customDates ? customDates.start : fmt(periodMap[period]())
     const endDate   = customDates ? customDates.end   : fmt(new Date())
 
+    const payload = {
+      tickers,
+      weights,
+      start_date:      startDate,
+      end_date:        endDate,
+      portfolio_value: portfolioValue,
+      show_benchmark:  showBenchmark,
+      rolling_window:  rollingWindow,
+    }
+
     try {
-      const res = await axios.post(`${API}/api/analyse`, {
-        tickers,
-        weights,
-        start_date:      startDate,
-        end_date:        endDate,
-        portfolio_value: portfolioValue,
-        show_benchmark:  showBenchmark,
-        rolling_window:  rollingWindow,
-      })
+      const res = await axios.post(`${API}/api/analyse-summary`, payload)
       setData(res.data)
       setHasRun(true)
+
+      // Not awaited — the summary render above already happened. Fires
+      // immediately, not on-demand per tab click, so Monte Carlo/Frontier/
+      // Backtest are usually already loaded (or loading) by the time
+      // someone navigates there. /api/analyse-full's response is a
+      // superset of the summary (identical fast-tier numbers, see api.py's
+      // shared _serialize_fast_tier), so replacing data wholesale here is
+      // safe — nothing already on screen changes, it only gains fields.
+      setHeavyLoading(true)
+      axios.post(`${API}/api/analyse-full`, payload)
+        .then(fullRes => setData(fullRes.data))
+        .catch(err => setHeavyError(errorMessage(err, 'Something went wrong loading the full simulation. Please try again in a moment.')))
+        .finally(() => setHeavyLoading(false))
+
     } catch (err) {
       // errorMessage() surfaces the backend's actual detail whenever the
       // server responded at all (invalid-ticker 404, rate-limit 503, or our
@@ -87,7 +114,7 @@ export function useAnalysis() {
 
   return {
     tickers, weights, period, portfolioValue, showBenchmark, rollingWindow,
-    data, loading, error, hasRun,
+    data, loading, error, hasRun, heavyLoading, heavyError,
     setTickers: updateTickers,
     updateWeight,
     setWeightsAll,
