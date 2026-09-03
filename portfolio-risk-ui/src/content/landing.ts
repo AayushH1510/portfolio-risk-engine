@@ -380,7 +380,7 @@ export const landingPage: LandingPage = {
         },
         {
           title: 'Real market data',
-          body: 'Historical prices come from Yahoo Finance; real-time quotes and fundamentals come from Finnhub. Both refresh on every run. No synthetic series, no stale caches.',
+          body: 'Historical prices come from Twelve Data; real-time quotes and fundamentals come from Finnhub. Both refresh on every run. No synthetic series, no stale caches.',
         },
         {
           title: 'Educational, by design',
@@ -427,7 +427,7 @@ export const landingPage: LandingPage = {
         },
         {
           question: 'Where does the market data come from?',
-          answer: 'Two sources, split by purpose. Finnhub provides real-time quotes and company fundamentals, powering the stock detail view and the valuation screen. Yahoo Finance provides the historical price series behind portfolio analysis, backtesting, and Monte Carlo simulation. Both are pulled live on each run, over the window you select, up to the maximum available history.',
+          answer: 'Two sources, split by purpose. Finnhub provides real-time quotes and company fundamentals, powering the stock detail view and the valuation screen. Twelve Data provides the historical price series behind portfolio analysis, backtesting, and Monte Carlo simulation. Both are pulled live on each run, over the window you select, up to the maximum available history.',
         },
       ],
     },

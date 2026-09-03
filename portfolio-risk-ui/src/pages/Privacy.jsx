@@ -2,7 +2,7 @@ import { TrustPage, TrustSection } from '../components/LandingLayout'
 
 export default function Privacy() {
   return (
-    <TrustPage title="Privacy Policy" updated="August 26, 2026">
+    <TrustPage title="Privacy Policy" updated="September 3, 2026">
       <TrustSection heading="What we collect">
         <p style={{ marginBottom: 12 }}>
           If you sign in, we collect your <strong>email address</strong> through Supabase Authentication -
@@ -22,7 +22,7 @@ export default function Privacy() {
       <TrustSection heading="Market data">
         <p style={{ marginBottom: 12 }}>
           Varense uses two third-party market data providers, each for a different part of the app.{' '}
-          <strong>yfinance</strong> (Yahoo Finance) powers portfolio analysis, backtesting, and Monte Carlo
+          <strong>Twelve Data</strong> powers portfolio analysis, backtesting, and Monte Carlo
           simulation - the historical price data your risk metrics are calculated from.{' '}
           <strong>Finnhub</strong> powers the individual stock drawer and the Valuation tab - real-time
           quotes and company fundamentals for a ticker you click into.
