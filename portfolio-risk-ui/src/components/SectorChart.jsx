@@ -19,14 +19,18 @@ function SectorTick({ x, y, payload }) {
 
 function SectorTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
+  // The percentage is already shown next to the bar itself (LabelList,
+  // below) — repeating it here told the viewer nothing new. The tickers
+  // that got classified into this sector do.
+  const tickers = payload[0].payload?.tickers
   return (
     <div style={{
       background: 'var(--surface-card)', border: 'var(--border-default)',
       padding: '8px 12px', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
-      <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-        {(payload[0].value * 100).toFixed(1)}%
+      <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
+        {tickers?.length ? tickers.join(', ') : '-'}
       </div>
     </div>
   )
