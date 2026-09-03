@@ -90,5 +90,4 @@ watchdog==6.0.0
 websockets==15.0.1
 wrapt==2.4.0
 yarl==1.23.0
-yfinance==1.6.0
 zstandard==0.25.0

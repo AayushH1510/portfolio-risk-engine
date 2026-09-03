@@ -1,7 +1,7 @@
 """
 cache.py
 --------
-Redis-backed caching for external data fetches (yfinance).
+Redis-backed caching for external data fetches (Twelve Data, Finnhub).
 
 Fails open: if Redis isn't installed, isn't running, or drops mid-session,
 every cache operation silently becomes a no-op and the app behaves exactly
@@ -65,6 +65,31 @@ def cache_set(key: str, value, ttl: int) -> None:
         _client.setex(key, ttl, pickle.dumps(value))
     except Exception:
         pass
+
+
+def cache_incr(key: str, ttl: int, by: int = 1) -> int | None:
+    """
+    Atomically increment a counter (creating it at 0 first if absent) and
+    return the new value. TTL is set only on the increment that actually
+    creates the key (detected as "the new value equals what we just added",
+    i.e. it started from 0) so repeated calls don't keep pushing the
+    expiry back — this is a fixed-window daily counter (see
+    twelvedata_utils.py's call-volume tracking), not a rolling one.
+
+    Separate from `cached`/`cache_get`/`cache_set` above: those cache a
+    function's pickled return value, this just counts. No-ops (returns
+    None) whenever Redis is unavailable, same fail-open contract as the
+    rest of this module.
+    """
+    if _client is None:
+        return None
+    try:
+        count = _client.incrby(key, by)
+        if count == by:
+            _client.expire(key, ttl)
+        return count
+    except Exception:
+        return None
 
 
 def cached(ttl: int, prefix: str | None = None, should_cache=None):

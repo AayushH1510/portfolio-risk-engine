@@ -231,7 +231,7 @@ Portfolio Risk Analysis Engine/
 - **Supabase URL:** `https://wzjtyosijxacgytfmjtu.supabase.co`
 - **Data:** two sources, split by purpose —
   - **Finnhub** (`stock_detail_route.py`, `FINNHUB_API_KEY`): real-time quotes and company fundamentals, powering the stock detail drawer and the Valuation tab.
-  - **Yahoo Finance via yfinance** (`data_fetcher.py`, free, no API key): historical price series, powering portfolio analysis, backtesting, and Monte Carlo simulation.
+  - **Twelve Data** (`data_fetcher.py` via `twelvedata_utils.py`, `TWELVEDATA_API_KEY`): historical price series, powering portfolio analysis, backtesting, and Monte Carlo simulation. Replaced yfinance in Sept 2026 — Yahoo's rate-limiting on Render's IP was silently misreporting valid tickers as "not found." Free tier: 800 calls/day, 8/minute, shared across every user — `twelvedata_utils.py` logs call volume as it approaches the daily cap. No free-tier access to the raw S&P 500 index (`^GSPC`/`SPX` are paywalled there), so the benchmark is `SPY` (S&P 500 ETF) instead of the literal index — see `fetch_with_benchmark`'s docstring.
 - **Streamlit prototype:** `https://portfolio-risk-engine.streamlit.app` (legacy — ignore)
 
 In stats_engine.py compute_diversification_score — verified correct Aug 2026. AAPL/MSFT/GOOGL scoring ~86/100 over trailing 1yr is accurate — the three stocks genuinely decorrelated in this window due to AI capex divergence. Not a bug. Score is window-dependent by design.
