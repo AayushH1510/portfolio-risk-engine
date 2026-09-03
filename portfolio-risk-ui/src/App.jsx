@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import Sidebar from './components/Sidebar'
@@ -46,6 +46,13 @@ export default function App() {
   // state for that case, distinct from "haven't checked".
   const [sectorData, setSectorData]     = useState(null)
   const [sectorLoading, setSectorLoading] = useState(false)
+  // Sector composition only depends on which tickers (and at what weights)
+  // are in the portfolio — not on the analysis result itself. `data`
+  // updates twice per run now (the fast summary, then the background full
+  // response replacing it once it lands), and without this the effect
+  // below re-fires — a second /api/fundamentals round-trip and a "Loading
+  // sector exposure…" flicker — for the exact same portfolio composition.
+  const sectorFetchKeyRef = useRef(null)
 
   const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
   const analysis = useAnalysis()
@@ -57,32 +64,46 @@ export default function App() {
     if (!data || !tickers.length) {
       setSectorData(null)
       setSectorLoading(false)
+      sectorFetchKeyRef.current = null
       return
     }
-    let cancelled = false
+    const fetchKey = `${tickers.join(',')}|${weights.join(',')}`
+    if (fetchKey === sectorFetchKeyRef.current) return   // heavy tier just replaced `data` for the same run — nothing to refetch
+    sectorFetchKeyRef.current = fetchKey
+
+    // Staleness is judged against the ref at resolution time, not an
+    // effect-cleanup flag — React tears down this effect's closure (and
+    // would flip a local `cancelled` flag) the moment `data` changes again,
+    // which now happens for reasons unrelated to this fetch (the heavy tier
+    // landing). A closure-scoped flag would falsely mark this in-flight
+    // request "cancelled" and its .finally() would then skip clearing
+    // sectorLoading, leaving the spinner stuck forever even though nothing
+    // is actually wrong. Comparing against the ref only treats a request as
+    // stale when a *different* portfolio has genuinely superseded it.
     setSectorLoading(true)
     axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
       .then(res => {
-        if (cancelled) return
+        if (sectorFetchKeyRef.current !== fetchKey) return
         const sectorByTicker = {}
         res.data.tickers.forEach(t => { sectorByTicker[t.ticker] = t.sector })
 
-        const weightBySector = {}
+        const weightBySector  = {}
+        const tickersBySector = {}
         tickers.forEach((tk, i) => {
           const sector = sectorByTicker[tk.toUpperCase()]
           if (!sector || sector === 'Unknown') return
-          weightBySector[sector] = (weightBySector[sector] || 0) + (weights[i] ?? 0)
+          weightBySector[sector]  = (weightBySector[sector] || 0) + (weights[i] ?? 0)
+          tickersBySector[sector] = [...(tickersBySector[sector] || []), tk]
         })
 
         setSectorData(
           Object.entries(weightBySector)
-            .map(([sector, weight]) => ({ sector, weight }))
+            .map(([sector, weight]) => ({ sector, weight, tickers: tickersBySector[sector] }))
             .sort((a, b) => b.weight - a.weight)
         )
       })
-      .catch(() => { if (!cancelled) setSectorData(null) })
-      .finally(() => { if (!cancelled) setSectorLoading(false) })
-    return () => { cancelled = true }
+      .catch(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorData(null) })
+      .finally(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorLoading(false) })
   }, [data])
 
   const handleLoadPortfolio = (p) => {
