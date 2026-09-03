@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { errorMessage } from '../lib/errorMessage'
+import InsightBox from '../components/InsightBox'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -84,7 +85,15 @@ export default function Valuation({ tickers }) {
     setError(null)
     setSelected(null)
     axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
-      .then(r => { setData(r.data.tickers); setSelected(r.data.tickers[0]?.ticker) })
+      .then(r => {
+        const list = r.data.tickers
+        setData(list)
+        // Prefer the first ticker with real fundamentals to select by
+        // default — a fund/ETF's detail panel would just be a wall of
+        // N/A, so don't lead with one if a real stock is also in the mix.
+        const firstWithData = list.find(d => !d.error && !d.is_fund)
+        setSelected((firstWithData || list[0])?.ticker)
+      })
       .catch(e => setError(errorMessage(e, 'Failed to load fundamentals')))
       .finally(() => setLoading(false))
   }, [tickers.join(',')])
@@ -116,6 +125,13 @@ export default function Valuation({ tickers }) {
     return sorted.map((d,i) => ({ ticker: d.ticker, rank: i+1 }))
   }
 
+  // A fund/ETF has no P/S ratio, gross margin, etc. of its own - those are
+  // company-level metrics that belong to its underlying holdings, not the
+  // wrapper (see api.py: is_fund). A portfolio made entirely of funds gets
+  // the same kind of honest explanation Sector Exposure already shows for
+  // this exact case, instead of a table full of N/A.
+  const allFunds = data.length > 0 && data.every(d => !d.error && d.is_fund)
+
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:14, height:'100%', overflowY:'auto' }}>
 
@@ -129,6 +145,14 @@ export default function Valuation({ tickers }) {
         </div>
       </div>
 
+      {allFunds ? (
+        <InsightBox
+          tone="neutral"
+          label="Not applicable"
+          text="Your portfolio is made up of funds and ETFs, which each hold many companies rather than being one themselves - so per-company valuation ratios like P/S, EV/EBITDA, and gross margin don't apply to the fund wrapper itself. Valuation works best with individual stock holdings."
+        />
+      ) : (
+      <>
       {/* Valuation table */}
       <div className="card" style={{ padding:0, overflow:'hidden', flexShrink:0 }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
@@ -143,16 +167,17 @@ export default function Valuation({ tickers }) {
             {data.map((stock, i) => {
               const isSelected = stock.ticker === selected
               const hasError   = !!stock.error
+              const isFund     = !hasError && stock.is_fund
               const flagCount  = stock.flags?.length || 0
 
               return (
                 <tr
                   key={stock.ticker}
-                  onClick={() => !hasError && setSelected(stock.ticker)}
+                  onClick={() => !hasError && !isFund && setSelected(stock.ticker)}
                   style={{
                     borderBottom:'1px solid rgba(var(--text-primary-rgb),0.04)',
                     background: isSelected ? 'rgba(var(--signal-positive-rgb),0.07)' : 'transparent',
-                    cursor: hasError ? 'default' : 'pointer',
+                    cursor: hasError || isFund ? 'default' : 'pointer',
                     transition:'background 0.12s',
                   }}
                   onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(var(--text-primary-rgb),0.02)')}
@@ -187,6 +212,10 @@ export default function Valuation({ tickers }) {
                   {hasError ? (
                     <td colSpan={6} style={{ padding:'12px 14px', color:'var(--signal-negative)', fontSize:11 }}>
                       {stock.error || 'Could not load data'}
+                    </td>
+                  ) : isFund ? (
+                    <td colSpan={6} style={{ padding:'12px 14px', color:'var(--text-muted)', fontSize:11 }}>
+                      Fund/ETF - per-company valuation ratios don't apply
                     </td>
                   ) : (
                     <>
@@ -229,7 +258,7 @@ export default function Valuation({ tickers }) {
       </div>
 
       {/* Risk assessment panel */}
-      {selectedStock && !selectedStock.error && (
+      {selectedStock && !selectedStock.error && !selectedStock.is_fund && (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, flexShrink:0 }}>
 
           {/* Metrics breakdown */}
@@ -331,6 +360,8 @@ export default function Valuation({ tickers }) {
       <div style={{ fontSize:10, color:'var(--text-muted)', paddingBottom:8, lineHeight:1.6 }}>
         Fundamental data sourced from Finnhub. Risk flags are rule-based and for educational purposes only - not financial advice. Always verify figures with primary sources.
       </div>
+      </>
+      )}
 
     </div>
   )
