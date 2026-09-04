@@ -2,23 +2,31 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { errorMessage } from '../lib/errorMessage'
 import InsightBox from '../components/InsightBox'
+import MetricTooltip from '../components/MetricTooltip'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const fmtPct  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 
+// metricKey looks up the real explanation in content/metricExplanations.js
+// via the shared MetricTooltip component (same one Dashboard/RiskAnalysis
+// use) — this table used to carry its own inline tip text through a native
+// `title` attribute instead, which is invisible on touch devices and
+// inconsistent enough elsewhere that it read as broken. stock_beta is a
+// distinct key from the portfolio-level "beta" already in that dictionary —
+// this one describes a single ticker's own market sensitivity.
 const COLUMNS = [
-  { label: '#',           tip: null },
-  { label: 'Ticker',      tip: null },
-  { label: 'P/S',         tip: 'Price-to-Sales ratio. How much investors pay per $1 of revenue. Lower = cheaper relative to sales. High-growth companies often have high P/S.' },
-  { label: 'EV/EBITDA',   tip: 'Enterprise Value divided by earnings before interest, tax, depreciation and amortisation. A measure of overall company value vs operating profit. Lower = cheaper. Negative means the company has negative EBITDA (unprofitable at operating level).' },
-  { label: 'Gross Margin',tip: 'Revenue kept after subtracting the direct cost of goods sold. Higher = stronger pricing power and more money left for R&D, sales, and profit. Software companies often exceed 70%. Manufacturers are typically 20–40%.' },
-  { label: 'Rev Growth',  tip: 'Year-over-year revenue growth. How fast the company is growing its top line. Green = strong growth (15%+). Red = shrinking revenue - a serious warning sign.' },
-  { label: 'Mkt Cap',     tip: 'Market capitalisation - total value of all shares outstanding. Gives context for scale: mega-cap ($1T+), large-cap ($10B+), mid-cap ($2B+), small-cap (under $2B).' },
-  { label: 'V/G Score',   tip: 'Value/Growth Score = P/S ÷ Revenue Growth %. Lower is better - it means you are getting more growth per dollar of valuation. Think of it as a revenue-based PEG ratio. A score below 0.15 is excellent.' },
+  { label: '#',           metricKey: null },
+  { label: 'Ticker',      metricKey: null },
+  { label: 'P/S',         metricKey: 'ps_ratio' },
+  { label: 'EV/EBITDA',   metricKey: 'ev_ebitda' },
+  { label: 'Gross Margin',metricKey: 'gross_margin' },
+  { label: 'Rev Growth',  metricKey: 'rev_growth' },
+  { label: 'Mkt Cap',     metricKey: 'market_cap' },
+  { label: 'V/G Score',   metricKey: 'vg_score' },
 ]
 
-function ColHeader({ label, tip }) {
+function ColHeader({ label, metricKey }) {
   return (
     <th style={{
       padding: '10px 14px',
@@ -27,22 +35,7 @@ function ColHeader({ label, tip }) {
       textTransform: 'uppercase', color: 'var(--text-muted)',
       whiteSpace: 'nowrap', userSelect: 'none',
     }}>
-      {tip ? (
-        <span
-          title={`${label}\n\n${tip}`}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            cursor: 'help', borderBottom: '1px dashed rgba(var(--signal-positive-rgb),0.3)',
-            paddingBottom: 1,
-          }}
-        >
-          {label}
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.45, flexShrink: 0 }}>
-            <circle cx="6" cy="6" r="5" stroke="var(--signal-positive)" strokeWidth="1.2"/>
-            <text x="6" y="9.5" textAnchor="middle" fontSize="7" fill="var(--signal-positive)" fontWeight="700">?</text>
-          </svg>
-        </span>
-      ) : label}
+      {metricKey ? <MetricTooltip metricKey={metricKey}>{label}</MetricTooltip> : label}
     </th>
   )
 }
@@ -159,7 +152,7 @@ export default function Valuation({ tickers }) {
           <thead>
             <tr style={{ borderBottom:'1px solid rgba(var(--text-primary-rgb),0.06)' }}>
               {COLUMNS.map(col => (
-                <ColHeader key={col.label} label={col.label} tip={col.tip} />
+                <ColHeader key={col.label} label={col.label} metricKey={col.metricKey} />
               ))}
             </tr>
           </thead>
@@ -267,20 +260,20 @@ export default function Valuation({ tickers }) {
               {selectedStock.ticker} - Key metrics
             </div>
             {[
-              { label:'P/S Ratio',      val: fmtX(selectedStock.ps_ratio),       note:'Price per $1 of revenue' },
-              { label:'EV/EBITDA',      val: fmtX(selectedStock.ev_ebitda),      note:'Enterprise value vs earnings' },
-              { label:'Gross Margin',   val: fmtPct(selectedStock.gross_margin), note:'Revenue kept after COGS' },
-              { label:'Net Margin',     val: fmtPct(selectedStock.profit_margin),note:'Revenue kept after all costs' },
-              { label:'Revenue Growth', val: selectedStock.rev_growth != null ? `${selectedStock.rev_growth>0?'+':''}${(selectedStock.rev_growth*100).toFixed(1)}%` : 'N/A', note:'Year over year' },
-              { label:'Debt/Equity',    val: selectedStock.debt_equity != null ? `${selectedStock.debt_equity.toFixed(0)}%` : 'N/A', note:'Leverage level' },
-              { label:'Current Ratio',  val: selectedStock.current_ratio != null ? `${selectedStock.current_ratio.toFixed(2)}x` : 'N/A', note:'Short-term liquidity' },
-              { label:'ROE',            val: fmtPct(selectedStock.roe),           note:'Return on equity' },
-              { label:'Beta',           val: selectedStock.beta != null ? selectedStock.beta.toFixed(2) : 'N/A', note:'Market sensitivity' },
-              { label:'Market Cap',     val: fmtCap(selectedStock.market_cap),   note:'Total company value' },
+              { label:'P/S Ratio',      metricKey:'ps_ratio',     val: fmtX(selectedStock.ps_ratio),       note:'Price per $1 of revenue' },
+              { label:'EV/EBITDA',      metricKey:'ev_ebitda',    val: fmtX(selectedStock.ev_ebitda),      note:'Enterprise value vs earnings' },
+              { label:'Gross Margin',   metricKey:'gross_margin', val: fmtPct(selectedStock.gross_margin), note:'Revenue kept after COGS' },
+              { label:'Net Margin',     metricKey:'profit_margin',val: fmtPct(selectedStock.profit_margin),note:'Revenue kept after all costs' },
+              { label:'Revenue Growth', metricKey:'rev_growth',   val: selectedStock.rev_growth != null ? `${selectedStock.rev_growth>0?'+':''}${(selectedStock.rev_growth*100).toFixed(1)}%` : 'N/A', note:'Year over year' },
+              { label:'Debt/Equity',    metricKey:'debt_equity',  val: selectedStock.debt_equity != null ? `${selectedStock.debt_equity.toFixed(0)}%` : 'N/A', note:'Leverage level' },
+              { label:'Current Ratio',  metricKey:'current_ratio',val: selectedStock.current_ratio != null ? `${selectedStock.current_ratio.toFixed(2)}x` : 'N/A', note:'Short-term liquidity' },
+              { label:'ROE',            metricKey:'roe',          val: fmtPct(selectedStock.roe),           note:'Return on equity' },
+              { label:'Beta',           metricKey:'stock_beta',   val: selectedStock.beta != null ? selectedStock.beta.toFixed(2) : 'N/A', note:'Market sensitivity' },
+              { label:'Market Cap',     metricKey:'market_cap',   val: fmtCap(selectedStock.market_cap),   note:'Total company value' },
             ].map(m => (
               <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:'1px solid rgba(var(--text-primary-rgb),0.03)' }}>
                 <div>
-                  <div style={{ fontSize:11, color:'var(--text-secondary)' }}>{m.label}</div>
+                  <div style={{ fontSize:11, color:'var(--text-secondary)' }}><MetricTooltip metricKey={m.metricKey}>{m.label}</MetricTooltip></div>
                   <div style={{ fontSize:10, color:'var(--text-muted)' }}>{m.note}</div>
                 </div>
                 <div style={{ fontSize:12, fontFamily:'var(--font-mono)', fontWeight:600, color:'var(--text-primary)' }}>{m.val}</div>
