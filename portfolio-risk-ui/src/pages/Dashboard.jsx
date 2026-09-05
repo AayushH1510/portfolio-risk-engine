@@ -99,6 +99,14 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const ddColor     = Math.abs(dd) < 0.15 ? 'good' : Math.abs(dd) < 0.30 ? 'warning' : 'bad'
   const retColor    = ret > 0.15 ? 'good' : ret > 0 ? 'warning' : 'bad'
 
+  // Same class of bug as vsBenchmarkHtml below — "Portfolio grew at -53.6%/yr"
+  // is a contradiction when the return is negative. retColor above already
+  // goes 'bad' (red) for ret <= 0, so the box's border/label are correct as-is;
+  // this only fixes the wording itself.
+  const retHtml = ret > 0
+    ? `Portfolio grew at <strong>${fmt(ret)}/yr</strong>.`
+    : `Portfolio fell <strong>${fmt(Math.abs(ret))}/yr</strong>.`
+
   // "Beat the S&P 500 by -0.9%" is a contradiction — a negative gap means
   // the portfolio lagged, not "beat by a negative amount". Word and colour
   // this clause off the sign of the gap itself (not retColor above, which
@@ -265,7 +273,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             label="Return"
             tone={retColor}
             compact
-            text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>.${vsBenchmarkHtml}${
+            text={`${retHtml}${vsBenchmarkHtml}${
               // Median 1-year projection comes from Monte Carlo, the heavy
               // tier — it isn't in the fast summary this tab otherwise
               // renders from, so say so plainly instead of a misleading
