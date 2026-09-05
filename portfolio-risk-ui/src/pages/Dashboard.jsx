@@ -99,6 +99,18 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const ddColor     = Math.abs(dd) < 0.15 ? 'good' : Math.abs(dd) < 0.30 ? 'warning' : 'bad'
   const retColor    = ret > 0.15 ? 'good' : ret > 0 ? 'warning' : 'bad'
 
+  // "Beat the S&P 500 by -0.9%" is a contradiction — a negative gap means
+  // the portfolio lagged, not "beat by a negative amount". Word and colour
+  // this clause off the sign of the gap itself (not retColor above, which
+  // tracks the portfolio's own absolute return and can disagree with it —
+  // e.g. +8%/yr against a +10%/yr benchmark is retColor 'warning' but still
+  // genuinely underperformed). Amber, not red: lagging the index isn't the
+  // same severity as an actual risk warning like high drawdown.
+  const vsBenchmark = ba ? ret - ba.benchmark_return : null
+  const vsBenchmarkHtml = vsBenchmark == null ? '' : vsBenchmark > 0
+    ? ` Beat the S&P 500 by <strong style="color:var(--signal-positive)">${fmt(vsBenchmark)}</strong>.`
+    : ` Underperformed the S&P 500 by <strong style="color:var(--signal-caution)">${fmt(Math.abs(vsBenchmark))}</strong>.`
+
   // Diversification score tone
   const divTone  = !divScore ? 'neutral'
     : divScore.score >= 70 ? 'good'
@@ -253,7 +265,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             label="Return"
             tone={retColor}
             compact
-            text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>. ${ba ? `Beat the S&P 500 by <strong>${fmt(ret - ba.benchmark_return)}</strong>.` : ''}${
+            text={`Portfolio grew at <strong>${fmt(ret)}/yr</strong>.${vsBenchmarkHtml}${
               // Median 1-year projection comes from Monte Carlo, the heavy
               // tier — it isn't in the fast summary this tab otherwise
               // renders from, so say so plainly instead of a misleading
