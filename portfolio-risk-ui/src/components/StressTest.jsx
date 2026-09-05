@@ -99,6 +99,9 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
           <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
             Running the full simulation, this can take up to a minute.
           </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
+            Taking longer than usual? A quick refresh usually does the trick.
+          </div>
         </div>
       )}
 
