@@ -270,7 +270,7 @@ export default function App() {
               </svg>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                 <div style={{ fontSize: 'var(--text-body)', color: 'var(--text-muted)' }}>Fetching data and running analysis...</div>
-                <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>Taking longer than expected? Refresh the page to retry.</div>
+                <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-muted)' }}>Taking longer than usual? A quick refresh usually does the trick.</div>
               </div>
             </div>
           )}
