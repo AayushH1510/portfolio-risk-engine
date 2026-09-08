@@ -136,14 +136,16 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
     correlation_matrix: corr, var_cvar, var_cvar_99,
     annualised_volatility: vol, sharpe_ratio: sharpe,
     portfolio_returns, treynor_ratio: treynor, information_ratio: infoRatio,
+    diversification_score: divScore,
   } = data
 
   const rvData = rv.dates.map((d, i) => ({ date: d.slice(5), vol: rv.values[i] }))
   const rsData = rs.dates.map((d, i) => ({ date: d.slice(5), sharpe: rs.values[i] }))
 
-  const recentVol    = rv.values[rv.values.length - 1]
-  const recentSharpe = rs.values[rs.values.length - 1]
-  const riskRising   = recentVol > vol
+  const recentVol      = rv.values[rv.values.length - 1]
+  const recentSharpe   = rs.values[rs.values.length - 1]
+  const riskRising     = recentVol > vol
+  const sharpeImproving = recentSharpe > sharpe
 
   const toneColor = { good: 'var(--signal-positive)', warning: 'var(--signal-caution)', bad: 'var(--signal-negative)' }
   const treynorTone   = treynor   > 1   ? 'good' : treynor   > 0 ? 'warning' : 'bad'
@@ -185,6 +187,11 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmtS(vol)}</span>
             <span style={{ marginLeft: 8, opacity: 0.5 }}>dashed line = long-run average</span>
           </div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5 }}>
+            {riskRising
+              ? 'Volatility is currently above its long-run average, meaning risk has been rising and returns have felt less stable recently.'
+              : 'Volatility is currently below its long-run average, meaning risk has been easing and returns have felt more stable recently.'}
+          </div>
         </div>
 
         <div className="card" style={{ padding: '14px 16px' }}>
@@ -199,12 +206,12 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             </div>
             <div style={{
               fontSize: 10, fontWeight: 600, padding: '3px 8px',
-              background: recentSharpe > sharpe ? 'rgba(var(--signal-positive-rgb),0.12)' : 'rgba(var(--signal-caution-rgb),0.12)',
-              color: recentSharpe > sharpe ? 'var(--signal-positive)' : 'var(--signal-caution)',
-              border: `1px solid ${recentSharpe > sharpe ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--signal-caution-rgb),0.3)'}`,
+              background: sharpeImproving ? 'rgba(var(--signal-positive-rgb),0.12)' : 'rgba(var(--signal-caution-rgb),0.12)',
+              color: sharpeImproving ? 'var(--signal-positive)' : 'var(--signal-caution)',
+              border: `1px solid ${sharpeImproving ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--signal-caution-rgb),0.3)'}`,
               marginTop: 2,
             }}>
-              {recentSharpe > sharpe ? '↑ Improving' : '↓ Weakening'}
+              {sharpeImproving ? '↑ Improving' : '↓ Weakening'}
             </div>
           </div>
           <MiniChart data={rsData} dataKey="sharpe" color="var(--signal-positive)" filled={false} refVal={sharpe} />
@@ -212,6 +219,16 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             Avg <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{sharpe.toFixed(2)}</span>
             <span style={{ marginLeft: 8, opacity: 0.5 }}>above 1.0 is strong</span>
           </div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5 }}>
+            {sharpeImproving
+              ? "Your risk-adjusted returns have been improving lately, better than this portfolio's own typical performance."
+              : "Your risk-adjusted returns have been weakening lately, below this portfolio's own typical performance."}
+          </div>
+          {recentSharpe < 0 && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5 }}>
+              Recent returns haven't been enough to justify the risk taken, regardless of the trend.
+            </div>
+          )}
         </div>
       </div>
 
@@ -300,10 +317,10 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             background: 'rgba(var(--signal-negative-rgb),0.05)',
             border: '1px solid rgba(var(--signal-negative-rgb),0.12)',
           }}>
-            On your worst <strong style={{ color: 'rgba(var(--text-primary-rgb),0.7)' }}>5% of days</strong>, expect to lose up to{' '}
+            On a typical bad day, you could lose around{' '}
             <strong style={{ color: 'var(--signal-negative)' }}>${Math.abs(var_cvar.var_dollar).toFixed(0)}</strong>.
-            {' '}The 99% threshold rises to{' '}
-            <strong style={{ color: 'var(--signal-negative-strong)' }}>${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)}</strong> - the worst 1 in 100 days.
+            {' '}On a truly rare, severe day, closer to{' '}
+            <strong style={{ color: 'var(--signal-negative-strong)' }}>${Math.abs(var_cvar_99?.cvar_dollar ?? 0).toFixed(0)}</strong>.
           </div>
         </div>
 
@@ -324,7 +341,9 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             background: 'rgba(var(--text-primary-rgb),0.02)',
             border: '1px solid rgba(var(--text-primary-rgb),0.05)',
           }}>
-            High correlation means your stocks move together - <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>less diversification</strong> than you might think.
+            {divScore?.label === 'Well diversified'
+              ? <>Your holdings move relatively independently, a sign of <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>real diversification</strong>.</>
+              : <>Your holdings move together more than a <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>well-diversified portfolio</strong> typically would.</>}
           </div>
         </div>
       </div>

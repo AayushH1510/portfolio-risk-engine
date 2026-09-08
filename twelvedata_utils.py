@@ -71,17 +71,18 @@ _CALL_COUNTER_TTL = 25 * 60 * 60  # a bit over a day, so a slow request near mid
 
 class TwelveDataRateLimitError(Exception):
     """
-    Raised when Twelve Data's per-minute or per-day credit cap is hit, or a
-    symbol failed for a reason that isn't a definitive bad-symbol signal.
-    See module docstring — this is the "don't blame the user" default
-    whenever Twelve Data's own response doesn't clearly say the ticker
-    itself is invalid.
+    Raised when Twelve Data's per-minute or per-day credit cap is hit, a
+    symbol failed for a reason that isn't a definitive bad-symbol signal, or
+    the request itself timed out / hit a transient network failure. See
+    module docstring — this is the "don't blame the user" default whenever
+    Twelve Data's own response doesn't clearly say the ticker itself is
+    invalid, or didn't arrive at all.
     """
     def __init__(self, failed_tickers: list[str]):
         self.failed_tickers = failed_tickers
         super().__init__(
             f"Unable to fetch data for: {', '.join(failed_tickers)}. "
-            "Twelve Data's API quota may be temporarily exhausted."
+            "The data provider may be temporarily rate-limited or slow to respond."
         )
 
 
@@ -141,7 +142,22 @@ def _track_call(n_symbols: int) -> None:
 def with_twelvedata_retry(fetch_fn):
     """
     Call fetch_fn() — a zero-arg callable wrapping one Twelve Data request —
-    retrying once after a short backoff if it raises TwelveDataRateLimitError.
+    retrying once after a short backoff if it raises TwelveDataRateLimitError
+    OR a raw requests-level failure (timeout, connection reset). The two
+    were originally handled differently — only TwelveDataRateLimitError was
+    ever retried, so a request that simply took longer than the fixed HTTP
+    timeout below raised an untyped requests.exceptions.Timeout straight
+    into the generic "something went wrong" path, retried zero times, and
+    never got the honest rate-limit-style error message it should have
+    (confirmed live: /api/stress-test's uncached fetch legitimately takes
+    anywhere from ~2s to 60s+ depending on Twelve Data's own response time,
+    comfortably exceeding a 20s per-call timeout often enough to matter).
+    A raw network failure is converted to TwelveDataRateLimitError by the
+    caller (see time_series_batch's _call) before it ever reaches here, so
+    it retries through the same branch below and reaches the caller through
+    the same well-understood, non-blaming 503 path as an actual 429 — "the
+    provider was slow/unreachable" and "the provider rate-limited us" both
+    warrant the identical "try again shortly" response to the user.
     Mirrors yfinance_utils.with_yfinance_retry's contract.
     """
     for attempt in range(RATE_LIMIT_RETRIES + 1):
@@ -190,7 +206,23 @@ def time_series_batch(symbols: list[str], start_date: str, end_date: str, interv
     }
 
     def _call():
-        resp = requests.get(f"{TWELVEDATA_BASE}/time_series", params=params, timeout=20)
+        try:
+            resp = requests.get(f"{TWELVEDATA_BASE}/time_series", params=params, timeout=45)
+        except requests.exceptions.RequestException as e:
+            # A plain timeout/connection failure here used to propagate as
+            # a raw, untyped exception straight past with_twelvedata_retry
+            # (which only ever caught TwelveDataRateLimitError) into every
+            # caller's generic "something went wrong" 500 — never retried,
+            # never given an honest message. Confirmed live against
+            # production: an uncached /api/stress-test fetch legitimately
+            # takes anywhere from ~2s to 60s+ depending on Twelve Data's own
+            # response time, so a fixed per-call timeout WILL be exceeded
+            # often enough to matter. Converting it here means it retries
+            # through the same branch as an actual 429 below, and — if it
+            # still fails after that retry — reaches the caller through the
+            # same well-tested, non-blaming 503 path instead of a bare 500.
+            logger.warning("Twelve Data request failed (%s): %s", type(e).__name__, e)
+            raise TwelveDataRateLimitError(symbols) from e
         _track_call(len(symbols))
         if resp.status_code == 401:
             raise TwelveDataAuthError()

@@ -19,6 +19,9 @@ function ScenarioCard({ scenario, portfolioValue }) {
   const noData = portfolio_return == null
 
   const lossColor = portfolio_return < -0.3 ? 'var(--signal-negative)' : portfolio_return < -0.1 ? 'var(--signal-caution)' : 'var(--signal-positive)'
+  const recoveryText = recovery_days == null
+    ? 'and hasn’t recovered yet'
+    : `taking ${recovery_days} day${recovery_days === 1 ? '' : 's'} to recover`
 
   return (
     <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -66,6 +69,12 @@ function ScenarioCard({ scenario, portfolioValue }) {
                 {recovery_days == null ? 'Not yet' : `${recovery_days}d`}
               </div>
             </div>
+          </div>
+
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            In {name}, your exact portfolio would have lost{' '}
+            <strong style={{ color: 'rgba(var(--text-primary-rgb),0.7)' }}>{fmtPct(portfolio_return)}</strong>, with its worst single day at{' '}
+            <strong style={{ color: 'rgba(var(--text-primary-rgb),0.7)' }}>{fmtPct(worst_day)}</strong>, {recoveryText}.
           </div>
 
           {excluded_tickers?.length > 0 && (

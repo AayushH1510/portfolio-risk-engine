@@ -15,6 +15,13 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
   const fmt     = v => `${(v * 100).toFixed(2)}%`
   const fmtS    = v => `${(v * 100).toFixed(1)}%`
 
+  // Annualised so it's on the same scale as the Volatility metric card's own
+  // < 0.20 / < 0.35 "good/warning/bad" cutoffs (Dashboard.jsx) — reusing that
+  // established threshold here rather than inventing a new one for what's
+  // fundamentally the same underlying spread, just daily instead of annual.
+  const annualisedStd = std * Math.sqrt(252)
+  const tightSpread    = annualisedStd < 0.20
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -215,6 +222,12 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
             </div>
           </div>
         ))}
+      </div>
+
+      <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+        {tightSpread
+          ? 'Most days cluster tightly around the average, a sign of predictable performance.'
+          : 'Returns are spread widely, including some sharp outlier days.'}
       </div>
     </div>
   )
