@@ -78,6 +78,23 @@ function pairwiseCorrStats({ tickers, values }) {
   return { maxVal, maxPair, minVal, minPair }
 }
 
+function CorrLegend() {
+  return (
+    <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--text-muted)' }}>
+      {[
+        ['≥ 0.8 High',  'rgba(var(--signal-negative-rgb),0.3)'],
+        ['0.5–0.8 Med', 'rgba(var(--signal-caution-rgb),0.3)'],
+        ['< 0.2 Low',   'rgba(var(--signal-positive-rgb),0.25)'],
+      ].map(([l, c]) => (
+        <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 8, height: 8, background: c }}/>
+          {l}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function CorrMatrix({ corr }) {
   const n = corr.tickers.length
   const cellPad  = n >= 5 ? '5px 3px' : n >= 4 ? '7px 4px' : '9px 6px'
@@ -129,18 +146,6 @@ function CorrMatrix({ corr }) {
           ))}
         </tbody>
       </table>
-      <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 10, color: 'var(--text-muted)' }}>
-        {[
-          ['≥ 0.8 High',  'rgba(var(--signal-negative-rgb),0.3)'],
-          ['0.5–0.8 Med', 'rgba(var(--signal-caution-rgb),0.3)'],
-          ['< 0.2 Low',   'rgba(var(--signal-positive-rgb),0.25)'],
-        ].map(([l, c]) => (
-          <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, background: c }}/>
-            {l}
-          </span>
-        ))}
-      </div>
     </div>
   )
 }
@@ -356,8 +361,11 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             grid opposite it, so without this the two summary boxes drift to
             different vertical positions. */}
         <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 14 }}>
-            <MetricTooltip metricKey="correlation_matrix">Correlation matrix</MetricTooltip>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
+              <MetricTooltip metricKey="correlation_matrix">Correlation matrix</MetricTooltip>
+            </div>
+            <CorrLegend />
           </div>
           <CorrMatrix corr={corr} />
           <div style={{
@@ -396,6 +404,8 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
               portfolioReturns={portfolio_returns}
               varPct={var_cvar.var_pct}
               cvarPct={var_cvar.cvar_pct}
+              varDollar={var_cvar.var_dollar}
+              cvarDollar={var_cvar.cvar_dollar}
               confidence={var_cvar.confidence}
             />
           </div>

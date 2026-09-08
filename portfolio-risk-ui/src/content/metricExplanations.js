@@ -26,6 +26,10 @@ export const metricExplanations = {
   downside_risk: "VaR and CVaR at 95% and 99% confidence. The 95% numbers describe a bad day that happens roughly 1 in 20 trading days. The 99% numbers describe a genuinely rare, severe day, roughly 1 in 100. CVaR shows the average loss on those worst days, VaR just marks where they start.",
   daily_returns_distribution: "Every daily return your portfolio has produced, plotted by how often each size of gain or loss occurred. A wider, lumpier spread means more unpredictable days.",
   stress_test: "Replays your exact portfolio through real historical crashes, 2008, COVID, and 2022, to show how it would have actually performed under genuine market panic, not just a simulated average.",
+  mean_daily: "The average daily return across the entire period. A small positive number here is normal, most of a portfolio's growth comes from compounding many small gains, not big single-day jumps.",
+  std_dev: "How much daily returns typically swing away from the average. A higher number means more day-to-day unpredictability.",
+  positive_days: "The percentage of trading days that ended with a gain. Above 50% is normal for most healthy portfolios over time, since markets trend upward more often than not.",
+  observations: "The total number of trading days included in this analysis. More observations generally make the other statistics more reliable.",
 
   // Valuation tab — per-ticker fundamentals, distinct from the portfolio-level
   // metrics above (e.g. stock_beta is one holding's own market sensitivity,

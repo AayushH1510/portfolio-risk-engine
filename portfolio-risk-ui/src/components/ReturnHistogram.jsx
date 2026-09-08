@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
+import MetricTooltip from './MetricTooltip'
 
-export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, confidence }) {
+export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, varDollar, cvarDollar, confidence }) {
   const canvasRef = useRef(null)
+  const geomRef   = useRef(null)
+  const [tooltip, setTooltip] = useState(null)
 
   if (!portfolioReturns?.length) return null
 
@@ -155,6 +158,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     }
 
     // Labels on lines
+    const meanX = toX(mean)
     ctx.font      = `9px ${cssVar('var(--font-mono)')}`
     ctx.textAlign = 'center'
     ctx.fillStyle = cssVar('rgba(var(--signal-negative-rgb),0.85)')
@@ -164,9 +168,99 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
     ctx.fillText('CVaR', cvarX, PAD.top + 10)
 
     ctx.fillStyle = cssVar('rgba(var(--text-primary-rgb),0.3)')
-    ctx.fillText('Mean', toX(mean), PAD.top + 10)
+    ctx.fillText('Mean', meanX, PAD.top + 10)
+
+    // Hit-test geometry for hover — recomputed every draw so mouse moves
+    // always test against the coordinates actually on screen right now,
+    // not a stale layout from a previous render (matches the pattern in
+    // Frontier.jsx's canvas hover, the only other raw-canvas chart with
+    // interactive hover in this app).
+    geomRef.current = {
+      W, H, PAD, PW, PH,
+      meanX, varX, cvarX,
+      bins: bins.map((count, i) => ({
+        x: PAD.left + (i / N_BINS) * PW,
+        width: bW,
+        binStart: minR + i * binW,
+        binEnd: minR + (i + 1) * binW,
+        count,
+      })),
+    }
 
   }, [portfolioReturns, varPct, cvarPct])
+
+  const handleMouseMove = e => {
+    const canvas = canvasRef.current
+    const g = geomRef.current
+    if (!canvas || !g) return
+    const rect = canvas.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+
+    // Bottom strip — x-axis tick labels live here (H - PAD.bottom to H).
+    if (my >= g.PAD.top + g.PH && mx >= g.PAD.left && mx <= g.W - g.PAD.right) {
+      setTooltip({ kind: 'xaxis', left: mx, top: g.PAD.top + g.PH })
+      return
+    }
+    // Left strip — y-axis tick labels live here (0 to PAD.left).
+    if (mx <= g.PAD.left && my >= g.PAD.top && my <= g.PAD.top + g.PH) {
+      setTooltip({ kind: 'yaxis', left: g.PAD.left, top: my })
+      return
+    }
+    // Outside the plot area and both axis strips (top/right margins, or off
+    // the bottom-left corner) — nothing meaningful to show.
+    if (mx < g.PAD.left || mx > g.W - g.PAD.right || my < g.PAD.top || my > g.PAD.top + g.PH) {
+      setTooltip(null)
+      return
+    }
+
+    // Inside the main plot — lines get first claim within a tight pixel
+    // tolerance (they're precise 1.5px targets), bars are the fallback,
+    // covering the rest of the plot as one continuous hoverable surface.
+    const LINE_TOL = 5
+    if (Math.abs(mx - g.varX) < LINE_TOL) { setTooltip({ kind: 'var', left: g.varX, top: my }); return }
+    if (Math.abs(mx - g.cvarX) < LINE_TOL) { setTooltip({ kind: 'cvar', left: g.cvarX, top: my }); return }
+    if (Math.abs(mx - g.meanX) < LINE_TOL) { setTooltip({ kind: 'mean', left: g.meanX, top: my }); return }
+
+    const bin = g.bins.find(b => mx >= b.x && mx < b.x + b.width)
+    setTooltip(bin ? { kind: 'bar', left: mx, top: my, bin } : null)
+  }
+
+  const TOOLTIP_LABEL = { fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-primary)', color: 'var(--text-muted)', marginBottom: 3 }
+  const TOOLTIP_VALUE = { fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }
+
+  const renderTooltipContent = () => {
+    switch (tooltip.kind) {
+      case 'mean':
+        return (<>
+          <div style={{ ...TOOLTIP_LABEL, color: 'rgba(var(--text-primary-rgb),0.5)' }}>Mean daily return</div>
+          <div style={TOOLTIP_VALUE}>{fmt(mean)}</div>
+        </>)
+      case 'var':
+        return (<>
+          <div style={{ ...TOOLTIP_LABEL, color: 'var(--signal-negative)' }}>VaR {(confidence * 100).toFixed(0)}%</div>
+          <div style={{ ...TOOLTIP_VALUE, color: 'var(--signal-negative)' }}>{fmt(varPct)}</div>
+          {varDollar != null && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>${Math.abs(varDollar).toFixed(0)} per day</div>}
+        </>)
+      case 'cvar':
+        return (<>
+          <div style={{ ...TOOLTIP_LABEL, color: 'var(--signal-caution)' }}>CVaR {(confidence * 100).toFixed(0)}%</div>
+          <div style={{ ...TOOLTIP_VALUE, color: 'var(--signal-caution)' }}>{fmt(cvarPct)}</div>
+          {cvarDollar != null && <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>${Math.abs(cvarDollar).toFixed(0)} avg</div>}
+        </>)
+      case 'bar':
+        return (<>
+          <div style={TOOLTIP_LABEL}>{fmt(tooltip.bin.binStart)} to {fmt(tooltip.bin.binEnd)}</div>
+          <div style={TOOLTIP_VALUE}>{tooltip.bin.count} day{tooltip.bin.count === 1 ? '' : 's'}</div>
+        </>)
+      case 'xaxis':
+        return <div style={{ fontSize: 10, color: 'var(--text-secondary)', maxWidth: 140 }}>The size of a day's gain or loss</div>
+      case 'yaxis':
+        return <div style={{ fontSize: 10, color: 'var(--text-secondary)', maxWidth: 140 }}>How many days fell in that range</div>
+      default:
+        return null
+    }
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -195,19 +289,40 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
 
       {/* Canvas */}
       <div style={{
+        position: 'relative',
         overflow: 'hidden',
         border: '1px solid rgba(var(--text-primary-rgb),0.05)',
       }}>
-        <canvas ref={canvasRef} style={{ width: '100%', height: 200, display: 'block' }} />
+        <canvas
+          ref={canvasRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setTooltip(null)}
+          style={{ width: '100%', height: 200, display: 'block', cursor: tooltip ? 'crosshair' : 'default' }}
+        />
+        {tooltip && (
+          <div style={{
+            position: 'absolute',
+            left: Math.min(Math.max(tooltip.left - 60, 4), (canvasRef.current?.offsetWidth || 999) - 140),
+            top: Math.max(tooltip.top - 54, 4),
+            background: 'var(--surface-elevated)',
+            border: 'var(--border-emphasis)',
+            padding: '8px 10px',
+            pointerEvents: 'none',
+            zIndex: 10,
+            minWidth: 120,
+          }}>
+            {renderTooltipContent()}
+          </div>
+        )}
       </div>
 
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
         {[
-          { label: 'Mean daily',   value: fmtS(mean),  color: mean >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
-          { label: 'Std dev',      value: fmtS(std),   color: 'var(--text-primary)' },
-          { label: 'Positive days',value: `${(posPct * 100).toFixed(1)}%`, color: posPct > 0.5 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
-          { label: 'Observations', value: returns.length, color: 'var(--text-muted)' },
+          { key: 'mean_daily',    label: 'Mean daily',    value: fmtS(mean),  color: mean >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
+          { key: 'std_dev',       label: 'Std dev',       value: fmtS(std),   color: 'var(--text-primary)' },
+          { key: 'positive_days', label: 'Positive days', value: `${(posPct * 100).toFixed(1)}%`, color: posPct > 0.5 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
+          { key: 'observations',  label: 'Observations',  value: returns.length, color: 'var(--text-muted)' },
         ].map(s => (
           <div key={s.label} style={{
             padding: '8px 12px',
@@ -215,7 +330,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, con
             border: 'var(--border-faint)',
           }}>
             <div style={{ fontSize: 'var(--text-caption)', color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', fontWeight: 'var(--weight-medium)', fontFamily: 'var(--font-primary)' }}>
-              {s.label}
+              <MetricTooltip metricKey={s.key}>{s.label}</MetricTooltip>
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: s.color }}>
               {s.value}
