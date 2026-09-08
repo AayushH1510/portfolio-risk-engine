@@ -155,7 +155,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
 
       <InsightBox
-        label="Why this matters"
+        label="Why risk-adjusted metrics matter"
         text="Two portfolios can have the same return but very different risk. These metrics show whether you're being compensated fairly for the risk you're taking, not just how much you made."
       />
 
@@ -352,8 +352,8 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
       {portfolio_returns && (
         <>
           <InsightBox
-            label="Why this matters"
-            text="Most returns cluster near zero, but the tails matter most. A portfolio with 'fat tails' can look calm most days while still carrying serious downside risk."
+            label="Why the daily returns distribution matters"
+            text="This chart plots every daily return your portfolio produced over the selected period. The x-axis is the size of a single day's gain or loss, from a big loss on the left to a big gain on the right. The y-axis is how many days landed in that range - a tall bar means a lot of days moved by roughly that amount. A narrow, tight cluster near the middle means your day-to-day performance has been consistent and predictable. A wide, lumpy spread, especially with bars reaching far to either side, means bigger day-to-day swings and occasional sharp outlier days - a portfolio with these 'fat tails' can look calm most days while still carrying serious downside risk."
           />
           <div className="card" style={{ padding: '14px 16px' }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 14 }}>
@@ -371,7 +371,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
 
       {/* Row 4: Stress test */}
       <InsightBox
-        label="Why this matters"
+        label="Why stress testing matters"
         text="Backtested returns show how your portfolio performs in normal conditions. Stress tests show what happens when markets panic, the scenario most investors are least prepared for."
       />
       <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
