@@ -61,6 +61,23 @@ function MetricPill({ label, value, color, sub }) {
   )
 }
 
+// Highest and lowest pairwise correlation in the matrix, and which two
+// tickers each belongs to — only ever looks at the upper triangle (i < j)
+// so the always-1.0 diagonal (a ticker against itself) and duplicate
+// mirrored pairs never enter into it.
+function pairwiseCorrStats({ tickers, values }) {
+  let maxVal = -Infinity, maxPair = null
+  let minVal = Infinity, minPair = null
+  for (let i = 0; i < tickers.length; i++) {
+    for (let j = i + 1; j < tickers.length; j++) {
+      const v = values[i][j]
+      if (v > maxVal) { maxVal = v; maxPair = [tickers[i], tickers[j]] }
+      if (v < minVal) { minVal = v; minPair = [tickers[i], tickers[j]] }
+    }
+  }
+  return { maxVal, maxPair, minVal, minPair }
+}
+
 function CorrMatrix({ corr }) {
   const n = corr.tickers.length
   const cellPad  = n >= 5 ? '5px 3px' : n >= 4 ? '7px 4px' : '9px 6px'
@@ -136,7 +153,6 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
     correlation_matrix: corr, var_cvar, var_cvar_99,
     annualised_volatility: vol, sharpe_ratio: sharpe,
     portfolio_returns, treynor_ratio: treynor, information_ratio: infoRatio,
-    diversification_score: divScore,
   } = data
 
   const rvData = rv.dates.map((d, i) => ({ date: d.slice(5), vol: rv.values[i] }))
@@ -150,6 +166,15 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
   const toneColor = { good: 'var(--signal-positive)', warning: 'var(--signal-caution)', bad: 'var(--signal-negative)' }
   const treynorTone   = treynor   > 1   ? 'good' : treynor   > 0 ? 'warning' : 'bad'
   const infoRatioTone = infoRatio > 0.5 ? 'good' : infoRatio > 0 ? 'warning' : 'bad'
+
+  // Corr matrix "why this matters" copy is derived entirely from the real
+  // pairwise data below, not a generic verdict — see pairwiseCorrStats.
+  // The "lowest pair" sentence only makes sense with 3+ tickers (a 2-ticker
+  // portfolio has exactly one pair, nothing to contrast it against), and
+  // only when that lowest pair is meaningfully below the highest one —
+  // otherwise it'd just be restating the same pair/value a second time.
+  const corrStats          = pairwiseCorrStats(corr)
+  const hasContrastingPair = corr.tickers.length >= 3 && (corrStats.maxVal - corrStats.minVal) >= 0.15
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
@@ -341,9 +366,17 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             background: 'rgba(var(--text-primary-rgb),0.02)',
             border: '1px solid rgba(var(--text-primary-rgb),0.05)',
           }}>
-            {divScore?.label === 'Well diversified'
-              ? <>Your holdings move relatively independently, a sign of <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>real diversification</strong>.</>
-              : <>Your holdings move together more than a <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>well-diversified portfolio</strong> typically would.</>}
+            {corrStats.maxVal >= 0.7 ? (
+              <>{corrStats.maxPair[0]} and {corrStats.maxPair[1]} move together the most in your portfolio, correlated at <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>{corrStats.maxVal.toFixed(2)}</strong>. When you hold both, you're not getting much real diversification from having two positions instead of one.</>
+            ) : corrStats.maxVal >= 0.4 ? (
+              <>{corrStats.maxPair[0]} and {corrStats.maxPair[1]} are your most closely linked holdings, correlated at <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>{corrStats.maxVal.toFixed(2)}</strong>, a moderate relationship. They still add some diversification, just not as much as fully independent assets would.</>
+            ) : (
+              <>Even your most closely linked pair, {corrStats.maxPair[0]} and {corrStats.maxPair[1]}, only correlates at <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>{corrStats.maxVal.toFixed(2)}</strong>. Your holdings are behaving largely independently of each other.</>
+            )}
+            {hasContrastingPair && (
+              <> {corrStats.minPair[0]} and {corrStats.minPair[1]} are your most independent pair, correlated at only <strong style={{ color: 'rgba(var(--text-primary-rgb),0.65)' }}>{corrStats.minVal.toFixed(2)}</strong>, they're doing the most real diversification work in this portfolio.</>
+            )}
+            {' '}The more your holdings move together, the more a single bad day for one can mean a bad day for all of them, real diversification comes from genuinely independent assets, not just from owning more tickers.
           </div>
         </div>
       </div>
