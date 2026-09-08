@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { errorMessage } from '../lib/errorMessage'
+import MetricTooltip from './MetricTooltip'
+
+// The backend's catch-all message for an unexpected server error — see
+// api.py's GENERIC_ERROR_DETAIL. Swapped for a more actionable instruction
+// here specifically, since "try again" with no guidance on how is a dead
+// end for a component whose only action is an automatic re-fetch on mount.
+const GENERIC_BACKEND_ERROR = 'Something went wrong processing your request. Please try again.'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -83,24 +90,32 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
     setError(null)
     axios.post(`${API}/api/stress-test`, { tickers, weights, portfolio_value: portfolioValue })
       .then(res => setScenarios(res.data.scenarios))
-      .catch(e => setError(errorMessage(e, 'Failed to load stress test scenarios')))
+      .catch(e => {
+        const msg = errorMessage(e, 'Failed to load stress test scenarios')
+        setError(msg === GENERIC_BACKEND_ERROR ? 'Please refresh the page and try again.' : msg)
+      })
       .finally(() => setLoading(false))
   }, [tickers.join(','), weights.join(',')])
 
   return (
     <div className="card" style={{ padding: '14px 16px' }}>
       <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
-        Stress test - historical scenarios
+        <MetricTooltip metricKey="stress_test">Stress test - historical scenarios</MetricTooltip>
       </div>
 
       {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Running historical scenarios...</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
-            Running the full simulation, this can take up to a minute.
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
-            Taking longer than usual? A quick refresh usually does the trick.
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <svg className="spin" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="var(--signal-positive)" strokeWidth="3" strokeDasharray="40 20" />
+          </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Running historical scenarios...</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
+              Running the full simulation, this can take up to a minute.
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', opacity: 0.7 }}>
+              Taking longer than usual? A quick refresh usually does the trick.
+            </div>
           </div>
         </div>
       )}

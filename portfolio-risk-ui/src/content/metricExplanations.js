@@ -20,6 +20,12 @@ export const metricExplanations = {
   sector_exposure: "Shows which industries your portfolio is concentrated in. Heavy weighting in one sector means your risk is tied to how that industry performs, not just your individual stocks.",
   risk_gauge: "A 0-100 score summarizing your portfolio's overall risk level, based on volatility, drawdown, and downside risk combined. Higher means riskier.",
   drawdown: "Tracks how far your portfolio has fallen from its highest point at any given time. It's a running record of your worst moments, not just the single worst one.",
+  rolling_volatility: "Volatility recalculated using only the most recent trading days, rather than the whole period. Shows whether risk has been rising or falling lately, not just on average.",
+  rolling_sharpe: "Your Sharpe ratio recalculated using only recent performance. Shows whether your risk-adjusted returns have been improving or weakening lately.",
+  correlation_matrix: "Shows how closely each pair of your holdings moves together, from -1 (opposite directions) to +1 (perfect lockstep). High correlation across your portfolio means less real diversification than the number of tickers might suggest.",
+  downside_risk: "VaR and CVaR at 95% and 99% confidence. The 95% numbers describe a bad day that happens roughly 1 in 20 trading days. The 99% numbers describe a genuinely rare, severe day, roughly 1 in 100. CVaR shows the average loss on those worst days, VaR just marks where they start.",
+  daily_returns_distribution: "Every daily return your portfolio has produced, plotted by how often each size of gain or loss occurred. A wider, lumpier spread means more unpredictable days.",
+  stress_test: "Replays your exact portfolio through real historical crashes, 2008, COVID, and 2022, to show how it would have actually performed under genuine market panic, not just a simulated average.",
 
   // Valuation tab — per-ticker fundamentals, distinct from the portfolio-level
   // metrics above (e.g. stock_beta is one holding's own market sensitivity,

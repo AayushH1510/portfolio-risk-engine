@@ -164,7 +164,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 4 }}>
-                Rolling volatility
+                <MetricTooltip metricKey="rolling_volatility">Rolling volatility</MetricTooltip>
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: riskRising ? 'var(--signal-caution)' : 'var(--signal-positive)' }}>
                 {fmtS(recentVol)}
@@ -191,7 +191,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 4 }}>
-                Rolling Sharpe
+                <MetricTooltip metricKey="rolling_sharpe">Rolling Sharpe</MetricTooltip>
               </div>
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-mono)', color: recentSharpe > 1 ? 'var(--signal-positive)' : recentSharpe > 0 ? 'var(--signal-caution)' : 'var(--signal-negative)' }}>
                 {recentSharpe.toFixed(2)}
@@ -241,9 +241,9 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
 
         {/* Downside risk — 95% and 99% side by side */}
-        <div className="card" style={{ padding: '14px 16px' }}>
+        <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
-            Downside risk
+            <MetricTooltip metricKey="downside_risk">Downside risk</MetricTooltip>
           </div>
 
           {/* Confidence level headers */}
@@ -296,7 +296,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
 
           <div style={{
             fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6,
-            padding: '10px 12px',
+            padding: '10px 12px', marginTop: 'auto',
             background: 'rgba(var(--signal-negative-rgb),0.05)',
             border: '1px solid rgba(var(--signal-negative-rgb),0.12)',
           }}>
@@ -307,14 +307,20 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           </div>
         </div>
 
-        <div className="card" style={{ padding: '14px 16px' }}>
+        {/* display:flex + marginTop:'auto' on the summary box below (matching
+            the Downside Risk card above) bottom-anchors both cards' summary
+            text at the same height regardless of how tall their own content
+            is — a 3-ticker correlation table is much shorter than the VaR/CVaR
+            grid opposite it, so without this the two summary boxes drift to
+            different vertical positions. */}
+        <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 14 }}>
-            Correlation matrix
+            <MetricTooltip metricKey="correlation_matrix">Correlation matrix</MetricTooltip>
           </div>
           <CorrMatrix corr={corr} />
           <div style={{
             fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6,
-            padding: '10px 12px', marginTop: 12,
+            padding: '10px 12px', marginTop: 'auto',
             background: 'rgba(var(--text-primary-rgb),0.02)',
             border: '1px solid rgba(var(--text-primary-rgb),0.05)',
           }}>
@@ -332,7 +338,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           />
           <div className="card" style={{ padding: '14px 16px' }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 14 }}>
-              Daily returns distribution
+              <MetricTooltip metricKey="daily_returns_distribution">Daily returns distribution</MetricTooltip>
             </div>
             <ReturnHistogram
               portfolioReturns={portfolio_returns}
