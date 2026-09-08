@@ -2,7 +2,7 @@
 
 **Portfolio risk analytics for individual investors.**
 
-Varense runs correlated Monte Carlo simulation, historical crisis replay, and full risk decomposition across a stock portfolio — the kind of analysis that normally sits behind an institutional terminal.
+Varense runs correlated Monte Carlo simulation, historical crisis replay, and full risk decomposition across a stock portfolio - the kind of analysis that normally sits behind an institutional terminal.
 
 **Live:** [varense.vercel.app](https://varense.vercel.app)
 
@@ -68,7 +68,7 @@ Enter up to five tickers, set your weights, pick a time period, and Varense comp
 
 ```
 varense/
-├── api.py                  # FastAPI — all HTTP endpoints
+├── api.py                  # FastAPI - all HTTP endpoints
 ├── stats_engine.py         # Pure maths layer, no HTTP, fully vectorised
 ├── data_fetcher.py         # Historical price fetching, Redis-cached
 ├── stock_detail_route.py   # Single-ticker quotes and fundamentals (Finnhub)
@@ -83,7 +83,7 @@ varense/
         └── content/        # Metric explanations, Learn tiers, landing copy
 ```
 
-The maths layer is deliberately isolated from the API layer — `stats_engine.py` takes DataFrames and returns dictionaries, with no knowledge of HTTP, so it can be tested and reasoned about independently.
+The maths layer is deliberately isolated from the API layer - `stats_engine.py` takes DataFrames and returns dictionaries, with no knowledge of HTTP, so it can be tested and reasoned about independently.
 
 ---
 
@@ -91,13 +91,13 @@ The maths layer is deliberately isolated from the API layer — `stats_engine.py
 
 A few implementation decisions worth calling out:
 
-**Returns are annualised geometrically, not arithmetically.** `compute_annualised_return` uses CAGR — `cumulative^(252/n) − 1` — rather than `mean × 252`. The efficient frontier simulation uses the identical formula, which is what keeps the user's real portfolio plotting inside the simulated cloud rather than floating outside it.
+**Returns are annualised geometrically, not arithmetically.** `compute_annualised_return` uses CAGR - `cumulative^(252/n) − 1` - rather than `mean × 252`. The efficient frontier simulation uses the identical formula, which is what keeps the user's real portfolio plotting inside the simulated cloud rather than floating outside it.
 
 **Monte Carlo models correlation.** Rather than drawing portfolio returns from a single univariate normal distribution, the simulation Cholesky-decomposes the asset covariance matrix and draws correlated returns per asset, then applies portfolio weights. Ignoring correlation systematically understates tail risk, because assets that fall together in reality are treated as independent. Falls back to the univariate approach if the covariance matrix is non-positive-definite.
 
 **CVaR is reported alongside VaR at two confidence levels.** VaR marks a quantile boundary but says nothing about severity beyond it. Expected Shortfall describes the tail itself, which is why the Basel Committee's Fundamental Review of the Trading Book replaced 99% VaR with 97.5% Expected Shortfall as the required market-risk capital measure.
 
-**Diversification is scored from realised correlation, not holdings count.** A five-stock portfolio of large-cap US tech is less diversified than a three-asset portfolio spanning uncorrelated sectors. The score is `(1 − average pairwise correlation) × 100`, which makes that visible. It is also window-dependent by design — the same holdings can score very differently across periods, which is surfaced in the UI rather than hidden.
+**Diversification is scored from realised correlation, not holdings count.** A five-stock portfolio of large-cap US tech is less diversified than a three-asset portfolio spanning uncorrelated sectors. The score is `(1 − average pairwise correlation) × 100`, which makes that visible. It is also window-dependent by design - the same holdings can score very differently across periods, which is surfaced in the UI rather than hidden.
 
 ---
 
@@ -132,7 +132,7 @@ Copy `.env.example` to `.env` and fill in:
 
 ```
 FINNHUB_API_KEY=      # free tier at finnhub.io
-REDIS_URL=            # optional — app runs fine without it
+REDIS_URL=            # optional - app runs fine without it
 ALLOWED_ORIGINS=http://localhost:5173
 ```
 
@@ -152,7 +152,7 @@ Redis is genuinely optional. `cache.py` fails open, so every cache operation bec
 |---|---|---|
 | `GET` | `/api/health` | Health check |
 | `POST` | `/api/validate` | Validate ticker symbols |
-| `POST` | `/api/analyse` | Full portfolio analysis — all metrics, simulation, frontier, backtest |
+| `POST` | `/api/analyse` | Full portfolio analysis - all metrics, simulation, frontier, backtest |
 | `POST` | `/api/stress-test` | Historical crisis scenarios |
 | `GET` | `/api/fundamentals` | Per-ticker fundamentals and risk flags |
 | `GET` | `/stock-detail/{ticker}` | Single-ticker quote and fundamentals |
