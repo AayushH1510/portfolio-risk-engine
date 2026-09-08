@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
+import MetricTooltip from './MetricTooltip'
 
 function computeRiskScore(vol, drawdown, varPct) {
   const v  = isFinite(vol)      ? vol      : 0.15
@@ -139,7 +140,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
         fontSize:'var(--text-caption)', fontWeight:'var(--weight-medium)', textTransform:'uppercase',
         letterSpacing:'var(--tracking-caption)', color:'var(--text-muted)', fontFamily:'var(--font-primary)', marginBottom:10,
       }}>
-        Risk Gauge
+        <MetricTooltip metricKey="risk_gauge">Risk Gauge</MetricTooltip>
       </div>
       <div
         onMouseEnter={() => setHovered(true)}

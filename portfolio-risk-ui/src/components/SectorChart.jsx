@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
 import InsightBox from './InsightBox'
+import MetricTooltip from './MetricTooltip'
 
 const truncate = (label, max = 24) =>
   label.length > max ? `${label.slice(0, max - 1)}…` : label
@@ -62,7 +63,7 @@ export default function SectorChart({ sectorData, loading }) {
     return (
       <div className="card" style={{ padding: '10px 16px', flexShrink: 0 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 5 }}>
-          Sector exposure
+          <MetricTooltip metricKey="sector_exposure">Sector exposure</MetricTooltip>
         </div>
         <InsightBox
           tone="neutral"
@@ -90,7 +91,7 @@ export default function SectorChart({ sectorData, loading }) {
     <div className="card" style={{ padding: '10px 16px', height: chartHeight, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-          Sector exposure
+          <MetricTooltip metricKey="sector_exposure">Sector exposure</MetricTooltip>
         </div>
         {hasExcluded && (
           <div style={{ fontSize: 'var(--text-micro)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>

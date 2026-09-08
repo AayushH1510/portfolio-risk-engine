@@ -17,6 +17,9 @@ export const metricExplanations = {
   cvar_99: "The average loss on your worst 1% of days - the typical severity of your most extreme downside scenarios.",
   treynor_ratio: "Return earned per unit of market risk (beta), rather than total volatility. Useful for comparing already-diversified portfolios.",
   information_ratio: "How much extra return your portfolio generates versus a benchmark, per unit of risk taken to deviate from it. Higher means more consistent outperformance.",
+  sector_exposure: "Shows which industries your portfolio is concentrated in. Heavy weighting in one sector means your risk is tied to how that industry performs, not just your individual stocks.",
+  risk_gauge: "A 0-100 score summarizing your portfolio's overall risk level, based on volatility, drawdown, and downside risk combined. Higher means riskier.",
+  drawdown: "Tracks how far your portfolio has fallen from its highest point at any given time. It's a running record of your worst moments, not just the single worst one.",
 
   // Valuation tab — per-ticker fundamentals, distinct from the portfolio-level
   // metrics above (e.g. stock_beta is one holding's own market sensitivity,
