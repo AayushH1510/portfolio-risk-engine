@@ -40,6 +40,40 @@ const CHART_STYLE = {
 
 const AXIS_STYLE = { fill: 'var(--text-muted)', fontSize: 10 }
 
+// Clickable ticker symbol — opens the Stock Drawer. Same pattern as
+// Sidebar's TickerLabel and Valuation's TickerLink (dotted underline, hover
+// arrow); this one sits inline in the "By Holding" legend, which has no
+// competing click handler of its own, but stopPropagation is kept for
+// consistency with the other two.
+function TickerLink({ ticker, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <span
+      onClick={e => { e.stopPropagation(); onClick?.(ticker) }}
+      title="Click to view stock details"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        fontWeight: 700, fontFamily: 'var(--font-mono)',
+        color: hovered ? 'var(--signal-positive)' : 'var(--text-muted)',
+        cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', gap: 3,
+        paddingBottom: 1,
+        borderBottom: hovered
+          ? '1.5px solid var(--signal-positive)'
+          : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
+        transition: 'color 0.15s, border-color 0.15s',
+        userSelect: 'none',
+      }}
+    >
+      {ticker}
+      <svg width="7" height="7" viewBox="0 0 8 8" fill="none" style={{ opacity: hovered ? 1 : 0.5, transition: 'opacity 0.15s' }}>
+        <path d="M1.5 4H6.5M4 1.5L6.5 4L4 6.5" stroke="var(--signal-positive)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </span>
+  )
+}
+
 function CustomTooltip({ active, payload, label, prefix = '', pct = false }) {
   if (!active || !payload?.length) return null
   return (
@@ -226,7 +260,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                 tickers.map((tk, i) => (
                   <span key={tk} style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
                     <span style={{ width: 20, height: 2, background: colorForTicker(i), display: 'inline-block' }} />
-                    {tk}
+                    <TickerLink ticker={tk} onClick={onTickerClick} />
                   </span>
                 ))
               )}

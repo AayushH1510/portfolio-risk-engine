@@ -2,6 +2,7 @@ import {
   LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
+import { useState } from 'react'
 import ReturnHistogram from '../components/ReturnHistogram'
 import StressTest from '../components/StressTest'
 import MetricTooltip from '../components/MetricTooltip'
@@ -95,7 +96,38 @@ function CorrLegend() {
   )
 }
 
-function CorrMatrix({ corr }) {
+// Clickable ticker symbol for the correlation matrix's row/column headers —
+// opens the Stock Drawer. Same pattern as Sidebar's TickerLabel and
+// Valuation's TickerLink, but without the hover arrow: at n>=5 tickers the
+// header cells run as small as 9px and there's no room for it. The matrix
+// cells themselves have no click handler of their own, so there's nothing
+// for stopPropagation to guard against here, but it's kept for consistency.
+function CorrTickerLink({ ticker, fontSize, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <span
+      onClick={e => { e.stopPropagation(); onClick?.(ticker) }}
+      title="Click to view stock details"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        fontSize, fontWeight: 700, fontFamily: 'var(--font-mono)',
+        color: hovered ? 'var(--signal-positive)' : 'var(--text-muted)',
+        cursor: 'pointer',
+        paddingBottom: 1,
+        borderBottom: hovered
+          ? '1.5px solid var(--signal-positive)'
+          : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
+        transition: 'color 0.15s, border-color 0.15s',
+        userSelect: 'none',
+      }}
+    >
+      {ticker}
+    </span>
+  )
+}
+
+function CorrMatrix({ corr, onTickerClick }) {
   const n = corr.tickers.length
   const cellPad  = n >= 5 ? '5px 3px' : n >= 4 ? '7px 4px' : '9px 6px'
   const cellFont = n >= 5 ? 9         : n >= 4 ? 10        : 11
@@ -116,20 +148,18 @@ function CorrMatrix({ corr }) {
           <tr>
             <th style={{ width: rowWidth }}/>
             {corr.tickers.map(t => (
-              <th key={t} style={{
-                fontSize: headFont, fontWeight: 700, color: 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)', padding: '0 2px 6px', textAlign: 'center',
-              }}>{t}</th>
+              <th key={t} style={{ padding: '0 2px 6px', textAlign: 'center' }}>
+                <CorrTickerLink ticker={t} fontSize={headFont} onClick={onTickerClick} />
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {corr.tickers.map((row, ri) => (
             <tr key={row}>
-              <td style={{
-                fontSize: headFont, fontWeight: 700, color: 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)', paddingRight: 6, textAlign: 'right',
-              }}>{row}</td>
+              <td style={{ paddingRight: 6, textAlign: 'right' }}>
+                <CorrTickerLink ticker={row} fontSize={headFont} onClick={onTickerClick} />
+              </td>
               {corr.values[ri].map((val, ci) => {
                 const { bg, text } = cellColor(Math.abs(val))
                 return (
@@ -367,7 +397,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             </div>
             <CorrLegend />
           </div>
-          <CorrMatrix corr={corr} />
+          <CorrMatrix corr={corr} onTickerClick={onTickerClick} />
           <div style={{
             fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6,
             padding: '10px 12px', marginTop: 'auto',
