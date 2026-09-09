@@ -79,7 +79,7 @@ function ReportTemplate({ data, tickers, weights }) {
             {metrics.map(m => (
               <div key={m.label} style={{ background:"var(--white)", borderRadius:'var(--radius-7)', padding:"10px 12px", boxShadow:"0 1px 3px rgba(var(--black-rgb),0.06)", borderTop:`3px solid ${m.good ? 'var(--accent)' : 'var(--negative)'}` }}>
                 <div style={{ fontSize:9, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"var(--text-secondary)", marginBottom:4 }}>{m.label}</div>
-                <div style={{ fontSize:16, fontWeight:700, fontFamily:"var(--font-mono)" }} style={{ color: m.good ? 'var(--accent-dark)' : 'var(--report-red)' }}>{m.val}</div>
+                <div style={{ fontSize:16, fontWeight:700, fontFamily:"var(--font-mono)", color: m.good ? 'var(--accent-dark)' : 'var(--report-red)' }}>{m.val}</div>
               </div>
             ))}
           </div>
@@ -125,7 +125,7 @@ function ReportTemplate({ data, tickers, weights }) {
                     <span style={{ fontWeight:700, color:'var(--accent-dark)', fontSize:12 }}>{Math.round(weights[i]*100)}%</span>
                   </div>
                   <div style={{ height:5, background:"var(--report-track)", borderRadius:'var(--radius-3)' }}>
-                    <div style={{ height:5, borderRadius:'var(--radius-3)' }} style={{ width:`${weights[i]*100}%`, background: allocColors[i % allocColors.length] }} />
+                    <div style={{ height:5, borderRadius:'var(--radius-3)', width:`${weights[i]*100}%`, background: allocColors[i % allocColors.length] }} />
                   </div>
                 </div>
               ))}
