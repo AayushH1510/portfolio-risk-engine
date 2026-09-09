@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SavedPortfolios from './SavedPortfolios'
 import Logo from './Logo'
+import { BENCHMARKS } from '../lib/benchmarks'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
@@ -28,10 +29,10 @@ function getInitialSidebarWidth() {
 
 export default function Sidebar({
   tickers, weights, period, portfolioValue,
-  showBenchmark, rollingWindow,
+  benchmark, rollingWindow,
   setTickers, setWeightsAll, setPeriod,
   portfolios, onSavePortfolio, onLoadPortfolio, onDeletePortfolio,
-  setPortfolioValue, setShowBenchmark, setRollingWindow,
+  setPortfolioValue, setBenchmark, setRollingWindow,
   onRun, loading, onTickerClick,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
@@ -409,29 +410,10 @@ export default function Sidebar({
 
         {/* 6. Benchmark */}
         <Section label="6. Benchmark">
-          <div onClick={() => setShowBenchmark(!showBenchmark)} style={{
-            display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-            padding: '7px 10px',
-            background: showBenchmark ? 'rgba(var(--signal-positive-rgb),0.12)' : 'var(--surface-elevated)',
-            border: `1px solid ${showBenchmark ? 'var(--signal-positive)' : 'var(--line-hairline)'}`,
-            transition: 'all 0.15s',
-          }}>
-            <div style={{
-              width: 16, height: 16,
-              background: showBenchmark ? 'var(--signal-positive)' : 'var(--surface-elevated)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.15s',
-            }}>
-              {showBenchmark && (
-                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                  <path d="M1 4L3.5 6.5L9 1" stroke="var(--surface-canvas)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </div>
-            <span style={{ fontSize: 11, color: showBenchmark ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: 500 }}>
-              Compare vs S&P 500
-            </span>
-          </div>
+          <select value={benchmark ?? 'none'} onChange={e => setBenchmark(e.target.value === 'none' ? null : e.target.value)}>
+            {BENCHMARKS.map(b => <option key={b.ticker} value={b.ticker}>{b.label} ({b.ticker})</option>)}
+            <option value="none">None (no benchmark comparison)</option>
+          </select>
         </Section>
 
       </div>

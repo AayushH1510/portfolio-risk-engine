@@ -22,7 +22,7 @@ export function useAnalysis() {
   const [weights, setWeights]           = useState([0.34, 0.33, 0.33])
   const [period, setPeriod]             = useState('1Y')
   const [portfolioValue, setPortfolioValue] = useState(10000)
-  const [showBenchmark, setShowBenchmark]   = useState(true)
+  const [benchmark, setBenchmark]           = useState('SPY')   // ticker, or null for "None"
   const [rollingWindow, setRollingWindow]   = useState(30)
 
   const [data, setData]         = useState(null)
@@ -54,7 +54,8 @@ export function useAnalysis() {
       start_date:      startDate,
       end_date:        endDate,
       portfolio_value: portfolioValue,
-      show_benchmark:  showBenchmark,
+      show_benchmark:  benchmark !== null,
+      benchmark:       benchmark || 'SPY',
       rolling_window:  rollingWindow,
     }
 
@@ -88,7 +89,7 @@ export function useAnalysis() {
     } finally {
       setLoading(false)
     }
-  }, [tickers, weights, period, portfolioValue, showBenchmark, rollingWindow])
+  }, [tickers, weights, period, portfolioValue, benchmark, rollingWindow])
 
   const updateWeight = useCallback((index, value) => {
     setWeights(prev => {
@@ -113,14 +114,14 @@ export function useAnalysis() {
   }, [])
 
   return {
-    tickers, weights, period, portfolioValue, showBenchmark, rollingWindow,
+    tickers, weights, period, portfolioValue, benchmark, rollingWindow,
     data, loading, error, hasRun, heavyLoading, heavyError,
     setTickers: updateTickers,
     updateWeight,
     setWeightsAll,
     setPeriod,
     setPortfolioValue,
-    setShowBenchmark,
+    setBenchmark,
     setRollingWindow,
     runAnalysis,
   }

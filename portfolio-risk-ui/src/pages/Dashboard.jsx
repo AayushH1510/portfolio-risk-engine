@@ -9,6 +9,7 @@ import InsightBox from '../components/InsightBox'
 import SectorChart from '../components/SectorChart'
 import FirstResultCallout from '../components/FirstResultCallout'
 import MetricTooltip from '../components/MetricTooltip'
+import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
 
 // Distinct hues for the Portfolio Growth chart's "By Holding" mode — one
 // line per ticker, differentiated by hue rather than dash pattern (dashing
@@ -69,6 +70,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           drawdown_series: ddSeries, period,
           diversification_score: divScore } = data
 
+  const benchmarkLabel  = getBenchmarkLabel(data.benchmark)
+  const benchmarkPhrase = getBenchmarkPhrase(data.benchmark)
+
   const medianFinal = data.monte_carlo?.p50_final
   const profitProb  = data.monte_carlo?.prob_profit
 
@@ -116,8 +120,8 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // same severity as an actual risk warning like high drawdown.
   const vsBenchmark = ba ? ret - ba.benchmark_return : null
   const vsBenchmarkHtml = vsBenchmark == null ? '' : vsBenchmark > 0
-    ? ` Beat the S&P 500 by <strong style="color:var(--signal-positive)">${fmt(vsBenchmark)}</strong>.`
-    : ` Underperformed the S&P 500 by <strong style="color:var(--signal-caution)">${fmt(Math.abs(vsBenchmark))}</strong>.`
+    ? ` Beat ${benchmarkPhrase} by <strong style="color:var(--signal-positive)">${fmt(vsBenchmark)}</strong>.`
+    : ` Underperformed ${benchmarkPhrase} by <strong style="color:var(--signal-caution)">${fmt(Math.abs(vsBenchmark))}</strong>.`
 
   // Diversification score tone
   const divTone  = !divScore ? 'neutral'
@@ -229,7 +233,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
               {bench && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
                   <span style={{ width: 20, height: 2, display: 'inline-block', opacity: 0.6, borderBottom: '2px dashed var(--text-muted)' }} />
-                  S&P 500
+                  {benchmarkLabel}
                 </span>
               )}
             </div>
@@ -250,7 +254,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                   <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
                   <Tooltip content={<CustomTooltip pct />} />
                   <Area type="monotone" dataKey="portfolio" stroke="var(--signal-positive)" strokeWidth={1.5} fill="var(--signal-positive)" fillOpacity={0.08} dot={false} name="Portfolio" />
-                  {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
+                  {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name={benchmarkLabel} />}
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
@@ -263,7 +267,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                   {tickers.map((tk, i) => (
                     <Line key={tk} type="monotone" dataKey={tk} stroke={colorForTicker(i)} strokeWidth={1.5} dot={false} name={tk} />
                   ))}
-                  {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name="S&P 500" />}
+                  {bench && <Line type="monotone" dataKey="benchmark" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} name={benchmarkLabel} />}
                 </ComposedChart>
               </ResponsiveContainer>
             )}

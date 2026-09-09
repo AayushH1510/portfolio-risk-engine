@@ -90,6 +90,7 @@ class AnalyseRequest(BaseModel):
     portfolio_value: float = 10_000
     rolling_window: int = 30
     show_benchmark: bool = True
+    benchmark: str = "SPY"   # ticker to compare against — see Sidebar's benchmark dropdown
 
 
 class ValidateRequest(BaseModel):
@@ -519,6 +520,7 @@ def _serialize_fast_tier(m: dict, req: AnalyseRequest, benchmark_prices) -> dict
         },
     }
 
+    result["benchmark"] = None
     if req.show_benchmark and benchmark_prices is not None:
         bench_rets   = benchmark_prices.pct_change().dropna().iloc[:, 0]
         bench_cumret = (1 + bench_rets).cumprod() - 1
@@ -528,6 +530,7 @@ def _serialize_fast_tier(m: dict, req: AnalyseRequest, benchmark_prices) -> dict
             "values": [round(v, 6) if not np.isnan(v) else None
                        for v in bench_cumret.values.tolist()],
         }
+        result["benchmark"] = req.benchmark
 
     return result
 
@@ -584,6 +587,7 @@ def _fetch_and_check(req: AnalyseRequest):
         tickers=req.tickers,
         start_date=req.start_date,
         end_date=req.end_date,
+        benchmark=req.benchmark,
     )
     if len(portfolio_prices) < MIN_ROWS_TO_CACHE:
         raise HTTPException(

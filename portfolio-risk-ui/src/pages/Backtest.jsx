@@ -2,16 +2,17 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import HeavyTierPending from '../components/HeavyTierPending'
+import { getBenchmarkLabel } from '../lib/benchmarks'
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
 
 const CHART_STYLE = { background: 'transparent', fontSize: 11, fontFamily: 'var(--font-mono)' }
 const AXIS_STYLE  = { fill: 'var(--text-muted)', fontSize: 10 }
 
-const STRATEGIES = [
+const getStrategies = benchmarkLabel => [
   { key: 'your_portfolio', label: 'Your Portfolio', color: 'var(--signal-positive)', dash: false },
   { key: 'equal_weight',   label: 'Equal Weight',   color: 'var(--signal-caution)', dash: true  },
-  { key: 'sp500',          label: 'S&P 500',        color: 'var(--text-muted)', dash: true  },
+  { key: 'sp500',          label: benchmarkLabel,   color: 'var(--text-muted)', dash: true  },
 ]
 
 function CustomTooltip({ active, payload, label }) {
@@ -62,7 +63,7 @@ function StrategyCard({ label, color, sub, stats, borderTone }) {
   )
 }
 
-function ReturnsTable({ backtest }) {
+function ReturnsTable({ backtest, strategies }) {
   const years = Object.keys(backtest.your_portfolio.annual_returns).sort()
 
   return (
@@ -77,7 +78,7 @@ function ReturnsTable({ backtest }) {
               <th style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 10px 8px 4px', borderBottom: 'var(--border-default)' }}>
                 Year
               </th>
-              {STRATEGIES.map(s => (
+              {strategies.map(s => (
                 <th key={s.key} style={{ textAlign: 'right', fontSize: 10, fontWeight: 700, color: s.color, padding: '4px 10px 8px', borderBottom: 'var(--border-default)' }}>
                   {s.label}
                 </th>
@@ -90,7 +91,7 @@ function ReturnsTable({ backtest }) {
                 <td style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '7px 10px 7px 4px', borderBottom: '1px solid rgba(var(--text-primary-rgb),0.04)' }}>
                   {y}
                 </td>
-                {STRATEGIES.map(s => {
+                {strategies.map(s => {
                   const v = backtest[s.key].annual_returns[y]
                   return (
                     <td key={s.key} style={{
@@ -125,12 +126,14 @@ export default function Backtest({ data, tickers, heavyError }) {
     if (!data.benchmark_cumulative) {
       return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 13 }}>
-          Enable "Compare vs S&P 500" in the sidebar and rerun the analysis to see the backtest.
+          Select a benchmark in the sidebar and rerun the analysis to see the backtest.
         </div>
       )
     }
     return <HeavyTierPending label="Loading backtest results..." error={heavyError} />
   }
+
+  const strategies = getStrategies(getBenchmarkLabel(data.benchmark))
 
   const sharpes = {
     your_portfolio: backtest.your_portfolio.sharpe_ratio,
@@ -162,7 +165,7 @@ export default function Backtest({ data, tickers, heavyError }) {
           borderTone={yourBorderTone}
         />
         <StrategyCard label="Equal Weight" color="var(--signal-caution)" stats={backtest.equal_weight} />
-        <StrategyCard label="S&P 500"      color="var(--text-muted)" stats={backtest.sp500} />
+        <StrategyCard label={strategies[2].label} color="var(--text-muted)" stats={backtest.sp500} />
       </div>
 
       {/* Cumulative return chart */}
@@ -172,7 +175,7 @@ export default function Backtest({ data, tickers, heavyError }) {
             Cumulative return - {backtest.period.start} to {backtest.period.end}
           </div>
           <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
-            {STRATEGIES.map(s => (
+            {strategies.map(s => (
               <span key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
                 <svg width="20" height="2" style={{ flexShrink: 0 }}>
                   <line x1="0" y1="1" x2="20" y2="1" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '4 3' : 'none'} />
@@ -189,7 +192,7 @@ export default function Backtest({ data, tickers, heavyError }) {
               <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
               <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
               <Tooltip content={<CustomTooltip />} />
-              {STRATEGIES.map(s => (
+              {strategies.map(s => (
                 <Line
                   key={s.key}
                   type="monotone"
@@ -207,7 +210,7 @@ export default function Backtest({ data, tickers, heavyError }) {
       </div>
 
       {/* Year-by-year table */}
-      <ReturnsTable backtest={backtest} />
+      <ReturnsTable backtest={backtest} strategies={strategies} />
 
     </div>
   )

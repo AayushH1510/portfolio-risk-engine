@@ -2,6 +2,7 @@ import {
   Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
+import { getBenchmarkLabel } from '../lib/benchmarks'
 
 const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtN = v => v != null ? v.toFixed(2) : 'N/A'
@@ -245,6 +246,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
     const ba   = d.beta_alpha
     const corr = d.correlation_matrix
     const date = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
+    const benchmarkLabel = getBenchmarkLabel(d.benchmark)
 
     const metricRows = [
       { label:'Annual Return',  val: fmt(d.annualised_return),       good: d.annualised_return > 0 },
@@ -302,7 +304,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
       { label:'CVaR 95%',     a: fmt(vc.cvar_pct),   b:`${fmtD(vc.cvar_dollar)} avg` },
       { label:'Max Drawdown', a: fmt(d.max_drawdown), b:'peak to trough' },
       ...(ba ? [
-        { label:'Beta',  a: fmtN(ba.beta),  b:'vs S&P 500' },
+        { label:'Beta',  a: fmtN(ba.beta),  b:`vs ${benchmarkLabel}` },
         { label:'Alpha', a: fmt(ba.alpha),  b:"Jensen's" },
       ] : []),
     ].map(r => `

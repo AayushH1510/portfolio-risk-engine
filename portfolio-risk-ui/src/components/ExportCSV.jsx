@@ -1,3 +1,5 @@
+import { getBenchmarkLabel } from '../lib/benchmarks'
+
 const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtN = v => v != null ? v.toFixed(2) : 'N/A'
 
@@ -48,7 +50,7 @@ function buildCSV(data) {
   if (data.backtest) {
     const { your_portfolio, equal_weight, sp500 } = data.backtest
     lines.push('')
-    lines.push(csvRow(['Year', 'Your Portfolio', 'Equal Weight', 'S&P 500']))
+    lines.push(csvRow(['Year', 'Your Portfolio', 'Equal Weight', getBenchmarkLabel(data.benchmark)]))
     Object.keys(your_portfolio.annual_returns).sort().forEach(year => {
       lines.push(csvRow([
         year,
