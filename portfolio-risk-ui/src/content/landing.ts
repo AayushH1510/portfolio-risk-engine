@@ -355,7 +355,7 @@ export const landingPage: LandingPage = {
           kicker: 'Efficient frontier · Backtest',
           kickerTone: 'positive',
           heading: 'Where you sit, and where you could have sat.',
-          body: 'The frontier plots every weighting of your holdings and marks the one with the best return per unit of risk. Then the backtest settles the argument: your allocation against equal-weight and against the S&P 500, over the same window, net of the same volatility.',
+          body: 'The frontier plots every weighting of your holdings and marks the one with the best return per unit of risk. Then the backtest settles the argument: your allocation against equal-weight and against a benchmark of your choosing, S&P 500, Nasdaq 100, gold, international markets, and more, over the same window, net of the same volatility.',
           tags: ['Sharpe · Sortino', 'Treynor · Information'],
           visual: 'frontier',
           visualSide: 'left',

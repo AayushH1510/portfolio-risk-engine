@@ -21,7 +21,7 @@ const FEATURES = [
   },
   {
     title: 'Backtesting with attribution',
-    body: 'Year-by-year performance vs equal-weight and S&P 500, buy-and-hold basis.',
+    body: 'Year-by-year performance vs equal-weight and your choice of benchmark, buy-and-hold basis.',
   },
   {
     title: 'Efficient frontier optimization',
