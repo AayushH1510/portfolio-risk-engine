@@ -47,6 +47,41 @@ const fmtCap  = v => {
   return `$${(v/1e6).toFixed(0)}M`
 }
 
+// Clickable ticker symbol — opens the Stock Drawer, distinct from clicking
+// elsewhere in the row (which selects it for the Key Metrics panel below).
+// e.stopPropagation() keeps those two actions independent: clicking the
+// symbol never also re-selects the row. Styling mirrors Sidebar's
+// TickerLabel (dotted underline, hover arrow) so the "this opens the
+// drawer" affordance reads the same everywhere it appears.
+function TickerLink({ ticker, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <span
+      onClick={e => { e.stopPropagation(); onClick?.(ticker) }}
+      title="Click to view stock details"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: 13,
+        color: hovered ? 'var(--signal-positive)' : 'var(--text-primary)',
+        cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', gap: 3,
+        paddingBottom: 1,
+        borderBottom: hovered
+          ? '1.5px solid var(--signal-positive)'
+          : '1.5px dashed rgba(var(--signal-positive-rgb),0.4)',
+        transition: 'color 0.15s, border-color 0.15s',
+        userSelect: 'none',
+      }}
+    >
+      {ticker}
+      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ opacity: hovered ? 1 : 0.5, transition: 'opacity 0.15s' }}>
+        <path d="M1.5 4H6.5M4 1.5L6.5 4L4 6.5" stroke="var(--signal-positive)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </span>
+  )
+}
+
 const SEV_COLOR = { high: 'var(--signal-negative)', medium: 'var(--signal-caution)', low: 'var(--signal-positive-soft)' }
 const SEV_BG    = { high: 'rgba(var(--signal-negative-rgb),0.13)', medium: 'rgba(var(--signal-caution-rgb),0.13)', low: 'rgba(var(--signal-positive-soft-rgb),0.13)' }
 const CAT_LABEL = { accounting: 'Accounting', concentration: 'Leverage / Ownership', competitive: 'Competitive' }
@@ -66,7 +101,7 @@ function ScoreBar({ value, max, color }) {
   )
 }
 
-export default function Valuation({ tickers }) {
+export default function Valuation({ tickers, onTickerClick }) {
   const [data, setData]     = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState(null)
@@ -188,8 +223,8 @@ export default function Valuation({ tickers }) {
 
                   {/* Ticker + name */}
                   <td style={{ padding:'12px 14px' }}>
-                    <div style={{ fontWeight:700, fontFamily:'var(--font-mono)', color:'var(--text-primary)', fontSize:13 }}>
-                      {stock.ticker}
+                    <div>
+                      <TickerLink ticker={stock.ticker} onClick={onTickerClick} />
                       {flagCount > 0 && (
                         <span style={{
                           marginLeft:6, fontSize:9, fontWeight:700, padding:'1px 5px',
