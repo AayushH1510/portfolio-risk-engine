@@ -30,6 +30,10 @@ export const metricExplanations = {
   std_dev: "How much daily returns typically swing away from the average. A higher number means more day-to-day unpredictability.",
   positive_days: "The percentage of trading days that ended with a gain. Above 50% is normal for most healthy portfolios over time, since markets trend upward more often than not.",
   observations: "The total number of trading days included in this analysis. More observations generally make the other statistics more reliable.",
+  starting_value: "The dollar amount you set for this portfolio at the beginning of the simulation, every simulated path starts from here.",
+  median_outcome: "The middle result across all simulated futures, half the simulations did better than this, half did worse. A reasonable single number to anchor expectations around.",
+  chance_of_profit: "The percentage of simulated futures where your portfolio ended up worth more than it started, based on this portfolio's actual historical return and risk pattern.",
+  chance_of_loss: "The percentage of simulated futures where your portfolio lost at least 10% of its value. A useful gut-check for how often a real setback happens, not just the best or average case.",
 
   // Valuation tab — per-ticker fundamentals, distinct from the portfolio-level
   // metrics above (e.g. stock_beta is one holding's own market sensitivity,

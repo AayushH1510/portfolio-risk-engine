@@ -6,6 +6,7 @@ import {
 import MetricCard from '../components/MetricCard'
 import InsightBox from '../components/InsightBox'
 import HeavyTierPending from '../components/HeavyTierPending'
+import MetricTooltip from '../components/MetricTooltip'
 
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
@@ -114,10 +115,10 @@ export default function MonteCarlo({ data, heavyError }) {
 
       {/* Metrics row */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, flexShrink:0 }}>
-        <MetricCard label="Starting value"      value={fmtD(portfolio_value)} tone="neutral" />
-        <MetricCard label="Median outcome"      value={fmtD(p50_final)} sub={`${gainPct > 0 ? '+' : ''}${gainPct.toFixed(1)}%`} tone={gain > 0 ? 'good' : 'bad'} />
-        <MetricCard label="Chance of profit"    value={`${Math.round(prob_profit * 100)}%`} tone={prob_profit > 0.6 ? 'good' : 'warning'} sub={`${n_simulations.toLocaleString()} simulations`} />
-        <MetricCard label="Chance of -10% loss" value={`${Math.round(prob_loss_10pct * 100)}%`} tone={prob_loss_10pct < 0.1 ? 'good' : prob_loss_10pct < 0.25 ? 'warning' : 'bad'} />
+        <MetricCard label={<MetricTooltip metricKey="starting_value">Starting value</MetricTooltip>}      value={fmtD(portfolio_value)} tone="neutral" />
+        <MetricCard label={<MetricTooltip metricKey="median_outcome">Median outcome</MetricTooltip>}      value={fmtD(p50_final)} sub={`${gainPct > 0 ? '+' : ''}${gainPct.toFixed(1)}%`} tone={gain > 0 ? 'good' : 'bad'} />
+        <MetricCard label={<MetricTooltip metricKey="chance_of_profit">Chance of profit</MetricTooltip>}    value={`${Math.round(prob_profit * 100)}%`} tone={prob_profit > 0.6 ? 'good' : 'warning'} sub={`${n_simulations.toLocaleString()} simulations`} />
+        <MetricCard label={<MetricTooltip metricKey="chance_of_loss">Chance of -10% loss</MetricTooltip>} value={`${Math.round(prob_loss_10pct * 100)}%`} tone={prob_loss_10pct < 0.1 ? 'good' : prob_loss_10pct < 0.25 ? 'warning' : 'bad'} />
       </div>
 
       {/* Chart */}
@@ -151,12 +152,12 @@ export default function MonteCarlo({ data, heavyError }) {
         {/* Chart */}
         <div style={{ flex:1, minHeight:0 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top:8, right:8, bottom:0, left:8 }}>
+            <LineChart data={chartData} margin={{ top:8, right:8, bottom:6, left:8 }}>
               <XAxis
                 dataKey="day"
                 tick={{ fill:'var(--text-muted)', fontSize:10 }}
                 tickLine={false} axisLine={false}
-                label={{ value:'Trading days (252 = 1 year)', position:'insideBottom', offset:-2, fill:'var(--text-muted)', fontSize:10 }}
+                label={{ value:'Trading days (252 = 1 year)', position:'insideBottom', offset:4, fill:'var(--text-muted)', fontSize:10 }}
               />
               <YAxis
                 tickFormatter={v => `$${(v/1000).toFixed(0)}k`}
@@ -184,6 +185,7 @@ export default function MonteCarlo({ data, heavyError }) {
         <InsightBox
           label="Monte Carlo insight"
           tone={tone}
+          compact
           text={`Based on ${n_simulations.toLocaleString()} simulations, <strong>${Math.round(prob_profit*100)}%</strong> of futures end the year profitable. The median outcome is <strong>${fmtD(p50_final)}</strong> - a ${gainPct > 0 ? 'gain' : 'loss'} of <strong>${fmtD(Math.abs(gain))}</strong>. Good year: <strong>${fmtD(p95_final)}</strong>. Bad year: <strong>${fmtD(p5_final)}</strong>. ${prob_loss_10pct > 0.2 ? `Note: <strong>${Math.round(prob_loss_10pct*100)}% chance of losing 10%+</strong> - ensure you can hold through that.` : 'Past performance does not guarantee future results.'}`}
         />
       </div>
