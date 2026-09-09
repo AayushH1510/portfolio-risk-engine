@@ -10,12 +10,13 @@
 // bond baskets don't ("Gold", not "the Gold"). Set it per new entry (e.g.
 // Oil: '') rather than assuming — it doesn't follow from the ticker itself.
 export const BENCHMARKS = [
-  { ticker: 'SPY', label: 'S&P 500',         article: 'the ' },
-  { ticker: 'QQQ', label: 'Nasdaq 100',      article: 'the ' },
-  { ticker: 'VTI', label: 'Total US Market', article: 'the ' },
-  { ticker: 'GLD', label: 'Gold',            article: '' },
-  { ticker: 'SLV', label: 'Silver',          article: '' },
-  { ticker: 'AGG', label: 'US Bonds',        article: '' },
+  { ticker: 'SPY',  label: 'S&P 500',                  article: 'the ' },
+  { ticker: 'QQQ',  label: 'Nasdaq 100',                article: 'the ' },
+  { ticker: 'VTI',  label: 'Total US Market',           article: 'the ' },
+  { ticker: 'VXUS', label: 'Total International Market', article: 'the ' },
+  { ticker: 'GLD',  label: 'Gold',                      article: '' },
+  { ticker: 'SLV',  label: 'Silver',                    article: '' },
+  { ticker: 'AGG',  label: 'US Bonds',                  article: '' },
 ]
 
 export function getBenchmarkLabel(ticker) {
