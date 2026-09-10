@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Comparison from '../pages/Comparison'
+import InsightBox from './InsightBox'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 
@@ -52,6 +53,22 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
+
+      {/* Why this tab matters — same compact InsightBox pattern as Monte Carlo / Frontier / Valuation */}
+      <InsightBox
+        label="Why the comparison matters"
+        compact
+        text="Two portfolios, one fair fight. Not two sets of numbers side by side, a single question answered: which allocation would actually have served you better? The same Sharpe, drawdown, and VaR math runs on both. See which one earned its risk, not just which one felt right."
+      />
+
+      {/* Comparison error — Portfolio B failed to load. Rendered here, outside the
+          !hasRun config panel, so a failed Re-run after a successful comparison
+          still surfaces the error instead of silently leaving stale results up. */}
+      {error && (
+        <div style={{ fontSize: 12, color: 'var(--signal-negative)', padding: '8px 12px', background: 'rgba(var(--signal-negative-rgb),0.1)', flexShrink: 0 }}>
+          {error}
+        </div>
+      )}
 
       {/* Portfolio B config panel */}
       {!hasRun && (
@@ -202,12 +219,6 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
               ))}
             </div>
           </div>
-
-          {error && (
-            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--signal-negative)', padding: '6px 10px', background: 'rgba(var(--signal-negative-rgb),0.1)' }}>
-              {error}
-            </div>
-          )}
         </div>
       )}
 
