@@ -1,0 +1,114 @@
+PATCH NOTES — VARENSE
+
+v1.0 — CORE ENGINE
+
+Cholesky-correlated Monte Carlo simulation (replaces naive univariate sampling)
+Dual-confidence VaR and CVaR at 95% and 99%
+Diversification score (0-100) derived from average pairwise correlation
+Sector exposure breakdown, weighted by portfolio allocation
+Redis caching (Upstash) for price and fundamentals data, fail-open design
+Historical stress testing: 2008 Financial Crisis, COVID Crash, 2022 Rate Shock
+Full portfolio backtesting engine vs equal-weight and S&P 500
+Treynor Ratio and Information Ratio added
+Bear / Base / Bull Monte Carlo scenario toggle
+CSV export alongside existing PDF export
+
+v1.0.x — PRODUCT SHIFT
+
+Two landing pages built: retail (plain language) and pro (technical)
+First-time user onboarding tour + first-result callout
+Privacy and Terms pages
+In-app feedback button wired to Supabase
+Deployed live: frontend on Vercel, backend on Render, Redis on Upstash
+
+v1.0.x — BETA FEEDBACK ROUND
+
+Fixed: Stock Drawer returning NaN/None (root cause: Yahoo rate-limiting; migrated to Finnhub)
+Fixed: Valuation tab failing to load (migrated fundamentals to Finnhub)
+Fixed: Backtest chart lines overlapping when weights equal equal-split (dashed-line fix)
+Added: reusable metric tooltip system, dotted-underline pattern, applied to every Dashboard metric
+Added: "why this matters" explainer blocks (Risk Analysis, Returns Distribution, Stress Test)
+Rebuilt: Learn tab with 3 tiers — Baby Language, Individual Investor, Expert — 22 concepts, each grounded in real institutional/CFA-level sourcing
+Full regression pass across both landing pages, all 8 app tabs, stock drawer, feedback flow
+Fixed: stale Yahoo Finance references left over from Finnhub migration
+Added: cold-start loading skeletons for Sector Exposure and Portfolio Growth
+
+v1.1 — NEW LANDING PAGE + GITHUB README
+
+Rebuilt landing page as a full 12-block editorial page (hero, product plate, stats band, features, steps, pillars, pricing, FAQ, footer)
+Pricing section replaced with "free during beta" messaging (no tiers yet)
+Corrected market data attribution (Finnhub + Yahoo Finance, accurately split by use)
+Wrote full GitHub README covering architecture, maths decisions, API reference, local setup
+
+v1.1.x — REAL BUG FIXES
+
+Fixed: Compare tab crash — event object leaking into function parameter, causing missing date fields
+Fixed: saved portfolio switch not updating the ticker input field (stale local state)
+Reverted: unnecessary Drawdown card overflow fix from a prior misdiagnosis
+Fixed: Risk Gauge card missing its .card wrapper, causing inconsistent spacing vs sibling cards
+Tightened: Sector Exposure card padding/height
+Enlarged: Portfolio Growth chart within its existing card
+Fixed: SPX ticker misdiagnosed as "rate limited" instead of "ticker not found" (added TickerNotFoundError distinction across all yfinance paths)
+Added: explicit empty state for all-ETF portfolios in Sector Exposure (was silently blank)
+Added: Portfolio Growth "breakdown by holding" toggle — per-ticker cumulative return lines, own color palette, legend
+Independently verified chart data accuracy against Nasdaq's public historical API (confirmed correct to a fraction of a percent, gap fully explained by dividend-adjustment methodology)
+
+v1.1.x — METHODOLOGY PAGE
+
+Built full technical methodology page, sourced directly from the actual codebase, not textbook assumption
+Compared every implemented formula against its standard/textbook definition, flagged every divergence
+Discovered Information Ratio's arithmetic form is the canonical definition (Grinold & Kahn) — Sharpe/Sortino/Treynor are the ones deviating via CAGR, not the reverse
+Removed dead confidence field from API request schema (declared, never read)
+Corrected a false landing-page claim ("parametric and historical VaR" — only historical is implemented)
+
+v1.1.x — AUTH + SECURITY HARDENING
+
+Fixed: sign-in redirecting to landing page instead of back to /app (Supabase redirectTo bug)
+Added: rate limiting (slowapi) on all cost-generating endpoints (20-30 req/min per IP)
+Ran full secrets audit across entire git history — clean, no rotation needed
+Sanitized all generic error responses (no more raw exception messages to client), added server-side exception logging
+
+v1.2 — DOMAIN RENAME + VISUAL REBRAND
+
+Renamed live domain from portfolio-risk-engine.vercel.app to varense.vercel.app (code, Supabase auth config, Render CORS all updated)
+Full visual rebrand: new DESIGN.md system — warm espresso-brown palette, zero border radius, hairline borders, Geist/Geist Mono typography, signal-only color
+Token refactor: every hardcoded color/radius/font across ~30 files routed through CSS custom properties
+Added film grain texture and canvas vignette for material depth (multiple iterations to get opacity/contrast right; root-caused a z-index stacking bug that was hiding the effect entirely)
+Fixed: Risk Gauge card spacing (was missing standard card padding)
+Added: logo and favicon system (custom mark, solid-background favicon for tab visibility) applied across every page — sidebar, both landing pages, auth modal, methodology page, footer
+Swapped H1 headline font from all-Newsreader to Lora (regular weight) with Newsreader italic retained for emphasis word
+Replaced all em dashes with contextual hyphens/commas across every user-facing string (189 replacements, 25 files)
+Version bumped to v1.2
+
+Post v1.2
+Learn Tab Width bug fix
+Error handling on Run Analysis
+
+FOR LATER — from pre-launch regression test
+
+Yahoo Finance intermittently blocking/rate-limiting Render's IP for the CORE analysis endpoint (not just stock drawer/valuation, those are already on Finnhub), not urgent right now since the honest-error fix is in, but if this keeps recurring during testing, may eventually need to consider moving core historical price fetching off yfinance too, bigger decision, not todays fix
+ExportPDF.jsx has two style={{...}} props on the same element in two places (lines 82 and 128), JSX silently drops the first one, some intended PDF styling is likely being lost, Vite flags this as a build warning
+Valuation.jsx doesn't wire onTickerClick to open the Stock Drawer, even though CLAUDE.md documents it as wired there, clicking a row only selects it for the Key Metrics panel below, doc/reality mismatch, not a functional break
+
+STILL OPEN / QUEUED
+Other economical benchmarks like GOLD with SNP500
+Combination of APIs for different markets
+Test Casing more tickers not just 3 - 5 (Potn csv of ticker drop to analysis)
+graphs for each stress test like how its shown in drawdown in the dashboard tab
+Loading animation to be a moving graph not a default circle (check the feasibility and opp cost)
+Content Rework (Loading should specifically say this might tak eupto a minute to load all the cxomputations - make it sound better)
+More Animations on graphs and tab switching on dashboard /app page
+Streaming a single response — keep one endpoint, but stream results progressively as each piece computes. More elegant, but a bigger architectural lift (server-sent events or chunked responses), probably overkill for what you need right now.
+Mobile and tablet responsive layout (zero breakpoints currently)
+Volatility modeling (GARCH/EWMA) feeding into Monte Carlo
+3D graphs, editable themes for a Pro tier
+Tailwind cleanup (accidentally present in build, contradicts CLAUDE.md)
+Redis caching gap on /api/stress-test
+Ticker autocomplete / company name search (deliberately parked — risk of wrong-match if done carelessly, no silent auto-conversion)
+Crypto ticker support
+Marketing/branding: YouTube video, VSL funnel
+Payment plans and logic
+About Us / Our Story page (mission, origin story, team bios, core values)
+Server-side rendering or equivalent for bot/crawler indexing
+Page speed optimization
+Open decision, not yet resolved: should Sharpe/Sortino/Treynor switch to CAGR-consistent annualization, or match the more conventional arithmetic form? Methodology page documents the tradeoff honestly without deciding.

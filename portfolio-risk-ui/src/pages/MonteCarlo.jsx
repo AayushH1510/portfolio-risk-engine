@@ -110,15 +110,22 @@ export default function MonteCarlo({ data, heavyError }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12, height:'100%' }}>
 
+      {/* Why three scenarios */}
+      <InsightBox
+        label="Why three scenarios, not one"
+        compact
+        text="Most tools show you one future. This shows you three, the realistic downside, the expected path, and the upside if things go right. See how your exact portfolio holds up before the market decides for you."
+      />
+
       {/* Scenario toggle */}
       <ScenarioToggle scenario={scenario} onChange={setScenario} />
 
       {/* Metrics row */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:10, flexShrink:0 }}>
-        <MetricCard label={<MetricTooltip metricKey="starting_value">Starting value</MetricTooltip>}      value={fmtD(portfolio_value)} tone="neutral" />
-        <MetricCard label={<MetricTooltip metricKey="median_outcome">Median outcome</MetricTooltip>}      value={fmtD(p50_final)} sub={`${gainPct > 0 ? '+' : ''}${gainPct.toFixed(1)}%`} tone={gain > 0 ? 'good' : 'bad'} />
-        <MetricCard label={<MetricTooltip metricKey="chance_of_profit">Chance of profit</MetricTooltip>}    value={`${Math.round(prob_profit * 100)}%`} tone={prob_profit > 0.6 ? 'good' : 'warning'} sub={`${n_simulations.toLocaleString()} simulations`} />
-        <MetricCard label={<MetricTooltip metricKey="chance_of_loss">Chance of -10% loss</MetricTooltip>} value={`${Math.round(prob_loss_10pct * 100)}%`} tone={prob_loss_10pct < 0.1 ? 'good' : prob_loss_10pct < 0.25 ? 'warning' : 'bad'} />
+        <MetricCard small label={<MetricTooltip metricKey="starting_value">Starting value</MetricTooltip>}      value={fmtD(portfolio_value)} tone="neutral" />
+        <MetricCard small label={<MetricTooltip metricKey="median_outcome">Median outcome</MetricTooltip>}      value={fmtD(p50_final)} sub={`${gainPct > 0 ? '+' : ''}${gainPct.toFixed(1)}%`} tone={gain > 0 ? 'good' : 'bad'} />
+        <MetricCard small label={<MetricTooltip metricKey="chance_of_profit">Chance of profit</MetricTooltip>}    value={`${Math.round(prob_profit * 100)}%`} tone={prob_profit > 0.6 ? 'good' : 'warning'} sub={`${n_simulations.toLocaleString()} simulations`} />
+        <MetricCard small label={<MetricTooltip metricKey="chance_of_loss">Chance of 10% Loss</MetricTooltip>} value={`${Math.round(prob_loss_10pct * 100)}%`} tone={prob_loss_10pct < 0.1 ? 'good' : prob_loss_10pct < 0.25 ? 'warning' : 'bad'} />
       </div>
 
       {/* Chart */}
@@ -155,6 +162,7 @@ export default function MonteCarlo({ data, heavyError }) {
             <LineChart data={chartData} margin={{ top:8, right:8, bottom:6, left:8 }}>
               <XAxis
                 dataKey="day"
+                height={42}
                 tick={{ fill:'var(--text-muted)', fontSize:10 }}
                 tickLine={false} axisLine={false}
                 label={{ value:'Trading days (252 = 1 year)', position:'insideBottom', offset:4, fill:'var(--text-muted)', fontSize:10 }}

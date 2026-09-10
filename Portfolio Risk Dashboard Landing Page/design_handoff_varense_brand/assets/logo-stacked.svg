@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 88" width="58" height="88" fill="none" role="img" aria-label="Varense">
+  <g>
+    <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+    <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+  </g>
+  <text x="29" y="82" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="500" font-size="24" letter-spacing="-0.84" fill="#F6F1EA">Varense</text>
+</svg>

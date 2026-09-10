@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #0C0908; color: #EFE7DE; font-family: Archivo, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  ::selection { background: #EFE7DE; color: #0C0908; }
+  a { color: #5CC49B; text-decoration: none; }
+  a:hover { color: #8AD8B8; }
+</style>
+</helmet>
+
+<div style="position: relative; background: #0C0908; min-height: 100vh;">
+
+  <div style="position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0.35; mix-blend-mode: overlay; background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E&quot;);"></div>
+
+  <header style="max-width: 1100px; margin: 0 auto; padding: 110px 48px 90px;">
+    <div style="display: flex; align-items: center; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #7C6E62; margin-bottom: 44px;">
+      <span>Varense</span>
+      <span style="color: #4A3F35;">/</span>
+      <span>Brand system</span>
+      <span style="color: #4A3F35;">/</span>
+      <span>v1.0</span>
+    </div>
+    <h1 style="font-family: Archivo, sans-serif; font-weight: 500; font-size: clamp(46px, 6.4vw, 88px); line-height: 1.0; letter-spacing: -0.04em; margin: 0 0 32px; color: #F6F1EA; max-width: 900px; text-wrap: balance;">One hue, two signals, and a mark that draws what the engine computes.</h1>
+    <p style="font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #A79A8D; max-width: 620px; margin: 0; text-wrap: pretty;">The identity is a single espresso luminance ramp. Colour is not decoration here — it is reserved, and it means something specific twice.</p>
+  </header>
+
+  <section style="max-width: 1100px; margin: 0 auto; padding: 0 48px 120px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6055; padding-top: 16px; border-top: 1px solid #241D16; margin-bottom: 56px;">01 — The mark</div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: clamp(40px, 5vw, 80px); align-items: center;">
+      <div style="position: relative; aspect-ratio: 1; border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; display: flex; align-items: center; justify-content: center; padding: 10%;">
+        <svg viewBox="0 0 64 64" style="width: 100%; height: auto; display: block;">
+          <sc-if value="{{ showConstruction }}" hint-placeholder-val="{{ true }}">
+            <g stroke="#352C24" fill="none" stroke-width="0.4">
+              <line x1="32" y1="9" x2="32" y2="52" stroke-dasharray="1.5 1.5"></line>
+              <line x1="1" y1="48" x2="63" y2="48" stroke-dasharray="1.5 1.5"></line>
+              <line x1="1" y1="10.95" x2="63" y2="10.95" stroke-dasharray="1.5 1.5"></line>
+              <line x1="5" y1="40" x2="5" y2="52" stroke-dasharray="1.5 1.5"></line>
+              <line x1="59" y1="40" x2="59" y2="52" stroke-dasharray="1.5 1.5"></line>
+              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5"></path>
+            </g>
+          </sc-if>
+          <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+          <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+        </svg>
+      </div>
+
+      <div>
+        <h2 style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 22px; color: #F6F1EA;">The envelope, and the path inside it.</h2>
+        <p style="font-size: 16.5px; line-height: 1.7; color: #8E8175; margin: 0 0 20px; max-width: 460px;">A domed envelope spanning the full range of outcomes, a baseline, and the realised path climbing through the middle of it. The envelope is where the portfolio could have gone. The path is where it went.</p>
+        <p style="font-size: 16.5px; line-height: 1.7; color: #8E8175; margin: 0 0 20px; max-width: 460px;">The baseline is load-bearing, not ornament. Without it the dome collapses into the signal-strength glyph every device in the world already uses; with it, the shape can only be read as a chart.</p>
+        <p style="font-size: 16.5px; line-height: 1.7; color: #8E8175; margin: 0 0 34px; max-width: 460px;">One ink, one stroke weight, no gradient and no fill above 24px — so it reproduces identically in foil, embroidery, and a 16-pixel favicon.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 22px 30px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.7;">
+          <div>
+            <div style="color: #6E6055; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Grid</div>
+            <div style="color: #C9BFB3;">64 × 64</div>
+          </div>
+          <div>
+            <div style="color: #6E6055; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Envelope</div>
+            <div style="color: #C9BFB3;">rx 27 · ry 30 · large-arc</div>
+          </div>
+          <div>
+            <div style="color: #6E6055; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Dome</div>
+            <div style="color: #C9BFB3;">54 wide × 37 tall</div>
+          </div>
+          <div>
+            <div style="color: #6E6055; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Stroke</div>
+            <div style="color: #C9BFB3;">3.5 · miter</div>
+          </div>
+          <div>
+            <div style="color: #6E6055; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px;">Baseline</div>
+            <div style="color: #C9BFB3;">y = 48</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1100px; margin: 0 auto; padding: 0 48px 120px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6055; padding-top: 16px; border-top: 1px solid #241D16; margin-bottom: 56px;">02 — Lockups</div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; overflow: hidden;">
+        <div style="min-height: 220px; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <svg viewBox="3 9 58 41" style="width: 44px; height: 31px; display: block; flex: none;">
+              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+              <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+            </svg>
+            <span style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 32px; color: #F6F1EA; letter-spacing: {{ wordmarkTracking }}; text-transform: {{ wordmarkTransform }};">Varense</span>
+          </div>
+        </div>
+        <div style="border-top: 1px solid #1C1611; padding: 16px 22px; display: flex; justify-content: space-between; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">
+          <span>Horizontal</span>
+          <span>min 104px wide</span>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; overflow: hidden;">
+        <div style="min-height: 220px; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+            <svg viewBox="3 9 58 41" style="width: 58px; height: 41px; display: block;">
+              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+              <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+            </svg>
+            <span style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 24px; color: #F6F1EA; letter-spacing: {{ wordmarkTracking }}; text-transform: {{ wordmarkTransform }};">Varense</span>
+          </div>
+        </div>
+        <div style="border-top: 1px solid #1C1611; padding: 16px 22px; display: flex; justify-content: space-between; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">
+          <span>Stacked</span>
+          <span>min 58px wide</span>
+        </div>
+      </div>
+
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; overflow: hidden;">
+        <div style="min-height: 220px; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="position: relative; padding: 26px; border: 1px dashed #2A221B;">
+            <svg viewBox="3 9 58 41" style="width: 62px; height: 44px; display: block;">
+              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+              <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+            </svg>
+          </div>
+        </div>
+        <div style="border-top: 1px solid #1C1611; padding: 16px 22px; display: flex; justify-content: space-between; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">
+          <span>Mark only</span>
+          <span>clear space = 0.4×</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; line-height: 1.8; color: #6E6055; margin: 26px 0 0; max-width: 660px;">Construction at reference size — horizontal: mark 44 × 31, gap 14, wordmark Archivo 500 at 32, vertically centred on the mark. Stacked: mark 58 × 41, gap 14, wordmark at 24, centred on the mark's vertical axis. Clear space is 0.4× the mark width on all four sides. Scale the lockup as a whole; never the parts independently.</p>
+  </section>
+
+  <section style="max-width: 1100px; margin: 0 auto; padding: 0 48px 120px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6055; padding-top: 16px; border-top: 1px solid #241D16; margin-bottom: 56px;">03 — Icon &amp; favicon</div>
+
+    <h2 style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 20px; color: #F6F1EA; max-width: 620px;">Full path at 180. Single peak at 32. Solid mass at 16.</h2>
+    <p style="font-size: 16.5px; line-height: 1.7; color: #8E8175; margin: 0 0 50px; max-width: 560px;">Every size step removes detail from the path and never from the envelope. The dome and its baseline are the identity; the path is the story they contain, and it is the only part allowed to simplify.</p>
+
+    <div style="display: flex; align-items: flex-end; gap: clamp(28px, 4vw, 56px); flex-wrap: wrap; margin-bottom: 40px;">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="width: 180px; height: 180px; border-radius: 40px; background: #16110D; border: 1px solid #241D16; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="3 9 58 41" style="width: 116px; height: 82px; display: block;">
+            <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+            <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="3.5"></path>
+          </svg>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">180 · app icon</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="width: 64px; height: 64px; border-radius: 14px; background: #16110D; border: 1px solid #241D16; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="3 9 58 41" style="width: 44px; height: 31px; display: block;">
+            <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#F6F1EA" stroke-width="4.5"></path>
+            <path d="M5,48 L18,48 L36,34 L48,48 L59,48" fill="none" stroke="#F6F1EA" stroke-width="4.5"></path>
+          </svg>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">32 · tab</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="width: 40px; height: 40px; border-radius: 9px; background: #16110D; border: 1px solid #241D16; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="2 5 60 45" style="width: 32px; height: 24px; display: block;">
+            <path d="M5.6,43 A27,30 0 1 1 58.4,43" fill="none" stroke="#F6F1EA" stroke-width="6"></path>
+            <path d="M16,48 L36,29 L56,48 Z" fill="#F6F1EA"></path>
+            <line x1="4" y1="48" x2="60" y2="48" stroke="#F6F1EA" stroke-width="6"></line>
+          </svg>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">16 · favicon</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="width: 64px; height: 64px; border-radius: 14px; background: #EFE7DE; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="3 9 58 41" style="width: 44px; height: 31px; display: block;">
+            <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="#100C0A" stroke-width="4.5"></path>
+            <path d="M5,48 L18,48 L36,34 L48,48 L59,48" fill="none" stroke="#100C0A" stroke-width="4.5"></path>
+          </svg>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">Inverse</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; border: 1px solid #241D16; border-radius: 8px; overflow: hidden;">
+      <div style="background: #100C0A; box-shadow: 0 0 0 1px #241D16; padding: 24px 26px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; margin-bottom: 10px;">Icon field</div>
+        <div style="font-size: 15px; line-height: 1.65; color: #8E8175;">Bone mark on <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #C9BFB3;">#16110D</span>, never on pure black. Corner radius is 22% of the icon width.</div>
+      </div>
+      <div style="background: #100C0A; box-shadow: 0 0 0 1px #241D16; padding: 24px 26px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; margin-bottom: 10px;">Balance</div>
+        <div style="font-size: 15px; line-height: 1.65; color: #8E8175;">The envelope is symmetric about x = 32. The path inside it deliberately is not — never mirror it, straighten it, or recentre its peak.</div>
+      </div>
+      <div style="background: #100C0A; box-shadow: 0 0 0 1px #241D16; padding: 24px 26px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; margin-bottom: 10px;">Never</div>
+        <div style="font-size: 15px; line-height: 1.65; color: #8E8175;">No gradient, no accent-coloured mark, no rotation. Never close the envelope into a full circle, and never drop the baseline.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1100px; margin: 0 auto; padding: 0 48px 120px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6055; padding-top: 16px; border-top: 1px solid #241D16; margin-bottom: 56px;">04 — Typography</div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 70px;">
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; padding: 38px 34px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 28px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #5CC49B;">Primary</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6055;">400 · 500 · 600</span>
+        </div>
+        <div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 54px; line-height: 1; letter-spacing: -0.04em; color: #F6F1EA; margin-bottom: 18px;">Archivo</div>
+        <div style="font-family: Archivo, sans-serif; font-weight: 400; font-size: 15px; line-height: 1.6; color: #8E8175; word-break: break-all;">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</div>
+        <div style="margin-top: 26px; padding-top: 22px; border-top: 1px solid #1C1611; font-size: 15px; line-height: 1.65; color: #8E8175;">Every headline and every line of prose. Tight negative tracking at display sizes is what keeps it from reading generic.</div>
+      </div>
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; padding: 38px 34px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 28px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #5CC49B;">Data</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #6E6055;">400 · 500</span>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: #F6F1EA; margin-bottom: 18px;">Plex Mono</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 14px; line-height: 1.6; color: #8E8175; word-break: break-all;">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789</div>
+        <div style="margin-top: 26px; padding-top: 22px; border-top: 1px solid #1C1611; font-size: 15px; line-height: 1.65; color: #8E8175;">Every label, every figure, every button. Tabular by default so columns of numbers never shift.</div>
+      </div>
+    </div>
+
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #7C6E62; margin-bottom: 24px;">The scale — 18 named steps</div>
+
+    <div style="border-top: 1px solid #241D16;">
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; padding: 12px 0; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; border-bottom: 1px solid #1C1611;">
+        <span>Token</span>
+        <span>Spec</span>
+        <span>Specimen</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">display-xl</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 46→88px · 1.0 · -0.04em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: clamp(46px, 6.4vw, 88px); line-height: 1.0; letter-spacing: -0.04em; color: #F6F1EA;">Varense</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">display-l</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 38→64px · 1.05 · -0.035em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: clamp(38px, 5vw, 64px); line-height: 1.05; letter-spacing: -0.035em; color: #F6F1EA;">Know the tail</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">display-m</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 32→52px · 1.1 · -0.03em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: clamp(32px, 4vw, 52px); line-height: 1.1; letter-spacing: -0.03em; color: #F6F1EA;">Section heading</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">display-s</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 38px · 1.15 · -0.025em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 38px; line-height: 1.15; letter-spacing: -0.025em; color: #F6F1EA;">Feature heading</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">heading-l</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 30px · 1.2 · -0.02em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 30px; line-height: 1.2; letter-spacing: -0.02em; color: #F6F1EA;">Run the engine</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">heading-m</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 500 · 24px · 1.25 · -0.015em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 24px; line-height: 1.25; letter-spacing: -0.015em; color: #F6F1EA;">Correlation is a hidden position</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">heading-s</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 600 · 19px · 1.35 · -0.01em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 600; font-size: 19px; line-height: 1.35; letter-spacing: -0.01em; color: #F6F1EA;">No brokerage connection</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">lead</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 400 · 19px · 1.6 · -0.005em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 400; font-size: 19px; line-height: 1.6; letter-spacing: -0.005em; color: #F6F1EA;">The arithmetic a desk runs on a book of billions.</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">body-l</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 400 · 17px · 1.65</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 400; font-size: 17px; line-height: 1.65; color: #F6F1EA;">Enter your tickers and weights.</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">body-m</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 400 · 15.5px · 1.65</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 400; font-size: 15.5px; line-height: 1.65; color: #F6F1EA;">Average outcomes are comfortable and useless.</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">body-s</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Archivo 400 · 13.5px · 1.6</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: Archivo, sans-serif; font-weight: 400; font-size: 13.5px; line-height: 1.6; color: #F6F1EA;">Not financial advice. Past performance guarantees nothing.</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">label-l</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 500 · 12.5px · 0.08em · caps</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 12.5px; line-height: 1.4; letter-spacing: 0.08em; text-transform: uppercase; color: #F6F1EA;">Launch the app</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">label-m</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 11px · 0.16em · caps</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 11px; line-height: 1.4; letter-spacing: 0.16em; text-transform: uppercase; color: #F6F1EA;">Value at risk</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">label-s</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 10px · 0.18em · caps</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 10px; line-height: 1.4; letter-spacing: 0.18em; text-transform: uppercase; color: #F6F1EA;">Max drawdown</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">data-xl</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 44px · 1.0 · -0.02em</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 44px; line-height: 1.0; letter-spacing: -0.02em; color: #F6F1EA;">1,000</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">data-l</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 26px · 1.1</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 26px; line-height: 1.1; color: #C9544B;">−$245</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">data-m</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 19px · 1.2</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 19px; line-height: 1.2; color: #F6F1EA;">33.6%</div></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 210px) minmax(0, 1fr); gap: 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid #1C1611;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #C9BFB3;">caption</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.6; color: #6E6055;">Plex Mono 400 · 12px · 1.7</div>
+        <div style="min-width: 0; overflow: hidden;"><div style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 12px; line-height: 1.7; color: #F6F1EA;">Σ → LLᵀ · 252 trading days</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1100px; margin: 0 auto; padding: 0 48px 140px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6055; padding-top: 16px; border-top: 1px solid #241D16; margin-bottom: 56px;">05 — Ink</div>
+
+    <h2 style="font-family: Archivo, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 44px; color: #F6F1EA; max-width: 560px;">One ramp. Two exceptions.</h2>
+
+    <div style="display: flex; border: 1px solid #241D16; border-radius: 8px; overflow: hidden; margin-bottom: 18px;">
+      <div style="flex: 1; height: 76px; background: #0C0908;"></div>
+      <div style="flex: 1; height: 76px; background: #100C0A;"></div>
+      <div style="flex: 1; height: 76px; background: #16110D;"></div>
+      <div style="flex: 1; height: 76px; background: #241D16;"></div>
+      <div style="flex: 1; height: 76px; background: #352C24;"></div>
+      <div style="flex: 1; height: 76px; background: #4A3F35;"></div>
+      <div style="flex: 1; height: 76px; background: #6E6055;"></div>
+      <div style="flex: 1; height: 76px; background: #8E8175;"></div>
+      <div style="flex: 1; height: 76px; background: #A79A8D;"></div>
+      <div style="flex: 1; height: 76px; background: #C9BFB3;"></div>
+      <div style="flex: 1; height: 76px; background: #EFE7DE;"></div>
+      <div style="flex: 1; height: 76px; background: #F6F1EA;"></div>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6E6055; margin-bottom: 60px; display: flex; justify-content: space-between; gap: 16px;">
+      <span>#0C0908 — ground</span>
+      <span>#F6F1EA — bone</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; padding: 32px; display: flex; flex-direction: column; gap: 22px;">
+        <div style="height: 72px; border-radius: 6px; background: #5CC49B;"></div>
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; margin-bottom: 8px;">Interaction</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #C9BFB3; margin-bottom: 14px;">#5CC49B</div>
+          <div style="font-size: 15px; line-height: 1.65; color: #8E8175;">Buttons, links, active states, focus rings. Never on a chart, never on a figure. If it appears next to a number, it is wrong.</div>
+        </div>
+      </div>
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; padding: 32px; display: flex; flex-direction: column; gap: 22px;">
+        <div style="height: 72px; border-radius: 6px; background: #C9544B;"></div>
+        <div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6055; margin-bottom: 8px;">Loss</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #C9BFB3; margin-bottom: 14px;">#C9544B</div>
+          <div style="font-size: 15px; line-height: 1.65; color: #8E8175;">Realised and projected loss only — VaR, CVaR, drawdown, the left tail. Never a button, never a border, never decoration.</div>
+        </div>
+      </div>
+      <div style="border: 1px solid #1C1611; border-radius: 10px; background: #100C0A; padding: 32px; display: flex; flex-direction: column; gap: 22px; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">VaR 95%</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; color: #C9544B;">−$180</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6055;">Sharpe</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; color: #F6F1EA;">1.48</span>
+          </div>
+        </div>
+        <div style="font-size: 15px; line-height: 1.65; color: #8E8175; padding-top: 20px; border-top: 1px solid #1C1611;">Positive figures are bone, not green. Only loss earns a hue — which is what makes it register.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top: 1px solid #1C1611;">
+    <div style="max-width: 1100px; margin: 0 auto; padding: 40px 48px; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: #6E6055;">
+      <span>Varense brand system v1.0</span>
+      <span>Two typefaces. One ramp. Two signals.</span>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showConstruction&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Mark&quot;},&quot;wordmarkCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Sentence case&quot;,&quot;Uppercase&quot;],&quot;default&quot;:&quot;Sentence case&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Wordmark&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const upper = (this.props.wordmarkCase ?? 'Sentence case') === 'Uppercase';
+    return {
+      showConstruction: this.props.showConstruction ?? true,
+      wordmarkTransform: upper ? 'uppercase' : 'none',
+      wordmarkTracking: upper ? '0.02em' : '-0.035em'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

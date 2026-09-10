@@ -1,0 +1,289 @@
+{
+  "$comment": "Varense brand v1.0. SUPERSEDES the color.accent and font blocks of the landing-page tokens.json — see README > Reconciling with the landing page.",
+  "meta": {
+    "name": "Varense",
+    "version": "1.0.0",
+    "colorMode": "dark-only",
+    "policy": "Monotone espresso ramp + exactly two reserved accents"
+  },
+  "color": {
+    "ramp": {
+      "$comment": "One hue, luminance only. 12 steps, ground to bone.",
+      "ground": {
+        "value": "#0C0908",
+        "use": "page canvas"
+      },
+      "panel": {
+        "value": "#100C0A",
+        "use": "cards, tiles"
+      },
+      "inset": {
+        "value": "#16110D",
+        "use": "inputs, icon field, metric wells"
+      },
+      "line": {
+        "value": "#241D16",
+        "use": "card borders, dividers"
+      },
+      "lineStrong": {
+        "value": "#352C24",
+        "use": "input borders, construction guides"
+      },
+      "lineHover": {
+        "value": "#4A3F35",
+        "use": "interactive border hover"
+      },
+      "ghost": {
+        "value": "#6E6055",
+        "use": "mono captions, legends, disabled"
+      },
+      "dim": {
+        "value": "#8E8175",
+        "use": "body copy in cards"
+      },
+      "muted": {
+        "value": "#A79A8D",
+        "use": "lead paragraphs"
+      },
+      "secondary": {
+        "value": "#C9BFB3",
+        "use": "emphasised data, secondary labels"
+      },
+      "body": {
+        "value": "#EFE7DE",
+        "use": "default body text"
+      },
+      "bone": {
+        "value": "#F6F1EA",
+        "use": "headlines, the mark, positive figures"
+      }
+    },
+    "subtleLine": {
+      "value": "#1C1611",
+      "use": "section band boundaries — between ground and panel"
+    },
+    "accent": {
+      "interaction": {
+        "value": "#5CC49B",
+        "use": "Buttons, links, active states, focus rings ONLY.",
+        "never": "Never on a chart, never on a figure. If it appears next to a number it is wrong."
+      },
+      "loss": {
+        "value": "#C9544B",
+        "use": "Realised and projected loss ONLY — VaR, CVaR, drawdown, the left tail.",
+        "never": "Never a button, never a border, never decoration. Large text only — fails AA at body sizes on ground."
+      }
+    },
+    "$rule": "Positive figures are bone (#F6F1EA), NOT green. Loss is the only hue in the data layer — that scarcity is what makes it register."
+  },
+  "font": {
+    "primary": {
+      "family": "Archivo",
+      "fallback": "system-ui, -apple-system, sans-serif",
+      "weights": [
+        400,
+        500,
+        600
+      ],
+      "source": "@fontsource-variable/archivo",
+      "use": "Every headline and every line of prose. Tight negative tracking at display sizes is what keeps it from reading generic."
+    },
+    "data": {
+      "family": "IBM Plex Mono",
+      "fallback": "ui-monospace, SFMono-Regular, monospace",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "@fontsource/ibm-plex-mono",
+      "use": "Every label, every figure, every button. Tabular by default so number columns never shift."
+    },
+    "$rule": "Two families, no third. Newsreader is retired."
+  },
+  "type": {
+    "display-xl": {
+      "font": "primary",
+      "weight": 500,
+      "size": "clamp(46px, 6.4vw, 88px)",
+      "leading": 1,
+      "tracking": "-0.04em"
+    },
+    "display-l": {
+      "font": "primary",
+      "weight": 500,
+      "size": "clamp(38px, 5vw, 64px)",
+      "leading": 1.05,
+      "tracking": "-0.035em"
+    },
+    "display-m": {
+      "font": "primary",
+      "weight": 500,
+      "size": "clamp(32px, 4vw, 52px)",
+      "leading": 1.1,
+      "tracking": "-0.03em"
+    },
+    "display-s": {
+      "font": "primary",
+      "weight": 500,
+      "size": "38px",
+      "leading": 1.15,
+      "tracking": "-0.025em"
+    },
+    "heading-l": {
+      "font": "primary",
+      "weight": 500,
+      "size": "30px",
+      "leading": 1.2,
+      "tracking": "-0.02em"
+    },
+    "heading-m": {
+      "font": "primary",
+      "weight": 500,
+      "size": "24px",
+      "leading": 1.25,
+      "tracking": "-0.015em"
+    },
+    "heading-s": {
+      "font": "primary",
+      "weight": 600,
+      "size": "19px",
+      "leading": 1.35,
+      "tracking": "-0.01em"
+    },
+    "lead": {
+      "font": "primary",
+      "weight": 400,
+      "size": "19px",
+      "leading": 1.6,
+      "tracking": "-0.005em"
+    },
+    "body-l": {
+      "font": "primary",
+      "weight": 400,
+      "size": "17px",
+      "leading": 1.65
+    },
+    "body-m": {
+      "font": "primary",
+      "weight": 400,
+      "size": "15.5px",
+      "leading": 1.65
+    },
+    "body-s": {
+      "font": "primary",
+      "weight": 400,
+      "size": "13.5px",
+      "leading": 1.6
+    },
+    "label-l": {
+      "font": "data",
+      "weight": 500,
+      "size": "12.5px",
+      "leading": 1.4,
+      "tracking": "0.08em",
+      "transform": "uppercase"
+    },
+    "label-m": {
+      "font": "data",
+      "weight": 400,
+      "size": "11px",
+      "leading": 1.4,
+      "tracking": "0.16em",
+      "transform": "uppercase"
+    },
+    "label-s": {
+      "font": "data",
+      "weight": 400,
+      "size": "10px",
+      "leading": 1.4,
+      "tracking": "0.18em",
+      "transform": "uppercase"
+    },
+    "data-xl": {
+      "font": "data",
+      "weight": 400,
+      "size": "44px",
+      "leading": 1,
+      "tracking": "-0.02em"
+    },
+    "data-l": {
+      "font": "data",
+      "weight": 400,
+      "size": "26px",
+      "leading": 1.1
+    },
+    "data-m": {
+      "font": "data",
+      "weight": 400,
+      "size": "19px",
+      "leading": 1.2
+    },
+    "caption": {
+      "font": "data",
+      "weight": 400,
+      "size": "12px",
+      "leading": 1.7
+    }
+  },
+  "logo": {
+    "$comment": "Geometry is authoritative. Render via Logo.jsx — never inline the paths.",
+    "grid": "64 × 64 authoring grid",
+    "envelope": {
+      "path": "M5.19,44.5 A27,30 0 1 1 58.81,44.5",
+      "radii": "rx 27 · ry 30 · large-arc-flag 1",
+      "dome": "54 wide × 37 tall",
+      "$warn": "large-arc=1 puts cy≈40.95. A plain rx27/ry30 half-ellipse is 7u too shallow."
+    },
+    "realisedPath": {
+      "full": "M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48",
+      "simple": "M5,48 L18,48 L36,34 L48,48 L59,48"
+    },
+    "baseline": "y = 48",
+    "stroke": {
+      "standard": 3.5,
+      "at32": 4.5,
+      "at16": 6,
+      "join": "miter",
+      "cap": "butt"
+    },
+    "viewBox": {
+      "standard": "3 9 58 41",
+      "solid16": "2 5 60 45",
+      "$warn": "Content spans y 10.95→48. A viewBox starting at y=14 clips the apex."
+    },
+    "detailLadder": [
+      "≥64px — full path, stroke 3.5",
+      "32px — simple path (single peak), stroke 4.5",
+      "16px — solid filled peak + heavy baseline, stroke 6"
+    ],
+    "lockups": {
+      "horizontal": "mark 44×31, gap 14, wordmark Archivo 500 @32px, vertically centred. Min 104px wide.",
+      "stacked": "mark 58×41, gap 14, wordmark @24px, centred on vertical axis. Min 58px wide.",
+      "clearSpace": "0.4× mark width, all four sides",
+      "$rule": "Scale the lockup as a whole. Never the parts independently."
+    },
+    "iconField": {
+      "background": "#16110D",
+      "cornerRadius": "22% of icon width",
+      "$rule": "Never on pure black."
+    },
+    "never": [
+      "No gradient, no accent-coloured mark, no rotation",
+      "Never close the envelope into a full circle",
+      "Never drop the baseline",
+      "Never mirror, straighten, or recentre the realised path — the envelope is symmetric, the path deliberately is not"
+    ]
+  },
+  "texture": {
+    "grain": {
+      "$comment": "Fixed full-viewport overlay. Carries most of the premium feel — do not omit.",
+      "opacity": 0.35,
+      "blendMode": "overlay",
+      "tileSize": 160,
+      "baseFrequency": 0.85,
+      "octaves": 3,
+      "zIndex": 60,
+      "css": "position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0.35; mix-blend-mode: overlay; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\");"
+    }
+  }
+}
