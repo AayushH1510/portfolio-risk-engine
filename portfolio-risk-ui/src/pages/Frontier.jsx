@@ -138,10 +138,14 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
 
     const retRange = Math.max(...allReturns) - Math.min(...allReturns)
     const volRange = Math.max(...allVols)    - Math.min(...allVols)
-    const minV = Math.min(...allVols)    - volRange * 0.04
-    const maxV = Math.max(...allVols)    + volRange * 0.04
-    const minR = Math.min(...allReturns) - retRange * 0.02
-    const maxR = Math.max(...allReturns) + retRange * 0.08
+    // Extra breathing room on the left / bottom: the efficient-frontier
+    // markers that matter (min-vol, max-Sharpe, and often the user's own dot)
+    // naturally bunch at the low-vol edge, so a tight pad jams them against
+    // the axis. Only widens the view — point positions / curve shape unchanged.
+    const minV = Math.min(...allVols)    - volRange * 0.11
+    const maxV = Math.max(...allVols)    + volRange * 0.06
+    const minR = Math.min(...allReturns) - retRange * 0.07
+    const maxR = Math.max(...allReturns) + retRange * 0.11
     const minS = Math.min(...sharpes), maxS = Math.max(...sharpes)
 
     const toX = v => PAD.left + (v - minV) / (maxV - minV) * PW
