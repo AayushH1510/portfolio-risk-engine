@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
 import HeavyTierPending from '../components/HeavyTierPending'
+import InsightBox from '../components/InsightBox'
 
 const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : '-'
 const fmtN = (v, d = 2) => v != null ? v.toFixed(d) : '-'
@@ -285,6 +286,13 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+
+      {/* Why the mix matters */}
+      <InsightBox
+        label="Why the mix matters"
+        compact
+        text="You already picked the stocks. This shows if you picked the right mix. Somewhere on this curve is the version of your portfolio that gets more return for the same risk, or the same return for less. See how close you already are."
+      />
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>

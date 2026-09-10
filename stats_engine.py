@@ -400,8 +400,16 @@ def compute_efficient_frontier(
     raw_weights = np.random.random((n_portfolios, n_assets))
     all_weights = raw_weights / raw_weights.sum(axis=1, keepdims=True)
 
-    log_rets      = np.log1p(returns.values)
-    port_log_rets = log_rets @ all_weights.T
+    # Blend the arithmetic daily returns to a per-day portfolio return first,
+    # THEN log1p — so every simulated portfolio's annualised return is the
+    # exact CAGR of its daily-rebalanced return series, identical in method to
+    # compute_annualised_return. Applying log1p per asset before weighting
+    # (log1p(r) @ w rather than log1p(r @ w)) makes it a weighted geometric
+    # mean of asset totals, which sits ~2-3pp below the real portfolio CAGR by
+    # Jensen's inequality and drifts the whole cloud off the "Your portfolio"
+    # dot's return axis.
+    port_daily    = returns.values @ all_weights.T
+    port_log_rets = np.log1p(port_daily)
     log_sums      = port_log_rets.sum(axis=0)
     all_returns   = np.exp(log_sums * (TRADING_DAYS / n_obs)) - 1
 
