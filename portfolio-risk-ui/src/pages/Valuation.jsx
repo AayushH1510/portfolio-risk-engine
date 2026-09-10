@@ -122,7 +122,10 @@ export default function Valuation({ tickers, onTickerClick }) {
         const firstWithData = list.find(d => !d.error && !d.is_fund)
         setSelected((firstWithData || list[0])?.ticker)
       })
-      .catch(e => setError(errorMessage(e, 'Failed to load fundamentals')))
+      // Same neutral fallback as useAnalysis / useComparison — errorMessage()
+      // still surfaces the backend's real `detail` when there is one; this
+      // line only shows for network-level failures that carry no response.
+      .catch(e => setError(errorMessage(e, 'Something went wrong loading data. Please try again in a moment.')))
       .finally(() => setLoading(false))
   }, [tickers.join(',')])
 
@@ -181,6 +184,14 @@ export default function Valuation({ tickers, onTickerClick }) {
         />
       ) : (
       <>
+      {/* Why fundamentals matter — only shown when there's a real table to introduce;
+          the all-funds branch above already carries its own honest explanation. */}
+      <InsightBox
+        label="Why fundamentals, not just price"
+        compact
+        text="Price tells you what the market thinks. Fundamentals tell you why. This ranks each holding on what it earns, how fast it's growing, and how much debt it's carrying, then surfaces the risk flags and strengths automatically so you don't have to dig for them. See whether the numbers back up the price."
+      />
+
       {/* Valuation table */}
       <div className="card" style={{ padding:0, overflow:'hidden', flexShrink:0 }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
