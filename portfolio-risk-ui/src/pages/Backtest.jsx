@@ -2,7 +2,8 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import HeavyTierPending from '../components/HeavyTierPending'
-import { getBenchmarkLabel } from '../lib/benchmarks'
+import InsightBox from '../components/InsightBox'
+import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
 
@@ -154,6 +155,15 @@ export default function Backtest({ data, tickers, heavyError }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
+
+      {/* Why this tab matters — same compact InsightBox pattern as the other tabs.
+          Benchmark is named dynamically (getBenchmarkPhrase) so the copy stays
+          accurate for whichever benchmark is selected, never hardcodes "S&P 500". */}
+      <InsightBox
+        label="Why run the backtest"
+        compact
+        text={`Stop guessing whether your weights make sense. This runs your exact allocation through the real historical period, side by side with a plain equal split and ${getBenchmarkPhrase(data.benchmark)}, same buy-and-hold, same dates for all three. See which one would actually have come out ahead.`}
+      />
 
       {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, flexShrink: 0 }}>
