@@ -16,6 +16,7 @@ export const BENCHMARKS = [
   { ticker: 'VXUS', label: 'Total International Market', article: 'the ' },
   { ticker: 'GLD',  label: 'Gold',                      article: '' },
   { ticker: 'SLV',  label: 'Silver',                    article: '' },
+  { ticker: 'USO',  label: 'Oil',                        article: '' },
   { ticker: 'AGG',  label: 'US Bonds',                  article: '' },
 ]
 
