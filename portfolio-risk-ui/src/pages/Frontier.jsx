@@ -243,16 +243,32 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
     if (max_sharpe_vol != null) {
       specRef.current.push({ px: toX(max_sharpe_vol), py: toY(max_sharpe_return), radius: 12, type: 'optimal', label: 'Optimal Portfolio', vol: max_sharpe_vol, ret: max_sharpe_return, sharpe: max_sharpe_sharpe, color: 'var(--signal-caution)', glow: 'rgba(var(--signal-caution-rgb),0.19)' })
       const opX = toX(max_sharpe_vol), opY = toY(max_sharpe_return)
-      let frame = 0; cancelAnimationFrame(animRef.current)
-      const animate = () => {
-        const a = 0.06 + 0.05*Math.sin(frame*0.04), r = 10+Math.sin(frame*0.04)*2
-        ctx.beginPath(); ctx.arc(opX,opY,r,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a})`); ctx.lineWidth=2; ctx.stroke()
-        ctx.beginPath(); ctx.arc(opX,opY,r*0.6,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a*1.5})`); ctx.lineWidth=1; ctx.stroke()
+      cancelAnimationFrame(animRef.current)
+      // Same reduced-motion check used in lib/motion/scroll-motion.ts and
+      // Hero.jsx — reused as-is rather than a second detection path.
+      const prefersReducedMotion = typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const drawOptimalMarker = (r, a) => {
+        if (!prefersReducedMotion) {
+          ctx.beginPath(); ctx.arc(opX,opY,r,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a})`); ctx.lineWidth=2; ctx.stroke()
+          ctx.beginPath(); ctx.arc(opX,opY,r*0.6,0,Math.PI*2); ctx.strokeStyle=cssVar(`rgba(var(--signal-caution-rgb),${a*1.5})`); ctx.lineWidth=1; ctx.stroke()
+        }
         drawCrosshair(ctx,opX,opY,5,'var(--signal-caution)'); drawDiamond(ctx,opX,opY,6,'var(--signal-caution)','rgba(var(--text-primary-rgb),0.65)')
         ctx.beginPath(); ctx.arc(opX,opY,2,0,Math.PI*2); ctx.fillStyle=cssVar('var(--text-primary)'); ctx.fill()
-        frame++; animRef.current = requestAnimationFrame(animate)
       }
-      animRef.current = requestAnimationFrame(animate)
+      if (prefersReducedMotion) {
+        // Resting state — the base radius/alpha the pulse oscillates around
+        // (frame=0 in the loop below), drawn once with no rings and no rAF loop.
+        drawOptimalMarker(10, 0.06)
+      } else {
+        let frame = 0
+        const animate = () => {
+          const a = 0.06 + 0.05*Math.sin(frame*0.04), r = 10+Math.sin(frame*0.04)*2
+          drawOptimalMarker(r, a)
+          frame++; animRef.current = requestAnimationFrame(animate)
+        }
+        animRef.current = requestAnimationFrame(animate)
+      }
     }
     return () => cancelAnimationFrame(animRef.current)
   }, [data])
@@ -289,7 +305,7 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
   const optimalWeights = max_sharpe_weights ? Object.entries(max_sharpe_weights).map(([t,w]) => ({ ticker: t, w })) : []
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto' }}>
 
       {/* Why the mix matters */}
       <InsightBox
