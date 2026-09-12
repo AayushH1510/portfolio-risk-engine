@@ -108,7 +108,7 @@ export default function MonteCarlo({ data, heavyError }) {
   const tone    = prob_profit > 0.75 ? 'good' : prob_profit > 0.5 ? 'warning' : 'bad'
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12, height:'100%' }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:12, height:'100%', overflowY:'auto' }}>
 
       {/* Why three scenarios */}
       <InsightBox

@@ -32,7 +32,7 @@ export default function AuthModal({ onSignInGoogle, onSignInEmail, onSignUpEmail
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: 360, background: 'var(--surface-card)',
+          width: 360, maxWidth: 'calc(100vw - 32px)', background: 'var(--surface-card)',
           border: 'var(--border-emphasis)',
           padding: '28px 28px 24px',
         }}

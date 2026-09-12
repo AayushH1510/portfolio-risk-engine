@@ -176,12 +176,12 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const secondCols = `repeat(${secondRowItems.length}, 1fr)`
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
 
       <FirstResultCallout />
 
       {/* Period pills */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
           <div key={i} style={{
             fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',

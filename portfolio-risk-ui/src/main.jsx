@@ -18,10 +18,12 @@ import Methodology from './pages/Methodology.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import StylePreview from './pages/StylePreview.jsx'
+import DebugViewportBadge from './components/DebugViewportBadge.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+      <DebugViewportBadge />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/pro" element={<LandingPro />} />

@@ -193,7 +193,8 @@ export default function Valuation({ tickers, onTickerClick }) {
       />
 
       {/* Valuation table */}
-      <div className="card" style={{ padding:0, overflow:'hidden', flexShrink:0 }}>
+      <div className="card" style={{ padding:0, flexShrink:0 }}>
+        <div style={{ overflowX: 'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
           <thead>
             <tr style={{ borderBottom:'1px solid rgba(var(--text-primary-rgb),0.06)' }}>
@@ -288,6 +289,7 @@ export default function Valuation({ tickers, onTickerClick }) {
             })}
           </tbody>
         </table>
+        </div>
 
         {/* Score explanation */}
         <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(var(--text-primary-rgb),0.04)', fontSize:10, color:'var(--text-muted)', lineHeight:1.6 }}>
