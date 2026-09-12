@@ -8,3 +8,5 @@ portfolio-risk-ui/dist/
 portfolio-risk-ui/node_modules/
 portfolio-risk-ui/src/landing-theme.css
 portfolio-risk-ui/screenshots/
+
+.vercel
