@@ -138,30 +138,62 @@ async function measureOverflow(page) {
     // reports an element's true laid-out box even when a clipping ancestor
     // stops it from painting, so walk every element and take the widest
     // right edge — this catches that case too, and names the culprit.
+    //
+    // But not every clipping ancestor is a bug: overflow-x:auto/scroll (the
+    // header tab bar, Backtest/Valuation's table wrappers) means the extra
+    // width is reachable via scroll, not lost — unlike overflow:hidden,
+    // which really does make content unreachable. So only auto/scroll
+    // ancestors get excluded from maxRight here; hidden ancestors still
+    // count (that's the case this function exists for in the first place).
+    // An element only counts as "contained" by a given ancestor if that
+    // ancestor is currently actually overflowing (scrollWidth > clientWidth)
+    // AND the element's own right edge is the thing poking past that
+    // ancestor's visible edge — not merely sitting inside an auto/scroll
+    // container that isn't currently overflowing at all.
+    function containingScrollAncestor(el) {
+      let a = el.parentElement
+      while (a) {
+        const cs = getComputedStyle(a)
+        if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && a.scrollWidth > a.clientWidth + 1) {
+          const ar = a.getBoundingClientRect()
+          const er = el.getBoundingClientRect()
+          if (er.right > ar.right + 0.5) return a
+        }
+        a = a.parentElement
+      }
+      return null
+    }
+
     let maxRight = clientWidth
     let widestSelector = null
+    let containedOverflowCount = 0
     for (const el of document.querySelectorAll('body *')) {
       const r = el.getBoundingClientRect()
-      if (r.width > 0 && r.right > maxRight) {
+      if (r.width === 0 || r.right <= clientWidth) continue
+      if (containingScrollAncestor(el)) {
+        containedOverflowCount++
+        continue
+      }
+      if (r.right > maxRight) {
         maxRight = r.right
         const cls = typeof el.className === 'string' && el.className.trim()
           ? '.' + el.className.trim().split(/\s+/).join('.') : ''
         widestSelector = el.tagName.toLowerCase() + cls
       }
     }
-    return { scrollWidth, clientWidth, maxRight: Math.round(maxRight), widestSelector }
+    return { scrollWidth, clientWidth, maxRight: Math.round(maxRight), widestSelector, containedOverflowCount }
   })
 }
 
 async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
-  const { scrollWidth, clientWidth, maxRight, widestSelector } = await measureOverflow(page)
+  const { scrollWidth, clientWidth, maxRight, widestSelector, containedOverflowCount } = await measureOverflow(page)
   const overflowsHorizontally = scrollWidth > clientWidth + 1 || maxRight > clientWidth + 1
   const file = path.join(outDir, `${slug}.png`)
   await page.screenshot({ path: file, fullPage: true })
   results.push({
     viewport: viewportLabel, view: slug,
     file: path.relative(ROOT, file),
-    scrollWidth, clientWidth, maxRight, widestSelector, overflowsHorizontally,
+    scrollWidth, clientWidth, maxRight, widestSelector, containedOverflowCount, overflowsHorizontally,
     ...extra,
     ok: true,
   })
