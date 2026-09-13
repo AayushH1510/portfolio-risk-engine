@@ -41,13 +41,16 @@ const DEFAULT_ROUTES = ['/', '/pro', '/methodology', '/app', '/privacy', '/terms
 const HEIGHT_FOR_WIDTH = {
   320: 568,   // iPhone SE (1st gen) — narrowest width still seen in the wild
   360: 740,   // common Android (e.g. Galaxy S8)
+  384: 854,   // Samsung Galaxy A54, Chrome, DPR 2.8125 — real device in QA rotation
   393: 852,   // iPhone 14/15/16 portrait
   440: 956,   // large Android (e.g. Pixel 7 Pro-class)
   768: 1024,  // iPad portrait
   1024: 768,  // iPad landscape / small laptop
+  1280: 800,  // common laptop
+  1366: 768,  // most common laptop width in the wild
   1440: 900,  // desktop
 }
-const DEFAULT_WIDTHS = [320, 360, 393, 440, 768, 1024, 1440]
+const DEFAULT_WIDTHS = [320, 360, 384, 393, 440, 768, 1024, 1280, 1366, 1440]
 // One explicit landscape viewport — the portrait/landscape pair of the same
 // physical phone (393x852 portrait above), since width-only sweeps never
 // catch a phone rotated sideways into a short, wide viewport.
@@ -196,6 +199,40 @@ async function robustClick(locator, timeout = 3000) {
   }
 }
 
+// Clicking a header tab is not just "did Playwright's click() not throw."
+// force:true still aims at the element's normal (mouse-coordinate) center
+// point — when the nav container's clientWidth is 0 (narrow viewports, see
+// captureAppViews below), that point resolves to nothing or to an unrelated
+// element, so the click silently lands on empty space: no exception, no tab
+// switch, and every subsequent screenshot quietly re-captures whatever tab
+// was already active. Caught via App.jsx's aria-current="page" marker (set
+// on the active tab button) — verify after each attempt, and only escalate
+// to locator.dispatchEvent('click'), which fires the DOM event directly on
+// the node regardless of its screen position, if the state genuinely didn't
+// change.
+async function clickTab(page, tab) {
+  const locator = page.getByRole('button', { name: tab.label, exact: true })
+  const isActive = () => locator.getAttribute('aria-current').then(v => v === 'page')
+
+  let forced = false, dispatched = false
+  try {
+    await locator.click({ timeout: 2000 })
+  } catch {
+    forced = true
+    await locator.click({ force: true, timeout: 2000 })
+  }
+  await page.waitForTimeout(120)
+
+  if (!(await isActive())) {
+    dispatched = true
+    await locator.dispatchEvent('click')
+    await page.waitForTimeout(120)
+  }
+
+  const verified = await isActive()
+  return { forced, dispatched, verified }
+}
+
 // Drives the app past the Run Analysis gate (and, for Compare, its own
 // Run comparison gate), then screenshots each of the 8 tabs by clicking
 // through the header tab bar, plus the sign-in modal as its own view.
@@ -238,9 +275,23 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
       // The header tab bar (App.jsx) is wider than the room a fixed 260px
       // sidebar leaves it at narrow viewports — a tab's own click point can
       // end up positioned past the right edge of the viewport entirely, not
-      // covered by anything, just off-screen. robustClick() surfaces that
-      // as `forced: true` rather than silently working around it.
-      const forced = await robustClick(page.getByRole('button', { name: tab.label, exact: true }))
+      // covered by anything, just off-screen. clickTab() surfaces that as
+      // `forced: true`, and — critically — verifies via aria-current that
+      // the tab actually switched rather than trusting a non-throwing
+      // click(); a forced click at a zero-width nav aims at a point that
+      // resolves to nothing, so it can "succeed" while doing nothing at all.
+      // clientWidth === 0 here means there is no room for nav at all — the
+      // fixed 260px sidebar plus the header's own auth cluster (sign-in +
+      // account badge, which must stay visible per design) leave nothing,
+      // independent of nav's own scroll mechanics. That's a sidebar-width
+      // constraint, not something a header-only fix can close; expected to
+      // clear once the sidebar becomes a collapsible drawer (Phase A) —
+      // recorded per-view below, not treated as a regression.
+      const navClientWidth = await page.locator('nav.tab-bar-scroll').evaluate(el => el.clientWidth).catch(() => null)
+      const { forced, dispatched, verified } = await clickTab(page, tab)
+      if (!verified) {
+        console.error(`  WARN  ${viewportLabel.padEnd(20)} app-${tab.id.padEnd(12)} tab click did not switch activeTab (still showing whatever was active before) — capturing anyway, flagged in manifest`)
+      }
       // Heavier canvas/chart tabs get a touch longer to finish drawing.
       await page.waitForTimeout(['montecarlo', 'frontier', 'backtest'].includes(tab.id) ? 1100 : 700)
 
@@ -251,14 +302,44 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
         }
       }
 
-      await capture(page, outDir, `app-${tab.id}`, viewportLabel, results, { tabClickForced: forced })
+      await capture(page, outDir, `app-${tab.id}`, viewportLabel, results, {
+        tabClickForced: forced, tabClickDispatched: dispatched, tabSwitchVerified: verified,
+        navClientWidth, blockedBySidebar: navClientWidth === 0,
+      })
     }
 
-    const signIn = page.getByRole('button', { name: 'Sign in', exact: true })
+    // Scoped to the header specifically: at least one app tab's own content
+    // (e.g. the "Sign in to save your portfolios" callout, or a Compare/Learn
+    // CTA) can render a second "Sign in"-labelled control once real tab
+    // content is reachable, which makes an unscoped role/name lookup
+    // ambiguous (strict-mode violation) even though it never surfaced back
+    // when forced clicks were silently failing to reach that content at all.
+    const signIn = page.getByRole('banner').getByRole('button', { name: 'Sign in', exact: true })
     if (await signIn.count()) {
-      const forced = await robustClick(signIn)
-      await page.waitForTimeout(400)
-      await capture(page, outDir, 'app-auth-modal', viewportLabel, results, { tabClickForced: forced })
+      let forced = false, dispatched = false
+      try {
+        await signIn.click({ timeout: 2000 })
+      } catch {
+        forced = true
+        await signIn.click({ force: true, timeout: 2000 })
+      }
+      await page.waitForTimeout(300)
+      let verified = await page.getByText('Sign in to your account').isVisible().catch(() => false)
+      if (!verified) {
+        dispatched = true
+        await signIn.dispatchEvent('click')
+        await page.waitForTimeout(300)
+        verified = await page.getByText('Sign in to your account').isVisible().catch(() => false)
+      }
+      if (!verified) console.error(`  WARN  ${viewportLabel.padEnd(20)} app-auth-modal      sign-in click did not open the modal`)
+      // Same header squeeze as the tab bar — the sign-in button lives in the
+      // same fixed-260px-sidebar-constrained header row, so it's blocked by
+      // the same known cause, not a separate issue.
+      const navClientWidth = await page.locator('nav.tab-bar-scroll').evaluate(el => el.clientWidth).catch(() => null)
+      await capture(page, outDir, 'app-auth-modal', viewportLabel, results, {
+        tabClickForced: forced, tabClickDispatched: dispatched, tabSwitchVerified: verified,
+        navClientWidth, blockedBySidebar: navClientWidth === 0,
+      })
     }
   } catch (err) {
     console.error(`  FAIL  ${viewportLabel.padEnd(20)} app-views -> ${err.message}`)
@@ -303,6 +384,9 @@ async function main() {
   const failed     = results.filter(r => !r.ok)
   const overflowing = results.filter(r => r.ok && r.overflowsHorizontally)
   const forcedClicks = results.filter(r => r.ok && r.tabClickForced)
+  const sidebarBlocked = forcedClicks.filter(r => r.blockedBySidebar)
+  const unexpectedForced = forcedClicks.filter(r => !r.blockedBySidebar)
+  const unverifiedSwitches = results.filter(r => r.ok && r.tabSwitchVerified === false)
   writeFileSync(path.join(ROOT, out, 'manifest.json'), JSON.stringify(results, null, 2))
 
   console.log(`\n${results.length - failed.length}/${results.length} screenshots written.`)
@@ -310,11 +394,19 @@ async function main() {
     console.log(`\n${overflowing.length} view(s) overflow horizontally:`)
     for (const o of overflowing) console.log(`  ${o.viewport.padEnd(20)} ${o.view.padEnd(20)} maxRight=${o.maxRight} > clientWidth=${o.clientWidth}  (widest: ${o.widestSelector || '?'})`)
   }
-  if (forcedClicks.length) {
-    console.log(`\n${forcedClicks.length} view(s) needed a forced click to reach (the real click point was off-screen or unreachable):`)
-    for (const f of forcedClicks) console.log(`  ${f.viewport.padEnd(20)} ${f.view}`)
+  if (sidebarBlocked.length) {
+    console.log(`\n${sidebarBlocked.length} view(s) needed a forced click, blocked by the fixed 260px sidebar (nav.clientWidth === 0 — no header-only fix closes this) — expected until the sidebar/drawer redesign, not a regression:`)
+    for (const f of sidebarBlocked) console.log(`  ${f.viewport.padEnd(20)} ${f.view}`)
   }
-  if (failed.length) process.exitCode = 1
+  if (unexpectedForced.length) {
+    console.log(`\n${unexpectedForced.length} view(s) needed a forced click for an UNEXPECTED reason (nav had nonzero clientWidth — investigate, this is not the known sidebar constraint):`)
+    for (const f of unexpectedForced) console.log(`  ${f.viewport.padEnd(20)} ${f.view}`)
+  }
+  if (unverifiedSwitches.length) {
+    console.log(`\n${unverifiedSwitches.length} view(s) may show the WRONG tab's content — click (even forced) never actually switched activeTab, verified via aria-current, even after a direct dispatchEvent('click'):`)
+    for (const u of unverifiedSwitches) console.log(`  ${u.viewport.padEnd(20)} ${u.view}`)
+  }
+  if (failed.length || unexpectedForced.length || unverifiedSwitches.length) process.exitCode = 1
 }
 
 main()

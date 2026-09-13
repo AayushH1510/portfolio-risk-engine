@@ -53,6 +53,8 @@ export default function App() {
   // below re-fires — a second /api/fundamentals round-trip and a "Loading
   // sector exposure…" flicker — for the exact same portfolio composition.
   const sectorFetchKeyRef = useRef(null)
+  const tabBarRef = useRef(null)
+  const tabRefs   = useRef({})
 
   const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
   const analysis = useAnalysis()
@@ -105,6 +107,16 @@ export default function App() {
       .catch(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorData(null) })
       .finally(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorLoading(false) })
   }, [data])
+
+  // Keep the active tab in view when the header bar overflows (narrow
+  // widths). scrollLeft = offsetLeft rather than scrollIntoView(): the
+  // latter walks up and scrolls ancestors too, and the app shell above
+  // this is overflow:hidden, which turns that into visible surprises.
+  useEffect(() => {
+    const container = tabBarRef.current
+    const activeEl  = tabRefs.current[activeTab]
+    if (container && activeEl) container.scrollLeft = activeEl.offsetLeft
+  }, [activeTab])
 
   const handleLoadPortfolio = (p) => {
     analysis.setTickers(p.tickers)
@@ -171,14 +183,24 @@ export default function App() {
           borderBottom: 'var(--border-default)',
           flexShrink: 0, minWidth: 0, overflow: 'hidden',
         }}>
-          <nav style={{ display: 'flex', gap: 0, height: '100%', alignItems: 'stretch', overflowX: 'auto', flexShrink: 1, minWidth: 0 }}>
+          <nav
+            ref={tabBarRef}
+            className="tab-bar-scroll"
+            style={{
+              display: 'flex', gap: 0, height: '100%', alignItems: 'stretch',
+              overflowX: 'auto', flex: 1, minWidth: 0, position: 'relative',
+              scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x proximity',
+            }}
+          >
             {TABS.map(tab => {
               const active   = activeTab === tab.id
               const unlocked = tab.id === 'learn' || tab.id === 'valuation' || tab.id === 'dashboard' || tab.id === 'compare' || hasRun
               return (
                 <button
                   key={tab.id}
+                  ref={el => { tabRefs.current[tab.id] = el }}
                   onClick={() => unlocked && setActiveTab(tab.id)}
+                  aria-current={active ? 'page' : undefined}
                   style={{
                     padding: '0 10px', fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)',
                     letterSpacing: 'var(--tracking-tab)', textTransform: 'uppercase',
@@ -188,6 +210,7 @@ export default function App() {
                     color: active ? 'var(--text-primary)' : !unlocked ? 'var(--text-faint)' : 'var(--text-muted)',
                     cursor: !unlocked ? 'not-allowed' : 'pointer',
                     transition: 'all var(--duration-fast) var(--ease-standard)', whiteSpace: 'nowrap', flexShrink: 0,
+                    scrollSnapAlign: 'start',
                   }}
                 >
                   {tab.label}
@@ -198,10 +221,10 @@ export default function App() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
             {hasRun && (
-              <>
+              <div className="header-export-actions">
                 <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} />
                 <ExportCSV data={data} tickers={tickers} weights={weights} />
-              </>
+              </div>
             )}
 
             {authLoading ? null : user ? (

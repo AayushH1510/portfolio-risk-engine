@@ -84,6 +84,14 @@
   --card-padding:   16px 20px;
   --element-gap:    12px;
 
+  /* Breakpoints — named per DESIGN.md's layout-value convention, alongside
+     --sidebar-width/--page-max-width above. Media queries can't reference
+     custom properties in their condition, so consumers still write the
+     literal px value in the @media rule itself; these exist as the documented
+     source of truth for what that literal should be. Two tiers only. */
+  --breakpoint-phone:  768px;
+  --breakpoint-tablet: 1024px;
+
   /* Motion */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast:     120ms;
@@ -265,6 +273,25 @@ body {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); }
+
+/* Header tab bar (App.jsx) — horizontally scrollable at any width, with the
+   scrollbar itself hidden (scrollbarWidth:'none' inline handles Firefox;
+   ::-webkit-scrollbar has no inline-style equivalent, hence this rule). */
+.tab-bar-scroll::-webkit-scrollbar { display: none; }
+
+/* Header export actions (App.jsx) — hidden below --breakpoint-phone (768px)
+   so the tab bar has room to actually render instead of being squeezed to
+   zero width by the sidebar + this cluster combined. Visibility only, no
+   restyling of the buttons themselves. These move into the sidebar drawer
+   in a later phase; this is the first half of that migration, not a
+   permanent removal. Sign-in stays visible at every width.
+   display/alignItems/gap live here rather than inline on the element so the
+   media query below can actually win — an inline style always beats a
+   stylesheet rule regardless of media-query match. */
+.header-export-actions { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 767px) {
+  .header-export-actions { display: none; }
+}
 
 /* Shared grain texture — one definition, reused via .grain-canvas (page
    background, ~7% opacity) and .grain-surface (sidebar/cards, ~4% opacity).
