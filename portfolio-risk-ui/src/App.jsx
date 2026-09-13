@@ -55,6 +55,16 @@ export default function App() {
   const sectorFetchKeyRef = useRef(null)
   const tabBarRef = useRef(null)
   const tabRefs   = useRef({})
+  // Below --breakpoint-tablet the sidebar is a closed-by-default off-canvas
+  // drawer (see .sidebar-shell, index.css) — this is the single source of
+  // truth for open/closed, shared by the hamburger, the backdrop, and
+  // Sidebar's own Escape/focus-trap handling. Meaningless at 1024px+ (CSS
+  // resets the sidebar to a normal column regardless of this value).
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // OnboardingTour's anchors all live inside the sidebar — while it's
+  // running, the drawer needs to stay open and Run Analysis (step 4's own
+  // anchor) must not auto-close it out from under the tour.
+  const [tourActive, setTourActive]   = useState(false)
 
   const { user, loading: authLoading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth()
   const analysis = useAnalysis()
@@ -118,6 +128,15 @@ export default function App() {
     if (container && activeEl) container.scrollLeft = activeEl.offsetLeft
   }, [activeTab])
 
+  // Open the drawer the moment the tour starts. A no-op visually at
+  // 1024px+ (CSS ignores sidebarOpen there), so this doesn't need its own
+  // width check.
+  useEffect(() => {
+    if (tourActive) setSidebarOpen(true)
+  }, [tourActive])
+
+  const closeSidebarDrawer = () => setSidebarOpen(false)
+
   const handleLoadPortfolio = (p) => {
     analysis.setTickers(p.tickers)
     analysis.setWeightsAll(p.weights)
@@ -138,7 +157,7 @@ export default function App() {
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'PR'
 
   return (
-    <div className="grain-canvas" style={{ height: '100vh', overflow: 'hidden', background: 'var(--surface-canvas)', position: 'relative' }}>
+    <div className="grain-canvas app-shell" style={{ overflow: 'hidden', background: 'var(--surface-canvas)', position: 'relative' }}>
       <div className="vignette-layer" />
 
       <div style={{ display: 'flex', height: '100%', position: 'relative', zIndex: 1 }}>
@@ -158,13 +177,20 @@ export default function App() {
         onClose={closeDrawer}
       />
 
-      <OnboardingTour />
+      <OnboardingTour onActiveChange={setTourActive} />
       <FeedbackButton user={user} />
+
+      {/* Backdrop — only visible/interactive below 1024px (.sidebar-backdrop,
+          index.css); mounting it unconditionally on sidebarOpen is safe
+          since it's display:none at 1024px+ regardless of this state. */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={closeSidebarDrawer} />
+      )}
 
       <Sidebar
         {...analysis}
         setWeightsAll={analysis.setWeightsAll}
-        onRun={(customDates) => runAnalysis(customDates)}
+        onRun={(customDates) => runAnalysis(customDates, () => { if (!tourActive) closeSidebarDrawer() })}
         loading={loading}
         portfolios={portfolios}
         onSavePortfolio={savePortfolio}
@@ -172,6 +198,8 @@ export default function App() {
         onDeletePortfolio={deletePortfolio}
         user={user}
         onTickerClick={openDrawer}
+        drawerOpen={sidebarOpen}
+        onCloseDrawer={closeSidebarDrawer}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
@@ -183,6 +211,22 @@ export default function App() {
           borderBottom: 'var(--border-default)',
           flexShrink: 0, minWidth: 0, overflow: 'hidden',
         }}>
+          <button
+            className="sidebar-hamburger"
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+            aria-expanded={sidebarOpen}
+            style={{
+              width: 44, height: 44, flexShrink: 0, marginRight: 2,
+              alignItems: 'center', justifyContent: 'center',
+              background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+            }}
+          >
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+              <path d="M0 1H18M0 7H18M0 13H18" stroke="var(--text-primary)" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+
           <nav
             ref={tabBarRef}
             className="tab-bar-scroll"
@@ -338,12 +382,12 @@ export default function App() {
         </main>
 
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
           padding: '6px 20px', fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
           borderTop: 'var(--border-default)', background: 'transparent', flexShrink: 0,
         }}>
           <span>Varense - educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
-          <span style={{ display: 'flex', gap: 12, flexShrink: 0, marginLeft: 12 }}>
+          <span style={{ display: 'flex', gap: 12, marginLeft: 12 }}>
             <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
             <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>
           </span>

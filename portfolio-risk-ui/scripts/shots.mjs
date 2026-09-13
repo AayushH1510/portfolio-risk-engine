@@ -186,6 +186,13 @@ async function measureOverflow(page) {
 }
 
 async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
+  // Web fonts (Geist Sans/Mono, index.html) load from a CDN — a screenshot
+  // taken before they've swapped in uses a fallback font with different
+  // metrics, which can shift wrapped/stacked layout height enough to change
+  // what's visible before an internal overflowY:auto region's scroll cuts
+  // it off (confirmed: two runs of identical code differed by up to 9% at
+  // 1440 on some app tabs, entirely from this, before this wait existed).
+  await page.evaluate(() => document.fonts.ready).catch(() => {})
   const { scrollWidth, clientWidth, maxRight, widestSelector, containedOverflowCount } = await measureOverflow(page)
   const overflowsHorizontally = scrollWidth > clientWidth + 1 || maxRight > clientWidth + 1
   const file = path.join(outDir, `${slug}.png`)
@@ -286,6 +293,28 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
     for (const rx of [/^skip/i, /got it/i]) {
       const btn = page.getByRole('button', { name: rx })
       if (await btn.count()) { try { await btn.first().click({ timeout: 800 }) } catch {} }
+    }
+
+    // Phase A: below --breakpoint-tablet (1024px) the sidebar is a
+    // closed-by-default off-canvas drawer — its inputs are off-screen
+    // (translateX(-100%)) until the hamburger opens it. The hamburger
+    // itself is CSS-hidden at 1024px+, so isVisible() here doubles as the
+    // "is there a drawer to open" check.
+    const hamburger = page.getByRole('button', { name: /open sidebar/i })
+    if (await hamburger.isVisible().catch(() => false)) {
+      try {
+        await hamburger.click({ timeout: 2000 })
+      } catch {
+        await hamburger.click({ force: true, timeout: 2000 })
+      }
+      await page.waitForTimeout(350)
+      if (await page.locator('aside.sidebar-open').count() === 0) {
+        await hamburger.dispatchEvent('click')
+        await page.waitForTimeout(350)
+      }
+      if (await page.locator('aside.sidebar-open').count() === 0) {
+        console.error(`  WARN  ${viewportLabel.padEnd(20)} app-views           sidebar drawer did not open — sidebar inputs may be unreachable`)
+      }
     }
 
     // Match the sidebar's portfolio composition to the fixture's, so labels

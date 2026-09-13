@@ -279,18 +279,111 @@ body {
    ::-webkit-scrollbar has no inline-style equivalent, hence this rule). */
 .tab-bar-scroll::-webkit-scrollbar { display: none; }
 
-/* Header export actions (App.jsx) — hidden below --breakpoint-phone (768px)
-   so the tab bar has room to actually render instead of being squeezed to
-   zero width by the sidebar + this cluster combined. Visibility only, no
-   restyling of the buttons themselves. These move into the sidebar drawer
-   in a later phase; this is the first half of that migration, not a
-   permanent removal. Sign-in stays visible at every width.
+/* Header export actions (App.jsx) — hidden below --breakpoint-tablet (1024px):
+   Phase A moves Export PDF/CSV into the sidebar drawer at those widths (see
+   .sidebar-export-actions below), so the header copy only needs to render
+   at 1024px+ now, where the sidebar is a normal flex-item column again.
    display/alignItems/gap live here rather than inline on the element so the
    media query below can actually win — an inline style always beats a
    stylesheet rule regardless of media-query match. */
 .header-export-actions { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .header-export-actions { display: none; }
+}
+
+/* App shell root (App.jsx) — 100vh first as the universal fallback, then
+   100dvh as a progressive-enhancement override: unsupported browsers keep
+   the 100vh rule (the later, unrecognized declaration is simply ignored),
+   supporting ones get the dynamic viewport height that actually excludes a
+   mobile browser's collapsible toolbar. Can't express "two values, second
+   wins if supported" via a JS style object (duplicate keys aren't valid),
+   hence this lives in CSS rather than App.jsx's inline style. */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Sidebar drawer (Sidebar.jsx's <aside>) — mobile-first default is a
+   fixed, off-canvas overlay; --breakpoint-tablet (1024px) and up restores
+   the original flex-item column exactly. Stays mounted at all times —
+   only ever translated, never unmounted (App.jsx owns the open/closed
+   state) — so in-progress sidebar input survives an open/close cycle.
+   width/minWidth/flexShrink/position all move here from Sidebar.jsx's
+   inline style because they differ by breakpoint and open state; nothing
+   else about the aside's own appearance changes.
+
+   Selector is `aside.sidebar-shell`, not `.sidebar-shell` alone: the aside
+   also carries `.grain-surface` (for its texture pseudo-element), whose own
+   rule sets `position: relative` and sits later in this file — at equal
+   class-only specificity the later rule wins regardless of which one you
+   meant to win, silently resetting this to `relative` and un-fixing the
+   drawer. Adding the element type raises specificity just enough to make
+   that ordering irrelevant. */
+aside.sidebar-shell {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: min(320px, 88vw);
+  min-width: 0;
+  flex-shrink: 0;
+  z-index: 550;
+  transform: translateX(-100%);
+  transition: transform var(--duration-standard) var(--ease-standard);
+}
+aside.sidebar-shell.sidebar-open {
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  aside.sidebar-shell { transition: none; }
+}
+@media (min-width: 1024px) {
+  aside.sidebar-shell {
+    position: relative;
+    top: auto; left: auto; bottom: auto;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    z-index: auto;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Backdrop scrim behind the open drawer (App.jsx) — flat, no blur/shadow/
+   radius per DESIGN.md Core Rules. Invisible and non-interactive at
+   1024px+, where the sidebar is back to being a normal column and there is
+   nothing to dim. */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(var(--black-rgb), 0.5);
+  border: none;
+}
+@media (min-width: 1024px) {
+  .sidebar-backdrop { display: none; }
+}
+
+/* Hamburger trigger (App.jsx header) — only meaningful below 1024px, where
+   the sidebar is a closed-by-default drawer that needs a way to open it. */
+.sidebar-hamburger { display: flex; }
+@media (min-width: 1024px) {
+  .sidebar-hamburger { display: none; }
+}
+
+/* Export PDF/CSV inside the sidebar (Sidebar.jsx, below Run Analysis) — the
+   drawer-width counterpart to .header-export-actions above; visible only
+   below 1024px (shown only when hasRun, gated in JS). */
+.sidebar-export-actions { display: flex; gap: 8px; margin-top: 10px; }
+@media (min-width: 1024px) {
+  .sidebar-export-actions { display: none; }
+}
+
+/* Sidebar resize handle (Sidebar.jsx) — mouse-only drag (no touch
+   equivalent), so hide it specifically on coarse-pointer devices rather
+   than by width: a touch-capable tablet above 1024px still shouldn't get a
+   drag handle it can't use, and this makes that existing mouse-only
+   behaviour explicit instead of implicit. */
+@media (pointer: coarse) {
+  .sidebar-resize-handle { display: none; }
 }
 
 /* Shared grain texture — one definition, reused via .grain-canvas (page

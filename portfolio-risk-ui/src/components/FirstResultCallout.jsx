@@ -3,6 +3,7 @@ import { useState, useEffect, useLayoutEffect } from 'react'
 const STORAGE_KEY      = 'varense_has_seen_first_result'
 const AUTO_DISMISS_MS  = 8000
 const ANCHOR_SELECTOR  = '[data-tour="sharpe-card"]'
+const POPOVER_WIDTH    = 250
 
 export default function FirstResultCallout() {
   const [visible, setVisible] = useState(false)
@@ -35,10 +36,15 @@ export default function FirstResultCallout() {
 
   if (!visible || !rect) return null
 
+  // Same horizontal clamp as MetricTooltip.jsx — at a narrow single-column
+  // mobile layout, a Sharpe card sitting anywhere past ~140px from the
+  // right edge would otherwise push this callout off-screen.
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - POPOVER_WIDTH - 8))
+
   return (
     <div style={{
-      position: 'fixed', top: rect.bottom + 10, left: rect.left,
-      zIndex: 999, width: 250,
+      position: 'fixed', top: rect.bottom + 10, left,
+      zIndex: 999, width: POPOVER_WIDTH,
       background: 'var(--surface-card)', border: '1px solid var(--signal-positive)',
       padding: '12px 14px',
     }}>

@@ -40,7 +40,7 @@ export function useAnalysis() {
   const [heavyLoading, setHeavyLoading] = useState(false)
   const [heavyError, setHeavyError]     = useState(null)
 
-  const runAnalysis = useCallback(async (customDates = null) => {
+  const runAnalysis = useCallback(async (customDates = null, onSuccess) => {
     setLoading(true)
     setError(null)
     setHeavyError(null)
@@ -63,6 +63,7 @@ export function useAnalysis() {
       const res = await axios.post(`${API}/api/analyse-summary`, payload)
       setData(res.data)
       setHasRun(true)
+      onSuccess?.()
 
       // Not awaited — the summary render above already happened. Fires
       // immediately, not on-demand per tab click, so Monte Carlo/Frontier/

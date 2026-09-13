@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import SavedPortfolios from './SavedPortfolios'
 import Logo from './Logo'
+import ExportPDF from './ExportPDF'
+import ExportCSV from './ExportCSV'
 import { BENCHMARKS } from '../lib/benchmarks'
+
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
@@ -34,9 +38,69 @@ export default function Sidebar({
   portfolios, onSavePortfolio, onLoadPortfolio, onDeletePortfolio,
   setPortfolioValue, setBenchmark, setRollingWindow,
   onRun, loading, onTickerClick,
+  data, hasRun, drawerOpen, onCloseDrawer,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
   const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
+  const asideRef = useRef(null)
+  const previouslyFocusedRef = useRef(null)
+  // Reactive, not computed once — a live resize/rotate (not just the
+  // initial load) needs to release the drawer-only behaviour below the
+  // moment the viewport crosses back over --breakpoint-tablet. Same
+  // real-capability-detection pattern as MetricTooltip's (hover: hover)
+  // check, applied to a value that can change after mount rather than one
+  // that can't.
+  const [isNarrow, setIsNarrow] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+  )
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 1023px)')
+    const handler = (e) => setIsNarrow(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
+  const isDrawerActive = drawerOpen && isNarrow
+
+  // Body scroll lock, focus trap, and focus in/out — only while genuinely
+  // acting as an overlay drawer (isDrawerActive), not just because
+  // drawerOpen happens to be true at a width where CSS has already put the
+  // sidebar back in the normal flex row.
+  useEffect(() => {
+    if (!isDrawerActive) return
+
+    previouslyFocusedRef.current = document.activeElement
+    const prevBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const focusables = asideRef.current?.querySelectorAll(FOCUSABLE_SELECTOR)
+    ;(focusables?.[0] || asideRef.current)?.focus()
+
+    const handleKeydown = (e) => {
+      if (e.key === 'Escape') {
+        onCloseDrawer?.()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const list = asideRef.current?.querySelectorAll(FOCUSABLE_SELECTOR)
+      if (!list || list.length === 0) return
+      const first = list[0]
+      const last  = list[list.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeydown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeydown)
+      document.body.style.overflow = prevBodyOverflow
+      previouslyFocusedRef.current?.focus?.()
+    }
+  }, [isDrawerActive, onCloseDrawer])
   const [tickerInput, setTickerInput]     = useState(tickers.join(', '))
   const [inputMode, setInputMode]         = useState('pct')
   const [useCustomDate, setUseCustomDate] = useState(false)
@@ -175,12 +239,19 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="grain-surface" style={{
-      width: 'var(--sidebar-width)', minWidth: 'var(--sidebar-width)', flexShrink: 0, height: '100%',
-      background: 'var(--surface-sidebar)',
-      borderRight: 'var(--border-default)',
-      display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
-    }}>
+    <aside
+      ref={asideRef}
+      tabIndex={-1}
+      role={isDrawerActive ? 'dialog' : undefined}
+      aria-modal={isDrawerActive ? 'true' : undefined}
+      className={`grain-surface sidebar-shell${drawerOpen ? ' sidebar-open' : ''}`}
+      style={{
+        height: '100%',
+        background: 'var(--surface-sidebar)',
+        borderRight: 'var(--border-default)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      }}
+    >
 
       {/* Logo */}
       <div style={{ padding: '18px 16px 14px', borderBottom: 'var(--border-default)' }}>
@@ -439,10 +510,22 @@ export default function Sidebar({
             </>
           ) : 'Run Analysis'}
         </button>
+
+        {/* Export PDF/CSV — drawer-width counterpart to the header's own
+            copy (App.jsx, hidden below 1024px). Same hasRun gate. */}
+        {hasRun && (
+          <div className="sidebar-export-actions">
+            <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
+            <ExportCSV data={data} tickers={tickers} weights={weights} />
+          </div>
+        )}
       </div>
 
-      {/* Resize handle — invisible until hover, drags --sidebar-width live */}
+      {/* Resize handle — invisible until hover, drags --sidebar-width live.
+          Mouse-only (no touch equivalent) — hidden on coarse pointers via
+          .sidebar-resize-handle (index.css), independent of viewport width. */}
       <div
+        className="sidebar-resize-handle"
         onMouseDown={handleResizeStart}
         title="Drag to resize"
         style={{

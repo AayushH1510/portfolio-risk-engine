@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect } from 'react'
 
 const STORAGE_KEY = 'varense_has_visited'
+const POPOVER_WIDTH = 236
 
 const STEPS = [
   { anchor: '[data-tour="stocks"]',       text: 'Add your stocks here' },
@@ -9,7 +10,7 @@ const STEPS = [
   { anchor: '[data-tour="run-analysis"]', text: 'Click here to see your risk' },
 ]
 
-export default function OnboardingTour() {
+export default function OnboardingTour({ onActiveChange }) {
   const [visible, setVisible] = useState(false)
   const [step, setStep]       = useState(0)
   const [rect, setRect]       = useState(null)
@@ -18,6 +19,15 @@ export default function OnboardingTour() {
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) setVisible(true)
   }, [])
+
+  // All four anchors live inside the sidebar — on a narrow viewport it's a
+  // closed-by-default drawer, so App.jsx needs to know the tour has started
+  // (to open it) and keep it open for the tour's duration (suppressing the
+  // drawer's own close-on-Run-Analysis, since step 4's anchor *is* that
+  // button).
+  useEffect(() => {
+    onActiveChange?.(visible)
+  }, [visible, onActiveChange])
 
   // Track the current step's anchor position, and keep it in sync on resize.
   useLayoutEffect(() => {
@@ -45,12 +55,15 @@ export default function OnboardingTour() {
 
   const isLast = step === STEPS.length - 1
   const top    = Math.min(rect.top + rect.height / 2, window.innerHeight - 90)
-  const left   = rect.right + 16
+  // Same horizontal clamp as MetricTooltip.jsx — without it, a drawer that
+  // covers most of the viewport pushes rect.right at or past the screen
+  // edge and this popover would render off-screen.
+  const left   = Math.max(8, Math.min(rect.right + 16, window.innerWidth - POPOVER_WIDTH - 8))
 
   return (
     <div style={{
       position: 'fixed', top, left, transform: 'translateY(-50%)',
-      zIndex: 999, width: 236,
+      zIndex: 999, width: POPOVER_WIDTH,
       background: 'var(--surface-card)', border: 'var(--border-default)',
       padding: '14px 16px',
     }}>
