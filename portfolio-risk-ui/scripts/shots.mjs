@@ -130,58 +130,99 @@ async function measureOverflow(page) {
   return page.evaluate(() => {
     const clientWidth = document.documentElement.clientWidth
     const scrollWidth = document.documentElement.scrollWidth
-    // document.documentElement.scrollWidth alone misses overflow that's
-    // contained by an ancestor's own explicit `overflow` — App.jsx sets
-    // overflow:hidden at several shell levels on purpose, so a tab's
-    // content can force extra width that's invisibly clipped there and
-    // never bubbles up to the document. getBoundingClientRect() still
-    // reports an element's true laid-out box even when a clipping ancestor
-    // stops it from painting, so walk every element and take the widest
-    // right edge — this catches that case too, and names the culprit.
-    //
-    // But not every clipping ancestor is a bug: overflow-x:auto/scroll (the
-    // header tab bar, Backtest/Valuation's table wrappers) means the extra
-    // width is reachable via scroll, not lost — unlike overflow:hidden,
-    // which really does make content unreachable. So only auto/scroll
-    // ancestors get excluded from maxRight here; hidden ancestors still
-    // count (that's the case this function exists for in the first place).
-    // An element only counts as "contained" by a given ancestor if that
-    // ancestor is currently actually overflowing (scrollWidth > clientWidth)
-    // AND the element's own right edge is the thing poking past that
-    // ancestor's visible edge — not merely sitting inside an auto/scroll
-    // container that isn't currently overflowing at all.
-    function containingScrollAncestor(el) {
+
+    function selectorFor(el) {
+      const cls = typeof el.className === 'string' && el.className.trim()
+        ? '.' + el.className.trim().split(/\s+/).join('.') : ''
+      return el.tagName.toLowerCase() + cls
+    }
+
+    // Every property in this codebase is authored inline (CLAUDE.md: "All
+    // inline styles"), so el.style.overflowX/overflowY/overflow — the raw
+    // inline declaration, not getComputedStyle — tells us exactly which
+    // axis the author actually intended to scroll, as opposed to which axis
+    // the browser computes afterward. That distinction matters: per spec,
+    // setting only overflow-y to a non-visible value forces the browser to
+    // also resolve overflow-x away from 'visible' (to 'auto') — so a plain
+    // `overflowY:'auto'` root (Dashboard, Risk Analysis, Valuation, ...)
+    // computes an overflow-x of 'auto' it never asked for. A prior version
+    // of this function read computed style here and treated that spec
+    // side-effect as if it were a deliberately-built horizontal scroll
+    // affordance (like the header tab bar or Backtest/Valuation's table
+    // wrappers, which explicitly author overflowX) — silently excluding
+    // real, unreachable horizontal overflow (e.g. Dashboard's `1fr 220px`
+    // chart row) from every count below. Reading the inline declaration
+    // directly avoids that: an ancestor only counts as a genuine horizontal
+    // scroll container if overflowX (or shorthand overflow) was actually
+    // set to auto/scroll on it.
+    function explicitAxis(el, axis) {
+      const v = el.style[axis]
+      return v === 'auto' || v === 'scroll'
+    }
+    function explicitShorthand(el) {
+      const v = el.style.overflow
+      return v === 'auto' || v === 'scroll'
+    }
+
+    // Classify the nearest actually-clipping ancestor for `el`:
+    //   'horizontal' — an ancestor explicitly authored overflowX (or the
+    //                  overflow shorthand) auto/scroll, and is genuinely
+    //                  overflowing horizontally right now. Content is
+    //                  reachable via scroll — a real, working affordance.
+    //   'vertical'   — an ancestor explicitly authored ONLY overflowY
+    //                  auto/scroll (no explicit overflowX), whose computed
+    //                  overflow-x still ends up clipping this element.
+    //                  Vertical scroll does not make horizontally-clipped
+    //                  content reachable — this is still lost, just hidden
+    //                  behind a scrollbar that looks like it "handles" it.
+    //   null         — no clipping ancestor at all (or only overflow:hidden
+    //                  ones, which were never reachable either way) — this
+    //                  is genuine, uncontained page overflow.
+    function classify(el) {
       let a = el.parentElement
       while (a) {
-        const cs = getComputedStyle(a)
-        if ((cs.overflowX === 'auto' || cs.overflowX === 'scroll') && a.scrollWidth > a.clientWidth + 1) {
-          const ar = a.getBoundingClientRect()
-          const er = el.getBoundingClientRect()
-          if (er.right > ar.right + 0.5) return a
+        const horizontalAuthored = explicitAxis(a, 'overflowX') || explicitShorthand(a)
+        const verticalOnlyAuthored = !horizontalAuthored && explicitAxis(a, 'overflowY')
+        if (horizontalAuthored || verticalOnlyAuthored) {
+          if (a.scrollWidth > a.clientWidth + 1) {
+            const ar = a.getBoundingClientRect()
+            const er = el.getBoundingClientRect()
+            if (er.right > ar.right + 0.5) {
+              return { kind: horizontalAuthored ? 'horizontal' : 'vertical', ancestor: a }
+            }
+          }
         }
         a = a.parentElement
       }
       return null
     }
 
-    let maxRight = clientWidth
-    let widestSelector = null
-    let containedOverflowCount = 0
+    const uncontained = []       // genuine, unreachable overflow
+    const verticalOnly = []      // clipped horizontally, "reachable" only by a vertical scrollbar that doesn't help
+    let containedHorizontalCount = 0
+
     for (const el of document.querySelectorAll('body *')) {
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.right <= clientWidth) continue
-      if (containingScrollAncestor(el)) {
-        containedOverflowCount++
-        continue
-      }
-      if (r.right > maxRight) {
-        maxRight = r.right
-        const cls = typeof el.className === 'string' && el.className.trim()
-          ? '.' + el.className.trim().split(/\s+/).join('.') : ''
-        widestSelector = el.tagName.toLowerCase() + cls
-      }
+      const c = classify(el)
+      if (c?.kind === 'horizontal') { containedHorizontalCount++; continue }
+      if (c?.kind === 'vertical') { verticalOnly.push({ selector: selectorFor(el), right: Math.round(r.right) }); continue }
+      uncontained.push({ selector: selectorFor(el), right: Math.round(r.right) })
     }
-    return { scrollWidth, clientWidth, maxRight: Math.round(maxRight), widestSelector, containedOverflowCount }
+
+    uncontained.sort((a, b) => b.right - a.right)
+    verticalOnly.sort((a, b) => b.right - a.right)
+
+    const maxRight = uncontained.length ? uncontained[0].right : clientWidth
+    const widestSelector = uncontained.length ? uncontained[0].selector : null
+
+    return {
+      scrollWidth, clientWidth, maxRight, widestSelector,
+      top5Uncontained: uncontained.slice(0, 5),
+      top5VerticalOnlyContained: verticalOnly.slice(0, 5),
+      verticalOnlyContainedCount: verticalOnly.length,
+      containedOverflowCount: containedHorizontalCount,
+    }
   })
 }
 
@@ -193,14 +234,18 @@ async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
   // it off (confirmed: two runs of identical code differed by up to 9% at
   // 1440 on some app tabs, entirely from this, before this wait existed).
   await page.evaluate(() => document.fonts.ready).catch(() => {})
-  const { scrollWidth, clientWidth, maxRight, widestSelector, containedOverflowCount } = await measureOverflow(page)
+  const {
+    scrollWidth, clientWidth, maxRight, widestSelector,
+    top5Uncontained, top5VerticalOnlyContained, verticalOnlyContainedCount, containedOverflowCount,
+  } = await measureOverflow(page)
   const overflowsHorizontally = scrollWidth > clientWidth + 1 || maxRight > clientWidth + 1
   const file = path.join(outDir, `${slug}.png`)
   await page.screenshot({ path: file, fullPage: true })
   results.push({
     viewport: viewportLabel, view: slug,
     file: path.relative(ROOT, file),
-    scrollWidth, clientWidth, maxRight, widestSelector, containedOverflowCount, overflowsHorizontally,
+    scrollWidth, clientWidth, maxRight, widestSelector, overflowsHorizontally,
+    top5Uncontained, top5VerticalOnlyContained, verticalOnlyContainedCount, containedOverflowCount,
     ...extra,
     ok: true,
   })
