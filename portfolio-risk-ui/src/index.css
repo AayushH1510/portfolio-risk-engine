@@ -256,6 +256,17 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Anchor reset — restores what Tailwind's Preflight was doing for free
+   before it was removed (commit f5572fe2, "remove unused Tailwind CSS
+   dependency"): without it, every <a> that doesn't set its own inline
+   textDecoration falls back to the browser default (blue, underlined).
+   Most links in this app (App.jsx footer, Methodology.jsx, LandingLayout.jsx)
+   already set textDecoration:'none' inline and are unaffected either way;
+   this covers the rest (Nav.jsx, Hero.jsx, and other landing blocks) that
+   never did, matching DESIGN.md's Button — Text spec: no underline at
+   rest, only ever as a deliberate hover affordance. */
+a { color: inherit; text-decoration: inherit; }
+
 html, body, #root {
   height: 100%;
   width: 100%;
