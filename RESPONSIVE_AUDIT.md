@@ -4,6 +4,58 @@ Read-only audit. No files modified, no build run. `CLAUDE.md` and `DESIGN.md` re
 
 ---
 
+## Status as of Phase B
+
+**Read this section first.** Everything below it (§1-10, Risks) was written at the start of the session and is now **partly stale** — several findings are already fixed, and every overflow number anywhere in the document is void (see below). Treat what follows this section as historical record of what an earlier pass found, not current state. Phase A (sidebar-as-drawer, breakpoint tokens, header nav scroll) is complete and committed; this is Phase B.
+
+### Already done — verify against `git log`, don't treat as outstanding
+
+- **Valuation's table wrapper** — `overflowX:'auto'` on the table's card wrapper (`Valuation.jsx:197`), matching the pattern `Backtest.jsx` already had. §6's "needs an actual code change" is resolved.
+- **AuthModal's fixed width** — `width: 360, maxWidth: 'calc(100vw - 32px)'` (`AuthModal.jsx:35`). §4's "no max-width safety net... overflows horizontally below ~360px" is resolved.
+- **`overflowY:'auto'` on Dashboard, Monte Carlo, and Efficient Frontier roots** — `Dashboard.jsx:179`, `MonteCarlo.jsx:111`, `Frontier.jsx:308`. §4's "three tabs have no scroll fallback whatsoever" and the matching Risks entry are resolved.
+- **Dashboard's period-pill row** — `flexWrap: 'wrap'` (`Dashboard.jsx:184`). §9's "un-wrapped flex row is itself a minor overflow risk" is resolved.
+
+### Genuinely outstanding for Phase B
+
+- **The fixed `gridTemplateColumns` tracks** — the full §4 table: Dashboard's `1fr 220px` (still "the single worst offender," see below) and `repeat(5,1fr)`/`repeat(N,1fr)`, MonteCarlo's `repeat(4,1fr)`, Backtest's `repeat(3,1fr)`, Frontier's `1fr 1fr 1fr`, Comparison's `1fr 80px 1fr` and `1fr 1fr`, CompareWrapper's three grids, Sidebar's two low-risk grids, RiskAnalysis's six `1fr 1fr` rows, ReturnHistogram's `repeat(4,1fr)`. None touched — still exactly as §4 describes.
+- **Canvas resize/DPR work** (§5/Risks) — RiskGauge, ReturnHistogram, and Frontier's scatter still only measure their container at mount/data-change, never on a pure resize. Still exactly as §5 describes it.
+
+### Why the old overflow numbers are void
+
+Every `maxRight`/overflow number anywhere else in this document predates three harness corrections, landed in this order:
+
+1. **`force:true` producing mislabelled captures.** The original tab-click fallback dispatched a click at the element's normal screen coordinate regardless of geometry — at a zero-width nav, that coordinate was off-canvas, so the click silently no-op'd and the harness kept re-screenshotting whichever tab was already active under every other tab's filename. Fixed via `aria-current` verification + `dispatchEvent('click')` escalation when the state didn't actually change.
+2. **Containment misclassification, inflating real numbers by 65-637px.** The overflow walk used `getComputedStyle` to decide what counted as "reachable via scroll" — but authoring only `overflow-y:auto` forces a browser-computed `overflow-x: auto` as a spec side-effect, which the old code then treated as a deliberate horizontal-scroll affordance and silently excluded. Fixed by reading `el.style.overflowX`/`overflowY` (the authored inline declaration) instead of computed style.
+3. **Font/line-height drift, ~4% noise per screenshot.** The harness didn't wait for web fonts to finish loading before capturing, so a mid-swap screenshot used fallback-font metrics — fixed with a `document.fonts.ready` wait before every capture. Separately, `html`'s own line-height had been lost along with Tailwind's Preflight and was restored via `var(--leading-body-sm)` (commit `7d3068d4`), which also legitimately shifted layout and required a fresh baseline.
+
+### Current overflow numbers — drawer closed, 320px and 360px (identical at both)
+
+All real overflow found is in the **contained-vertical-only** bucket (bucket definitions below) — clipped horizontally by a root that only authored `overflowY:'auto'`, so a vertical scrollbar exists but doesn't reach it. **Zero uncontained overflow anywhere** — nothing is genuinely lost off the page edge with no scroll mechanism at all. Ranked by right edge, in px past a 320px viewport:
+
+| Tab | Right edge | Past 320px |
+|---|---|---|
+| Dashboard | 513 | 193 |
+| Risk Analysis | 456 | 136 |
+| Backtest | 437 | 117 |
+| Monte Carlo | 404 | 84 |
+| Frontier | 403 | 83 |
+| Compare | 374 | 54 |
+| Valuation | 337 | 17 |
+| Learn | 0 | 0 |
+
+This is the actual Phase B severity order — Dashboard's `1fr 220px` row (§4's "single worst offender") is confirmed still the worst, now with a real number behind it.
+
+### Standing decisions — apply these, don't rediscover them
+
+- **Breakpoint tokens**: `--breakpoint-phone: 768px`, `--breakpoint-tablet: 1024px` (`index.css`). Every live `@media` rule in the file today keys off `--breakpoint-tablet` (drawer, header-export-actions, hamburger, sidebar-export-actions, resize-handle). `--breakpoint-phone` is defined but currently unreferenced by any rule — don't assume it's load-bearing anywhere without checking first.
+- **Solution tier order for responsive problems, in preference order**: (1) CSS `repeat(auto-fit, minmax(Npx, 1fr))` first — zero media queries, zero JS, already proven throughout `components/landing/*` (§10) and the obvious first thing to try on every §4 grid; (2) a `@media` rule on the two tokens above, if auto-fit can't produce the needed column behavior; (3) a JS hook (`matchMedia` listener, `ResizeObserver`) only as a last resort, when neither CSS approach can express it — this is why the drawer's focus-trap/scroll-lock uses a live `matchMedia` check (`Sidebar.jsx`) but nothing else in Phase A reached for JS.
+- **Drawer close rule**: closes on backdrop tap, Escape, or a *successful* Run Analysis (the fast-tier summary call resolving without error) — and only that; no other interaction inside it closes it. Suppressed for the duration of the onboarding tour (Run Analysis is step 4's own anchor). Don't add other auto-close triggers without checking this rule first.
+- **Real-device test target**: Samsung Galaxy A54, Chrome, 384px width / DPR 2.8125 — in the harness's width list (`scripts/shots.mjs`) specifically because it's a real device in rotation, not a round number or a common named breakpoint.
+- **Pinch-zoom is deliberately enabled** — `index.html`'s viewport meta is `width=device-width, initial-scale=1.0`, no `maximum-scale`/`user-scalable=no`. The mobile strategy is density (DESIGN.md: "Let cards sit tight, this is a data product") with zoom as the escape hatch — not shrinking content to avoid needing zoom, and not enlarging touch targets/text to compensate for zoom being unavailable. Don't add a `maximum-scale` restriction.
+- **The harness's three overflow buckets** (`scripts/shots.mjs`, `measureOverflow`): **uncontained** — no scroll ancestor of any kind, genuinely lost; **contained-horizontal** — an ancestor explicitly authored `overflowX`/`overflow` auto/scroll and is actually overflowing, a real reachable affordance (header tab bar, Backtest/Valuation's table wrappers); **contained-vertical-only** — an ancestor authored only `overflowY:'auto'`, clipped horizontally as a spec side-effect, *not* actually reachable despite the vertical scrollbar's presence. Classification reads `el.style.overflowX`/`overflowY` (the authored declaration), never `getComputedStyle` — see "why the old numbers are void" above for why that distinction is load-bearing.
+
+---
+
 ## 1. Styling ground truth
 
 **Plain CSS custom properties only. No Tailwind, anywhere, as of the current working tree.**
