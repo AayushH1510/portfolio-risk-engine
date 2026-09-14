@@ -267,6 +267,37 @@
    rest, only ever as a deliberate hover affordance. */
 a { color: inherit; text-decoration: inherit; }
 
+/* Base line-height — also lost with Tailwind's Preflight (f5572fe2). Every
+   element that routes through typeStyle() (landing) or sets its own
+   lineHeight inline already overrides this per-role; this is only the
+   fallback for what doesn't (button/input/table cells/svg, mainly), which
+   without it computed to the UA default `normal` (~1.15-1.2) instead —
+   individually invisible, but compounding visibly down any content-heavy
+   page. Tied to --leading-body-sm (already 1.5 in the type scale above)
+   rather than a bare number, so a future rescale of that token carries this
+   forward instead of leaving an orphaned value here. */
+html { line-height: var(--leading-body-sm); }
+
+/* Heading font-weight — restores Preflight's `h1-h6 { font-weight: inherit
+   }`. Swept every h1-h6 in the codebase (21 total, all on the landing side
+   — the app tabs use zero heading elements): 20 already set fontWeight
+   inline (14 via typeStyle()'s own bundled fontWeight, see
+   components/landing/tokens.js; 3 via LandingLayout.jsx's hardcoded
+   var(--weight-semibold), used by Privacy/Terms). Inline always wins
+   regardless of this rule, so this is provably inert on all 20 of them.
+   The one exception — Pillars.jsx:36 — sets fontFamily/fontSize/
+   letterSpacing/textTransform/color/margin but never fontWeight, so it was
+   relying on this exact Preflight rule to inherit 300 from its ambient
+   context; without it, the browser's own bold h1-h6 default (700) showed
+   through on its 4 rendered instances instead. */
+h1, h2, h3, h4, h5, h6 { font-weight: inherit; }
+
+/* SVG icon baseline alignment — Preflight also set this. Mostly inert in
+   this codebase (icons overwhelmingly sit inside display:flex containers,
+   where vertical-align doesn't apply at all), but restores correct
+   inline-context alignment for any that aren't, at zero risk. */
+svg { vertical-align: middle; }
+
 html, body, #root {
   height: 100%;
   width: 100%;
