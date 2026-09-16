@@ -35,7 +35,7 @@ export default function MetricCard({ label, value, sub, tone = 'neutral', mono =
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 'var(--text-micro)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginTop: 1 }}>
+        <div className="metric-card-sub" style={{ fontSize: 'var(--text-micro)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginTop: 1 }}>
           {sub}
         </div>
       )}

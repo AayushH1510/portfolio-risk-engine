@@ -428,45 +428,175 @@ aside.sidebar-shell.sidebar-open {
   .sidebar-resize-handle { display: none; }
 }
 
-/* Dashboard chart row (Dashboard.jsx) — Phase B. gridTemplateColumns/areas
-   live here, not inline, so the @media rule below can win (inline styles
-   always beat a stylesheet rule regardless of media-query match — same
+/* Dashboard body (Dashboard.jsx) — Phase B, revised. The whole page body is
+   one CSS Grid rather than a flex column specifically so a mobile media
+   query can reorder top-level sections via grid-template-areas: flexbox's
+   `order` can't express "growth spans two rows beside a narrower right
+   column" on desktop while ALSO letting row1/row2/sector interleave
+   between growth and the gauge/drawdown pair at a different breakpoint —
+   only grid-template-areas can swap both the grouping and the order in one
+   rule. gridTemplateAreas/Columns/Rows live here, not inline, for the same
    reason .header-export-actions above keeps display out of its inline
-   style). Desktop: growth spans both rows of a 220px right column (gauge
-   above drawdown, matching the original nested-flex layout). Below
-   --breakpoint-phone (768px): single column, reordered to growth,
-   drawdown, gauge — drawdown pairs with growth as a time series; the gauge
-   is a single score and the most compressible of the three, so it goes
-   last. All three stay rendered at every width; Dashboard's own
-   overflowY:'auto' is the fallback if the stack runs long, not a reason to
-   drop anything. */
-.dashboard-chart-row {
+   style: an inline style always beats a stylesheet rule regardless of
+   media-query match.
+
+   Desktop reproduces the original flex-column geometry: same 12px gaps
+   throughout (the grid's own `gap`), same 1fr/220px growth+right split,
+   same final row filling remaining height. min-height:0 on growth/right
+   is the relocated equivalent of what used to be inline minHeight:0 on
+   those divs — moved here, not just copied, because a competing inline
+   value would have permanently shadowed the @media override below
+   regardless of viewport (this was a real bug: min-height:260px inline-
+   shadowed by minHeight:0 was silently inert, and both growth and
+   drawdown collapsed to their header row alone at phone width). */
+.dashboard-grid {
+  display: grid;
+  /* row-gap/column-gap, not the `gap` shorthand: growth|right are the only
+     column-adjacent pair here, and their original gap (the old nested
+     .dashboard-chart-row's own `gap:10`) was 10px, distinct from the 12px
+     the flex column used everywhere else. A single uniform `gap` value
+     can't reproduce both — it measurably shifted growth's width by 2px
+     and showed up as a real (~0.6-0.75%) desktop diff, not noise. */
+  row-gap: 12px;
+  column-gap: 10px;
   grid-template-columns: 1fr 220px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto auto auto 1fr;
   grid-template-areas:
-    "growth gauge"
-    "growth drawdown";
+    "pills  pills"
+    "row1   row1"
+    "row2   row2"
+    "sector sector"
+    "growth right";
 }
-.dashboard-chart-row__growth   { grid-area: growth; }
-.dashboard-chart-row__gauge    { grid-area: gauge; }
-.dashboard-chart-row__drawdown { grid-area: drawdown; }
+.dashboard-grid__pills  { grid-area: pills; }
+.dashboard-grid__row1   { grid-area: row1; }
+.dashboard-grid__row2   { grid-area: row2; }
+.dashboard-grid__sector { grid-area: sector; }
+.dashboard-grid__growth { grid-area: growth; min-height: 0; }
+.dashboard-grid__right  { grid-area: right; }
+
+/* Gauge/drawdown pairing — flex, not a nested grid: a grid item that is
+   itself a grid container produced an unreliable "auto" row height for the
+   outer .dashboard-grid's "right" row at mobile width (RiskGauge's
+   aspect-ratio canvas resolving its intrinsic contribution to near-zero
+   during the outer grid's track-sizing pass, before its real width was
+   known — measured empirically: the wrapper's own box came out ~13px
+   while its children correctly rendered ~450px below it, positioned
+   right but visually escaping their own claimed container). Flex column
+   + order doesn't hit this — it's the same pattern the original pre-
+   Phase-B code used here (gauge auto-height, drawdown flex:1), just with
+   `order` added for the mobile swap. */
+.dashboard-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.dashboard-right-col__gauge    { order: 1; }
+.dashboard-right-col__drawdown { order: 2; flex: 1; min-height: 0; }
 
 @media (max-width: 767px) {
-  .dashboard-chart-row {
+  /* Reorder: pills, growth chart, metric cards, sector exposure, then the
+     gauge/drawdown pair last. The growth chart moves right after pills —
+     it's the point of the page, everything else supports it — instead of
+     sitting below eleven metric cards where it was effectively off-screen
+     on load. Rows go back to auto (not 1fr) since Dashboard's own
+     overflowY:'auto' is the intended fallback for a stack this long. */
+  .dashboard-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     grid-template-areas:
+      "pills"
       "growth"
-      "drawdown"
-      "gauge";
+      "row1"
+      "row2"
+      "sector"
+      "right";
   }
-  /* Growth/drawdown each wrap a Recharts ResponsiveContainer, which needs a
-     definite pixel height on an ancestor to compute against — the desktop
-     rule gets that for free from the two-row track sizing above, but a
-     single auto-height row here has none, so state it explicitly. */
-  .dashboard-chart-row__growth,
-  .dashboard-chart-row__drawdown {
-    min-height: 260px;
+
+  /* The chart is the point of the page: give it real height instead of
+     letting min-height:0 (desktop's rule, above) collapse it to its label
+     row. ~240px keeps period pills + chart within the ~727px usable
+     height measured on the A54 (384x854) — the chart is the first
+     substantial thing on screen, with the top of the metric-card grid
+     peeking in below as a scroll affordance. */
+  .dashboard-grid__growth {
+    min-height: 240px;
+  }
+
+  /* Swap the gauge/drawdown pair to drawdown-first, matching the reorder
+     above (drawdown pairs with growth as a time series; the gauge is a
+     single score, the most compressible of the two, so it goes last).
+     Desktop's flex:1 (base rule, above) is what gives drawdown real
+     height normally — replaced with a fixed floor here since it's no
+     longer filling leftover space in a height-constrained column; this is
+     the secondary chart of the pair so it gets a shorter floor than
+     growth's 240px, not the same one. */
+  .dashboard-right-col__gauge    { order: 2; }
+  .dashboard-right-col__drawdown { order: 1; flex: none; min-height: 160px; }
+  /* Without this, the outer grid's own "auto" row-sizing for "right"
+     measures ~13px instead of the ~453px this pair actually needs —
+     verified via getComputedStyle: RiskGauge's aspect-ratio canvas
+     contributes near-zero to the row's intrinsic-size calculation before
+     its real width is resolved (children still rendered at their correct
+     final size and position, just visually past the undersized row —
+     harmless as long as Dashboard's own overflowY:'auto' covers it, but
+     not something to leave relying on overflow spillover). An explicit
+     min-height sidesteps that calculation the same way growth's does
+     above, rather than depending on it. */
+  .dashboard-grid__right {
+    min-height: 453px;
+  }
+
+  /* Uniform, compact metric cards — row1/row2 only; MetricCard itself is
+     shared by every other tab and is untouched there. Fixed height sized
+     to the shortest useful card (VaR/CVaR: label + one number); cards
+     must not grow to fit content, so overflow is clipped rather than
+     pushing the grid's row height around. min-width:0 matters as much as
+     overflow:hidden here: a grid/flex item's default min-width is auto
+     (content-based), and "DIVERSIFICATION" — one unbreakable uppercase
+     word — was forcing its card wider than its auto-fit track at 320px
+     regardless of overflow:hidden, since the card had already grown past
+     its track before overflow had anything to clip (measured: 3px past
+     the viewport edge, label text only, at 320px specifically). Subtitles
+     are hidden rather than truncated at this width: a mid-phrase ellipsis
+     on a string like "Well diversified · avg corr 0.14 · 1yr window"
+     reads as broken, not abbreviated, and label+value alone is still
+     meaningful. Full sub text is back at 768px+, where cards have room. */
+  .dashboard-grid__row1 .card,
+  .dashboard-grid__row2 .card {
+    height: 64px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  /* MetricCard's label is always its first child div — a long single-word
+     label ("Diversification") gets a clean ellipsis instead of an abrupt
+     hard clip at the card's own edge. */
+  .dashboard-grid__row1 .card > div:first-child,
+  .dashboard-grid__row2 .card > div:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* The Sharpe card sits inside its own wrapper (data-tour anchor for
+     OnboardingTour) — that wrapper, not .card, is the actual auto-fit
+     grid item, so it needs the same min-width:0. */
+  .dashboard-grid__row1 [data-tour="sharpe-card"] {
+    min-width: 0;
+  }
+  .dashboard-grid__row1 .metric-card-sub,
+  .dashboard-grid__row2 .metric-card-sub {
+    display: none;
+  }
+
+  /* Visual hierarchy via spacing only (DESIGN.md: one signal colour per
+     component, no new vocabulary) — a bigger gap between the primary
+     metrics row and the VaR/CVaR/diversification row reads as two groups
+     instead of one 11-card wall. Scoped to phone width only: desktop's
+     larger cards already read as more separated, and this must not shift
+     desktop layout at all (verified against the 1280/1366/1440 baseline). */
+  .dashboard-grid__row2 {
+    margin-top: 8px;
   }
 }
 

@@ -189,12 +189,12 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   ].filter(Boolean)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
+    <div className="dashboard-grid" style={{ height: '100%', overflowY: 'auto' }}>
 
       <FirstResultCallout />
 
       {/* Period pills */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="dashboard-grid__pills" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
           <div key={i} style={{
             fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
@@ -211,7 +211,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           `small` on each card is the one part of this row that does need a
           breakpoint (MetricCard's font-size is prop-driven, not CSS-driven),
           hence the isPhone check above instead of a pure CSS approach here. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+      <div className="dashboard-grid__row1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
         <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isPhone} />
         <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isPhone} />
         <div data-tour="sharpe-card">
@@ -223,8 +223,10 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
 
       {/* Second metrics row — dynamic, already `small`; auto-fit replaces the
           fixed repeat(N, 1fr) so it densely wraps rather than squeezing N
-          columns arbitrarily narrow. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+          columns arbitrarily narrow. Phone width adds margin-top here (CSS,
+          not gap) purely as a visual-hierarchy signal separating this row
+          from the primary one above — see .dashboard-grid__row2 in index.css. */}
+      <div className="dashboard-grid__row2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
         {secondRowItems.map(item => (
           <MetricCard
             key={item.label}
@@ -240,16 +242,16 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       </div>
 
       {/* Sector exposure */}
-      <SectorChart sectorData={sectorData} loading={sectorLoading} />
+      <div className="dashboard-grid__sector">
+        <SectorChart sectorData={sectorData} loading={sectorLoading} />
+      </div>
 
-      {/* Charts row — column count/order live in index.css (.dashboard-chart-row)
-          rather than here: an inline gridTemplateColumns/gridTemplateAreas
-          would always beat the @media rule regardless of viewport, the same
-          reason .header-export-actions keeps display out of its inline style. */}
-      <div className="dashboard-chart-row" style={{ display: 'grid', gap: 10, flex: 1, minHeight: 0 }}>
-
-        {/* Growth chart */}
-        <div className="dashboard-chart-row__growth card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      {/* Growth chart — the point of the page. Placement/order live in
+          index.css (.dashboard-grid) rather than here: an inline
+          gridTemplateAreas would always beat the @media rule regardless of
+          viewport, the same reason .header-export-actions keeps display
+          out of its inline style. */}
+      <div className="dashboard-grid__growth card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
@@ -344,11 +346,20 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           />
         </div>
 
-        {/* Drawdown — a grid-area sibling of Growth/Gauge, not nested inside
-            a "right column" flex div, specifically so the mobile media query
-            can put it between them (growth, drawdown, gauge) via
-            grid-template-areas alone. See index.css .dashboard-chart-row. */}
-        <div className="dashboard-chart-row__drawdown card" style={{ padding: '14px 16px', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      {/* Gauge + drawdown, paired — index.css's .dashboard-right-col swaps
+          their internal order (gauge-first desktop, drawdown-first mobile)
+          without touching anything else on the page. This whole block is
+          last in the mobile stack, matching the outer reorder above. */}
+      <div className="dashboard-grid__right dashboard-right-col">
+        <div className="dashboard-right-col__gauge">
+          <RiskGauge
+            vol={vol}
+            drawdown={dd}
+            varPct={var_cvar.var_pct}
+          />
+        </div>
+
+        <div className="dashboard-right-col__drawdown card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             <MetricTooltip metricKey="drawdown">Drawdown</MetricTooltip>
           </div>
@@ -366,17 +377,6 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             <span style={{ color: 'var(--text-muted)' }}>Worst drop: </span>
             <span style={{ color: 'var(--signal-negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
           </div>
-        </div>
-
-        {/* Risk gauge — last in the mobile stack order (single score, the
-            most compressible of the three); unchanged desktop position
-            (top of the 220px column) via grid-template-areas. */}
-        <div className="dashboard-chart-row__gauge">
-          <RiskGauge
-            vol={vol}
-            drawdown={dd}
-            varPct={var_cvar.var_pct}
-          />
         </div>
       </div>
     </div>
