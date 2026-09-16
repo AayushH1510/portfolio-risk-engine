@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AreaChart, Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -94,6 +94,21 @@ function CustomTooltip({ active, payload, label, prefix = '', pct = false }) {
 export default function Dashboard({ data, tickers, weights, portfolioValue, onTickerClick, sectorData, sectorLoading }) {
   const [growthMode, setGrowthMode] = useState('combined')
 
+  // Reactive, not computed once — same real-capability-detection pattern as
+  // Sidebar's isNarrow check (matchMedia, not a resize listener), keyed to
+  // --breakpoint-phone (768px) rather than --breakpoint-tablet. Drives
+  // MetricCard's own `small` prop on the top metrics row only — every other
+  // `small` usage in the app is deliberate at every width and stays as-is.
+  const [isPhone, setIsPhone] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsPhone(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   if (!data) return null
 
   const { annualised_return: ret, annualised_volatility: vol,
@@ -173,8 +188,6 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
     ba ? { label: 'Alpha', metricKey: 'alpha', value: fmt(ba.alpha),        tone: ba.alpha > 0 ? 'good' : 'bad',         small: true } : null,
   ].filter(Boolean)
 
-  const secondCols = `repeat(${secondRowItems.length}, 1fr)`
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
 
@@ -194,19 +207,24 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
         ))}
       </div>
 
-      {/* Top metrics row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
-        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} />
-        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} />
+      {/* Top metrics row — auto-fit, no media query needed for column count;
+          `small` on each card is the one part of this row that does need a
+          breakpoint (MetricCard's font-size is prop-driven, not CSS-driven),
+          hence the isPhone check above instead of a pure CSS approach here. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isPhone} />
+        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isPhone} />
         <div data-tour="sharpe-card">
-          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" />
+          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" small={isPhone} />
         </div>
-        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} />
-        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} />
+        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} small={isPhone} />
+        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} small={isPhone} />
       </div>
 
-      {/* Second metrics row — dynamic */}
-      <div style={{ display: 'grid', gridTemplateColumns: secondCols, gap: 10 }}>
+      {/* Second metrics row — dynamic, already `small`; auto-fit replaces the
+          fixed repeat(N, 1fr) so it densely wraps rather than squeezing N
+          columns arbitrarily narrow. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
         {secondRowItems.map(item => (
           <MetricCard
             key={item.label}
@@ -224,11 +242,14 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
       {/* Sector exposure */}
       <SectorChart sectorData={sectorData} loading={sectorLoading} />
 
-      {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 10, flex: 1, minHeight: 0 }}>
+      {/* Charts row — column count/order live in index.css (.dashboard-chart-row)
+          rather than here: an inline gridTemplateColumns/gridTemplateAreas
+          would always beat the @media rule regardless of viewport, the same
+          reason .header-export-actions keeps display out of its inline style. */}
+      <div className="dashboard-chart-row" style={{ display: 'grid', gap: 10, flex: 1, minHeight: 0 }}>
 
         {/* Growth chart */}
-        <div className="card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div className="dashboard-chart-row__growth card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
@@ -323,35 +344,39 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           />
         </div>
 
-        {/* Right column — Risk gauge + Drawdown */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        {/* Drawdown — a grid-area sibling of Growth/Gauge, not nested inside
+            a "right column" flex div, specifically so the mobile media query
+            can put it between them (growth, drawdown, gauge) via
+            grid-template-areas alone. See index.css .dashboard-chart-row. */}
+        <div className="dashboard-chart-row__drawdown card" style={{ padding: '14px 16px', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
+            <MetricTooltip metricKey="drawdown">Drawdown</MetricTooltip>
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
+                <Tooltip content={<CustomTooltip pct />} />
+                <Area type="monotone" dataKey="drawdown" stroke="var(--signal-negative)" strokeWidth={1.5} fill="var(--signal-negative)" fillOpacity={0.08} dot={false} name="Drawdown" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ fontSize: 11, marginTop: 8 }}>
+            <span style={{ color: 'var(--text-muted)' }}>Worst drop: </span>
+            <span style={{ color: 'var(--signal-negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
+          </div>
+        </div>
 
+        {/* Risk gauge — last in the mobile stack order (single score, the
+            most compressible of the three); unchanged desktop position
+            (top of the 220px column) via grid-template-areas. */}
+        <div className="dashboard-chart-row__gauge">
           <RiskGauge
             vol={vol}
             drawdown={dd}
             varPct={var_cvar.var_pct}
           />
-
-          <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
-              <MetricTooltip metricKey="drawdown">Drawdown</MetricTooltip>
-            </div>
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                  <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                  <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} width={36} />
-                  <Tooltip content={<CustomTooltip pct />} />
-                  <Area type="monotone" dataKey="drawdown" stroke="var(--signal-negative)" strokeWidth={1.5} fill="var(--signal-negative)" fillOpacity={0.08} dot={false} name="Drawdown" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ fontSize: 11, marginTop: 8 }}>
-              <span style={{ color: 'var(--text-muted)' }}>Worst drop: </span>
-              <span style={{ color: 'var(--signal-negative)', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>{fmt(dd)}</span>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

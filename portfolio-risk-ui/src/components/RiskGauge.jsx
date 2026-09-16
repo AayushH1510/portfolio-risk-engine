@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
 import MetricTooltip from './MetricTooltip'
+import useCanvasSize from '../hooks/useCanvasSize'
 
 function computeRiskScore(vol, drawdown, varPct) {
   const v  = isFinite(vol)      ? vol      : 0.15
@@ -26,16 +27,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
   const score = computeRiskScore(vol, drawdown, varPct)
   const { label, color } = riskLabel(score)
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    const W   = canvas.offsetWidth
-    const H   = canvas.offsetHeight
-    canvas.width  = W * window.devicePixelRatio
-    canvas.height = H * window.devicePixelRatio
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-
+  const draw = useCallback((ctx, W, H) => {
     const cx     = W / 2
     const cy     = H * 0.68
     const R      = Math.min(W * 0.44, H * 0.82)
@@ -133,6 +125,8 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
     ctx.fillText(score, cx, cy + R * 0.32)
 
   }, [score])
+
+  useCanvasSize(canvasRef, draw)
 
   return (
     <div className="card" style={{ padding:'14px 16px', display:'flex', flexDirection:'column' }}>

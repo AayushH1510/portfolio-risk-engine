@@ -428,6 +428,48 @@ aside.sidebar-shell.sidebar-open {
   .sidebar-resize-handle { display: none; }
 }
 
+/* Dashboard chart row (Dashboard.jsx) — Phase B. gridTemplateColumns/areas
+   live here, not inline, so the @media rule below can win (inline styles
+   always beat a stylesheet rule regardless of media-query match — same
+   reason .header-export-actions above keeps display out of its inline
+   style). Desktop: growth spans both rows of a 220px right column (gauge
+   above drawdown, matching the original nested-flex layout). Below
+   --breakpoint-phone (768px): single column, reordered to growth,
+   drawdown, gauge — drawdown pairs with growth as a time series; the gauge
+   is a single score and the most compressible of the three, so it goes
+   last. All three stay rendered at every width; Dashboard's own
+   overflowY:'auto' is the fallback if the stack runs long, not a reason to
+   drop anything. */
+.dashboard-chart-row {
+  grid-template-columns: 1fr 220px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "growth gauge"
+    "growth drawdown";
+}
+.dashboard-chart-row__growth   { grid-area: growth; }
+.dashboard-chart-row__gauge    { grid-area: gauge; }
+.dashboard-chart-row__drawdown { grid-area: drawdown; }
+
+@media (max-width: 767px) {
+  .dashboard-chart-row {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-template-areas:
+      "growth"
+      "drawdown"
+      "gauge";
+  }
+  /* Growth/drawdown each wrap a Recharts ResponsiveContainer, which needs a
+     definite pixel height on an ancestor to compute against — the desktop
+     rule gets that for free from the two-row track sizing above, but a
+     single auto-height row here has none, so state it explicitly. */
+  .dashboard-chart-row__growth,
+  .dashboard-chart-row__drawdown {
+    min-height: 260px;
+  }
+}
+
 /* Shared grain texture — one definition, reused via .grain-canvas (page
    background, ~7% opacity) and .grain-surface (sidebar/cards, ~4% opacity).
    Each is a ::before on the surface itself rather than one global layer,
