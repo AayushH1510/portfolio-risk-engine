@@ -12,6 +12,7 @@ import FirstResultCallout from '../components/FirstResultCallout'
 import MetricTooltip from '../components/MetricTooltip'
 import useOverlay from '../hooks/useOverlay'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
+import { COMPACT_VIEWPORT_QUERY } from '../lib/breakpoints'
 
 // Distinct hues for the Portfolio Growth chart's "By Holding" mode — one
 // line per ticker, differentiated by hue rather than dash pattern (dashing
@@ -115,17 +116,17 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // for MetricCard's font sizing but wrong for the growth chart's fullscreen
   // expand. A phone rotated to landscape (A54: 852x393) has a width well
   // past 767px but is still a phone, and it's exactly the orientation where
-  // expanding a wide time series pays off most. min(width, height) <= 767 —
-  // equivalent to the OR below — catches a phone in either orientation
-  // while still excluding a landscape tablet (1024x768: neither axis is
-  // <=767) and real laptop viewports (1366x768, 1280x800: same), matching
-  // the existing --breakpoint-phone token applied to both axes instead of
-  // just one.
+  // expanding a wide time series pays off most. COMPACT_VIEWPORT_QUERY
+  // (lib/breakpoints.js) is the single source for this condition — CSS
+  // can't import it (media conditions can't read custom properties), so
+  // index.css's "Compact viewport" block hand-writes the same 767 literal
+  // and points back at that module in its banner comment; this is the one
+  // and only place it's defined for JS.
   const [isCompactViewport, setIsCompactViewport] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px), (max-height: 767px)').matches
+    typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
   )
   useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px), (max-height: 767px)')
+    const mql = window.matchMedia(COMPACT_VIEWPORT_QUERY)
     const handler = (e) => setIsCompactViewport(e.matches)
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)

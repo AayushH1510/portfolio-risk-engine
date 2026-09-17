@@ -495,8 +495,45 @@ aside.sidebar-shell.sidebar-open {
 .dashboard-right-col__gauge    { order: 1; }
 .dashboard-right-col__drawdown { order: 2; flex: 1; min-height: 0; }
 
-@media (max-width: 767px) {
-  /* Reorder: pills, growth chart, metric cards, sector exposure, then the
+/* ═══════════════════════════════════════════════════════════════════════
+   COMPACT VIEWPORT — every rule below, until the closing brace, is gated
+   on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
+   i.e. "this is a phone, in either orientation." Dual-axis, not
+   width-only: a landscape phone (A54: 852x393, iPhone 14/15/16: 852x393)
+   has a width well past 767px but is still a phone — min(width, height)
+   <= 767 is what actually identifies one, and that's equivalent to this
+   OR (if either axis is <=767, the smaller one is), while excluding a
+   landscape tablet (1024x768: neither axis qualifies) and real laptop
+   viewports (1366x768, 1280x800: same).
+
+   COMPACT_VIEWPORT_QUERY in lib/breakpoints.js is the JS-side twin of
+   this condition (Dashboard.jsx's isCompactViewport, gating the
+   growth-chart expand control) — that module is the one canonical
+   definition; this 767 is the CSS-side copy kept in sync with it by hand,
+   since plain media-query conditions can't read a custom property or
+   import a JS value (see --breakpoint-phone's own comment above for the
+   custom-property half of that limitation). This codebase doesn't run
+   PostCSS today (no postcss.config.*, no custom-media plugin in
+   package.json) — adding one to share a single literal between two CSS
+   rules wasn't worth the new build dependency; if a third or fourth
+   consumer shows up, that calculus may change.
+
+   THE RULE: any new rule that should only apply on a phone — any
+   orientation — belongs inside THIS block, not a fresh `@media
+   (max-width: 767px)` elsewhere in the file. Two separate compact-viewport
+   media blocks already existed here once (this one, plus a second one
+   for .risk-gauge-frame/.risk-gauge-canvas below), both width-only, and
+   fixing the drift in one silently exposed the identical gap in the
+   other — confirmed by measurement, not by inspection, since nothing
+   about either rule looks wrong in isolation. A third block would just
+   repeat that. If a rule doesn't logically belong with the Dashboard grid
+   reflow below, that's fine — group it under its own labelled subsection
+   inside this same block (see the RiskGauge subsection near the bottom)
+   rather than opening a new @media.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px), (max-height: 767px) {
+  /* ─── Dashboard grid reflow (Dashboard.jsx) ───
+     Reorder: pills, growth chart, metric cards, sector exposure, then the
      gauge/drawdown pair last. The growth chart moves right after pills —
      it's the point of the page, everything else supports it — instead of
      sitting below eleven metric cards where it was effectively off-screen
@@ -602,37 +639,27 @@ aside.sidebar-shell.sidebar-open {
   .dashboard-grid__row2 {
     margin-top: 8px;
   }
-}
 
-/* RiskGauge (RiskGauge.jsx) — width/aspect-ratio live here, not inline on
-   the <canvas>, for the same reason .header-export-actions keeps display
-   out of its inline style: an inline style always beats a stylesheet rule
-   regardless of media-query match, so a phone-only override has to live in
-   CSS. Base rule reproduces the component's old inline values exactly
-   (100% width, 1.4/1 aspect) — desktop is untouched.
-
-   Below 768px the card stretches to the full mobile column width (previous
-   §5 finding: "the single element that reads as oversized" — a near-
-   square ~350px box for what's drawn as a semicircle). R in the draw()
-   function is always width-bound at this aspect ratio (R = min(W*0.44,
-   H*0.82), and 0.44W < 0.82*(W/1.4) = 0.586W for any width) — so capping
-   the frame's width to roughly the same footprint the gauge already gets
-   on desktop (a 220px right column, ~188px of canvas after card padding)
-   reproduces the same R, same drawing, just recentred. Pairing that cap
-   with a tighter aspect-ratio (1.7/1 instead of 1.4/1) removes most of the
-   dead space below the needle without touching R at all: at this ratio the
-   arc's outer edge (R*0.83 above cy) and the score label's lower edge
-   (~R*0.39 below cy) land close to the box's own top/bottom edges instead
-   of floating in a taller box sized for a squarer aspect. (The exact
-   crossover where R stops being width-bound is 1.864/1 — 1.7/1 keeps a
-   deliberate few px of margin on both edges rather than running the arc
-   right up to the frame.) No changes to RiskGauge.jsx's draw() itself. */
-.risk-gauge-canvas {
-  width: 100%;
-  aspect-ratio: 1.4 / 1;
-  display: block;
-}
-@media (max-width: 767px) {
+  /* ─── RiskGauge (RiskGauge.jsx) ───
+     Below 768px (or on a landscape phone — see this block's banner
+     comment) the card would otherwise stretch to the full mobile column
+     width (previous §5 finding: "the single element that reads as
+     oversized" — a near-square ~350px box for what's drawn as a
+     semicircle). R in the draw() function is always width-bound at this
+     aspect ratio (R = min(W*0.44, H*0.82), and 0.44W < 0.82*(W/1.4) =
+     0.586W for any width) — so capping the frame's width to roughly the
+     same footprint the gauge already gets on desktop (a 220px right
+     column, ~188px of canvas after card padding) reproduces the same R,
+     same drawing, just recentred. Pairing that cap with a tighter
+     aspect-ratio (1.7/1 instead of the base rule's 1.4/1, below) removes
+     most of the dead space below the needle without touching R at all: at
+     this ratio the arc's outer edge (R*0.83 above cy) and the score
+     label's lower edge (~R*0.39 below cy) land close to the box's own
+     top/bottom edges instead of floating in a taller box sized for a
+     squarer aspect. (The exact crossover where R stops being width-bound
+     is 1.864/1 — 1.7/1 keeps a deliberate few px of margin on both edges
+     rather than running the arc right up to the frame.) No changes to
+     RiskGauge.jsx's draw() itself. */
   .risk-gauge-frame {
     width: 200px;
     max-width: 100%;
@@ -641,6 +668,21 @@ aside.sidebar-shell.sidebar-open {
   .risk-gauge-canvas {
     aspect-ratio: 1.7 / 1;
   }
+}
+
+/* RiskGauge (RiskGauge.jsx) base rule — width/aspect-ratio live here, not
+   inline on the <canvas>, for the same reason .header-export-actions keeps
+   display out of its inline style: an inline style always beats a
+   stylesheet rule regardless of media-query match, so the compact-viewport
+   override above has to live in CSS, not a prop. This reproduces the
+   component's old inline values exactly (100% width, 1.4/1 aspect) —
+   desktop is untouched. The phone/landscape-phone override lives in the
+   "Compact viewport" block above, not here — see that block's banner
+   comment before adding a third copy of this reasoning somewhere else. */
+.risk-gauge-canvas {
+  width: 100%;
+  aspect-ratio: 1.4 / 1;
+  display: block;
 }
 
 /* Growth chart fullscreen expand (Dashboard.jsx) — phone/landscape-phone
