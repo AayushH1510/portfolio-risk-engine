@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   AreaChart, Area, LineChart, Line, ComposedChart,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -9,6 +10,7 @@ import InsightBox from '../components/InsightBox'
 import SectorChart from '../components/SectorChart'
 import FirstResultCallout from '../components/FirstResultCallout'
 import MetricTooltip from '../components/MetricTooltip'
+import useOverlay from '../hooks/useOverlay'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
 
 // Distinct hues for the Portfolio Growth chart's "By Holding" mode — one
@@ -109,6 +111,36 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
     return () => mql.removeEventListener('change', handler)
   }, [])
 
+  // Distinct from isPhone above — that one is width-only, which is right
+  // for MetricCard's font sizing but wrong for the growth chart's fullscreen
+  // expand. A phone rotated to landscape (A54: 852x393) has a width well
+  // past 767px but is still a phone, and it's exactly the orientation where
+  // expanding a wide time series pays off most. min(width, height) <= 767 —
+  // equivalent to the OR below — catches a phone in either orientation
+  // while still excluding a landscape tablet (1024x768: neither axis is
+  // <=767) and real laptop viewports (1366x768, 1280x800: same), matching
+  // the existing --breakpoint-phone token applied to both axes instead of
+  // just one.
+  const [isCompactViewport, setIsCompactViewport] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px), (max-height: 767px)').matches
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px), (max-height: 767px)')
+    const handler = (e) => setIsCompactViewport(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
+  // Mirrors Sidebar's isDrawerActive pattern: `expanded` is a plain request,
+  // not the source of truth — deriving it from isCompactViewport means
+  // resizing/rotating back past the breakpoint while expanded auto-releases
+  // the overlay instead of stranding the chart fullscreen on a desktop-size
+  // viewport with no way to have triggered it in the first place.
+  const [expandRequested, setExpandRequested] = useState(false)
+  const isGrowthExpanded = expandRequested && isCompactViewport
+  const growthCardRef = useRef(null)
+  useOverlay(isGrowthExpanded, growthCardRef, () => setExpandRequested(false))
+
   if (!data) return null
 
   const { annualised_return: ret, annualised_volatility: vol,
@@ -188,70 +220,30 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
     ba ? { label: 'Alpha', metricKey: 'alpha', value: fmt(ba.alpha),        tone: ba.alpha > 0 ? 'good' : 'bad',         small: true } : null,
   ].filter(Boolean)
 
-  return (
-    <div className="dashboard-grid" style={{ height: '100%', overflowY: 'auto' }}>
-
-      <FirstResultCallout />
-
-      {/* Period pills */}
-      <div className="dashboard-grid__pills" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
-          <div key={i} style={{
-            fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
-            background: 'var(--surface-elevated)', border: 'var(--border-default)',
-            padding: '3px 8px', color: 'var(--text-muted)',
-            fontFamily: 'var(--font-mono)',
-          }}>
-            {pill}
-          </div>
-        ))}
-      </div>
-
-      {/* Top metrics row — auto-fit, no media query needed for column count;
-          `small` on each card is the one part of this row that does need a
-          breakpoint (MetricCard's font-size is prop-driven, not CSS-driven),
-          hence the isPhone check above instead of a pure CSS approach here. */}
-      <div className="dashboard-grid__row1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
-        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isPhone} />
-        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isPhone} />
-        <div data-tour="sharpe-card">
-          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" small={isPhone} />
-        </div>
-        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} small={isPhone} />
-        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} small={isPhone} />
-      </div>
-
-      {/* Second metrics row — dynamic, already `small`; auto-fit replaces the
-          fixed repeat(N, 1fr) so it densely wraps rather than squeezing N
-          columns arbitrarily narrow. Phone width adds margin-top here (CSS,
-          not gap) purely as a visual-hierarchy signal separating this row
-          from the primary one above — see .dashboard-grid__row2 in index.css. */}
-      <div className="dashboard-grid__row2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
-        {secondRowItems.map(item => (
-          <MetricCard
-            key={item.label}
-            label={item.metricKey
-              ? <MetricTooltip metricKey={item.metricKey}>{item.label}</MetricTooltip>
-              : item.label}
-            value={item.value}
-            tone={item.tone}
-            small={item.small}
-            sub={item.sub}
-          />
-        ))}
-      </div>
-
-      {/* Sector exposure */}
-      <div className="dashboard-grid__sector">
-        <SectorChart sectorData={sectorData} loading={sectorLoading} />
-      </div>
-
-      {/* Growth chart — the point of the page. Placement/order live in
-          index.css (.dashboard-grid) rather than here: an inline
-          gridTemplateAreas would always beat the @media rule regardless of
-          viewport, the same reason .header-export-actions keeps display
-          out of its inline style. */}
-      <div className="dashboard-grid__growth card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
+  // Built once here, referenced twice below (normal grid slot vs. portalled
+  // fullscreen) — not duplicated JSX. It has to be a portal rather than
+  // just a CSS class swap on the in-place element: App.jsx wraps every
+  // tab's content in a `.fade-up` div whose mount animation
+  // (`animation: fadeUp 0.3s ease forwards`, index.css) leaves a resting
+  // `transform: translateY(0)` after it finishes — and per the CSS spec,
+  // ANY computed transform value other than the keyword `none` (including
+  // an at-rest identity translate) makes that element a new containing
+  // block for fixed-position descendants, so a plain position:fixed here
+  // would resolve its `inset:0` against .fade-up's box instead of the
+  // viewport (confirmed empirically: getBoundingClientRect() landed at
+  // .fade-up's own position, not (0,0), even though getComputedStyle
+  // correctly reported position:fixed/inset:0). MetricTooltip.jsx already
+  // solves the same family of problem (there, <main>'s overflow:hidden
+  // clipping a popover) the same way — portal to document.body, which has
+  // no such ancestor. Don't "fix" this by reaching for position:fixed
+  // again on some other wrapper; the .fade-up transform issue applies to
+  // any descendant, anywhere in tab content, not just here.
+  const growthCardEl = (
+    <div
+        ref={growthCardRef}
+        className={`dashboard-grid__growth card${isGrowthExpanded ? ' dashboard-growth-expanded' : ''}`}
+        style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column' }}
+      >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
@@ -271,6 +263,23 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
                     </button>
                   ))}
                 </div>
+              )}
+              {/* Growth only — not drawdown, not the gauge. This is the one
+                  chart that gains from more room, especially By Holding
+                  mode where several series compress into an unreadable band
+                  at the card's normal height. Rendered only on a compact
+                  viewport (phone width or phone-landscape height) — desktop
+                  and tablet never see it, so isGrowthExpanded can never
+                  become true there regardless of expandRequested. */}
+              {isCompactViewport && (
+                <button
+                  onClick={() => setExpandRequested(v => !v)}
+                  className="chart-expand-btn"
+                  aria-label={isGrowthExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+                  title={isGrowthExpanded ? 'Collapse' : 'Expand'}
+                >
+                  {isGrowthExpanded ? '✕' : '⤢'}
+                </button>
               )}
             </div>
             <div style={{ display: 'flex', gap: 10, fontSize: 10, flexWrap: 'wrap' }}>
@@ -345,6 +354,71 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
             }`}
           />
         </div>
+  )
+
+  return (
+    <div className="dashboard-grid" style={{ height: '100%', overflowY: 'auto' }}>
+
+      <FirstResultCallout />
+
+      {/* Period pills */}
+      <div className="dashboard-grid__pills" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {[period.start, period.end, `${period.n_days} days`, `${period.n_years}yr`].map((pill, i) => (
+          <div key={i} style={{
+            fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
+            background: 'var(--surface-elevated)', border: 'var(--border-default)',
+            padding: '3px 8px', color: 'var(--text-muted)',
+            fontFamily: 'var(--font-mono)',
+          }}>
+            {pill}
+          </div>
+        ))}
+      </div>
+
+      {/* Top metrics row — auto-fit, no media query needed for column count;
+          `small` on each card is the one part of this row that does need a
+          breakpoint (MetricCard's font-size is prop-driven, not CSS-driven),
+          hence the isPhone check above instead of a pure CSS approach here. */}
+      <div className="dashboard-grid__row1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isPhone} />
+        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isPhone} />
+        <div data-tour="sharpe-card">
+          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" small={isPhone} />
+        </div>
+        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} small={isPhone} />
+        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} small={isPhone} />
+      </div>
+
+      {/* Second metrics row — dynamic, already `small`; auto-fit replaces the
+          fixed repeat(N, 1fr) so it densely wraps rather than squeezing N
+          columns arbitrarily narrow. Phone width adds margin-top here (CSS,
+          not gap) purely as a visual-hierarchy signal separating this row
+          from the primary one above — see .dashboard-grid__row2 in index.css. */}
+      <div className="dashboard-grid__row2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+        {secondRowItems.map(item => (
+          <MetricCard
+            key={item.label}
+            label={item.metricKey
+              ? <MetricTooltip metricKey={item.metricKey}>{item.label}</MetricTooltip>
+              : item.label}
+            value={item.value}
+            tone={item.tone}
+            small={item.small}
+            sub={item.sub}
+          />
+        ))}
+      </div>
+
+      {/* Sector exposure */}
+      <div className="dashboard-grid__sector">
+        <SectorChart sectorData={sectorData} loading={sectorLoading} />
+      </div>
+
+      {/* Growth chart — the point of the page. Built as growthCardEl above
+          (not inline here) so the exact same JSX can render either in its
+          normal grid slot or through a portal when expanded — see that
+          const's comment for why. */}
+      {isGrowthExpanded ? createPortal(growthCardEl, document.body) : growthCardEl}
 
       {/* Gauge + drawdown, paired — index.css's .dashboard-right-col swaps
           their internal order (gauge-first desktop, drawdown-first mobile)

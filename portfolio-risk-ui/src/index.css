@@ -535,17 +535,21 @@ aside.sidebar-shell.sidebar-open {
   .dashboard-right-col__gauge    { order: 2; }
   .dashboard-right-col__drawdown { order: 1; flex: none; min-height: 160px; }
   /* Without this, the outer grid's own "auto" row-sizing for "right"
-     measures ~13px instead of the ~453px this pair actually needs —
-     verified via getComputedStyle: RiskGauge's aspect-ratio canvas
-     contributes near-zero to the row's intrinsic-size calculation before
-     its real width is resolved (children still rendered at their correct
-     final size and position, just visually past the undersized row —
-     harmless as long as Dashboard's own overflowY:'auto' covers it, but
-     not something to leave relying on overflow spillover). An explicit
-     min-height sidesteps that calculation the same way growth's does
-     above, rather than depending on it. */
+     measures ~13px instead of what this pair actually needs — verified via
+     getComputedStyle: RiskGauge's aspect-ratio canvas contributes near-zero
+     to the row's intrinsic-size calculation before its real width is
+     resolved (children still rendered at their correct final size and
+     position, just visually past the undersized row — harmless as long as
+     Dashboard's own overflowY:'auto' covers it, but not something to leave
+     relying on overflow spillover). An explicit min-height sidesteps that
+     calculation the same way growth's does above, rather than depending on
+     it. 350px, not the original 453px: that number was sized to the gauge
+     card's old full-square canvas (~287px tall); the gauge cap below
+     (.risk-gauge-canvas's phone aspect-ratio) shrinks the gauge card to
+     ~172px, so drawdown's 160px + 10px gap + ~172px gauge is the new floor.
+     Keep this in sync if either card's mobile sizing changes again. */
   .dashboard-grid__right {
-    min-height: 453px;
+    min-height: 350px;
   }
 
   /* Uniform, compact metric cards — row1/row2 only; MetricCard itself is
@@ -598,6 +602,120 @@ aside.sidebar-shell.sidebar-open {
   .dashboard-grid__row2 {
     margin-top: 8px;
   }
+}
+
+/* RiskGauge (RiskGauge.jsx) — width/aspect-ratio live here, not inline on
+   the <canvas>, for the same reason .header-export-actions keeps display
+   out of its inline style: an inline style always beats a stylesheet rule
+   regardless of media-query match, so a phone-only override has to live in
+   CSS. Base rule reproduces the component's old inline values exactly
+   (100% width, 1.4/1 aspect) — desktop is untouched.
+
+   Below 768px the card stretches to the full mobile column width (previous
+   §5 finding: "the single element that reads as oversized" — a near-
+   square ~350px box for what's drawn as a semicircle). R in the draw()
+   function is always width-bound at this aspect ratio (R = min(W*0.44,
+   H*0.82), and 0.44W < 0.82*(W/1.4) = 0.586W for any width) — so capping
+   the frame's width to roughly the same footprint the gauge already gets
+   on desktop (a 220px right column, ~188px of canvas after card padding)
+   reproduces the same R, same drawing, just recentred. Pairing that cap
+   with a tighter aspect-ratio (1.7/1 instead of 1.4/1) removes most of the
+   dead space below the needle without touching R at all: at this ratio the
+   arc's outer edge (R*0.83 above cy) and the score label's lower edge
+   (~R*0.39 below cy) land close to the box's own top/bottom edges instead
+   of floating in a taller box sized for a squarer aspect. (The exact
+   crossover where R stops being width-bound is 1.864/1 — 1.7/1 keeps a
+   deliberate few px of margin on both edges rather than running the arc
+   right up to the frame.) No changes to RiskGauge.jsx's draw() itself. */
+.risk-gauge-canvas {
+  width: 100%;
+  aspect-ratio: 1.4 / 1;
+  display: block;
+}
+@media (max-width: 767px) {
+  .risk-gauge-frame {
+    width: 200px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  .risk-gauge-canvas {
+    aspect-ratio: 1.7 / 1;
+  }
+}
+
+/* Growth chart fullscreen expand (Dashboard.jsx) — phone/landscape-phone
+   only (gated in JS by isCompactViewport, not by this rule; see Dashboard's
+   comment on that state for why it isn't a plain max-width check). Applied
+   to the same .dashboard-grid__growth.card element used at normal size, not
+   a second element, so no chart content is duplicated.
+
+   position:fixed here is deliberate over the grid's own layout: a fixed
+   item is removed from grid flow entirely (its containing block becomes
+   the viewport, not the grid), so this simply escapes the grid rather than
+   needing a competing grid-area override. It also isn't clipped by any
+   ancestor's overflow:hidden (.grain-canvas, <main>, the grid root's own
+   overflowY) — overflow clipping only affects position:fixed descendants
+   of an ancestor that itself establishes a containing block (a transform,
+   filter, perspective, or contain:layout), and nothing between here and
+   the viewport sets any of those.
+
+   100vh first as the universal fallback, 100dvh as the progressive-
+   enhancement override — same two-declaration pattern as .app-shell above,
+   for the same reason: measured 71px of difference on the A54 between the
+   two. z-index clears the sidebar drawer (550), its backdrop (500), and
+   the stock drawer (100/99) — this needs to sit above literally everything
+   in the shell, including the app header. No border-radius (global reset,
+   never overridden), no shadow, and the .card class's existing hairline
+   border is left as-is rather than stripped — DESIGN.md's overlay
+   constraints, satisfied by simply not touching what .card already does.
+
+   Selector is the compound `.dashboard-growth-expanded.card`, not
+   `.dashboard-growth-expanded` alone: `.card` sets `position: relative`
+   for its own grain-texture pseudo-element (further down this file, see
+   "Shared grain texture" below), and at equal single-class specificity the
+   later rule wins regardless of which one you meant to win — silently
+   flattening this back to `relative` and leaving the card sized correctly
+   (100vw/100dvh, unaffected) but positioned wherever the grid happened to
+   place it instead of pinned to the viewport. Same bug, same fix as
+   `aside.sidebar-shell` elsewhere in this file: raise specificity so
+   source order stops mattering. Confirmed via getBoundingClientRect() —
+   without the compound selector this measured top:99/left:16 (wherever
+   the grid put it) instead of top:0/left:0.
+
+   background overrides .card's own rgba(...,0.9) — deliberate everywhere
+   else (DESIGN.md: lets the page vignette show through a card sitting on
+   the canvas), but this card no longer sits beside the vignette, it sits
+   in front of the entire rest of the app: at 90% opacity the whole
+   dashboard underneath (every other card, each also 90% opaque over the
+   vignette) visibly ghosted through, busy and unreadable behind the
+   chart. A fullscreen view needs a solid backing. */
+.dashboard-growth-expanded.card {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--surface-card);
+}
+
+/* Expand/collapse control (Dashboard.jsx, growth card header) — a small
+   mono glyph, not a Button-Ghost/Primary: DESIGN.md's button specs are for
+   real actions, this is meant to read as unobtrusive chrome sitting next
+   to the Combined/By Holding toggle, not compete with it. */
+.chart-expand-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  margin: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1;
+}
+.chart-expand-btn:hover {
+  color: var(--text-primary);
 }
 
 /* Shared grain texture — one definition, reused via .grain-canvas (page

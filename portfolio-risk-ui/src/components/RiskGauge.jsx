@@ -137,6 +137,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
         <MetricTooltip metricKey="risk_gauge">Risk Gauge</MetricTooltip>
       </div>
       <div
+        className="risk-gauge-frame"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
@@ -146,10 +147,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
           background:'var(--surface-card)',
         }}
       >
-        <canvas
-          ref={canvasRef}
-          style={{ width:'100%', aspectRatio:'1.4/1', display:'block' }}
-        />
+        <canvas ref={canvasRef} className="risk-gauge-canvas" />
       </div>
     </div>
   )

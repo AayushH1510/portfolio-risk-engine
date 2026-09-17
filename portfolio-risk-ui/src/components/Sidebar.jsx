@@ -4,9 +4,8 @@ import SavedPortfolios from './SavedPortfolios'
 import Logo from './Logo'
 import ExportPDF from './ExportPDF'
 import ExportCSV from './ExportCSV'
+import useOverlay from '../hooks/useOverlay'
 import { BENCHMARKS } from '../lib/benchmarks'
-
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
@@ -43,7 +42,6 @@ export default function Sidebar({
   const [logoHovered, setLogoHovered]     = useState(false)
   const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
   const asideRef = useRef(null)
-  const previouslyFocusedRef = useRef(null)
   // Reactive, not computed once — a live resize/rotate (not just the
   // initial load) needs to release the drawer-only behaviour below the
   // moment the viewport crosses back over --breakpoint-tablet. Same
@@ -66,41 +64,9 @@ export default function Sidebar({
   // Body scroll lock, focus trap, and focus in/out — only while genuinely
   // acting as an overlay drawer (isDrawerActive), not just because
   // drawerOpen happens to be true at a width where CSS has already put the
-  // sidebar back in the normal flex row.
-  useEffect(() => {
-    if (!isDrawerActive) return
+  // sidebar back in the normal flex row. See useOverlay.js.
+  useOverlay(isDrawerActive, asideRef, onCloseDrawer)
 
-    previouslyFocusedRef.current = document.activeElement
-    const prevBodyOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const focusables = asideRef.current?.querySelectorAll(FOCUSABLE_SELECTOR)
-    ;(focusables?.[0] || asideRef.current)?.focus()
-
-    const handleKeydown = (e) => {
-      if (e.key === 'Escape') {
-        onCloseDrawer?.()
-        return
-      }
-      if (e.key !== 'Tab') return
-      const list = asideRef.current?.querySelectorAll(FOCUSABLE_SELECTOR)
-      if (!list || list.length === 0) return
-      const first = list[0]
-      const last  = list[list.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus()
-      }
-    }
-    document.addEventListener('keydown', handleKeydown)
-
-    return () => {
-      document.removeEventListener('keydown', handleKeydown)
-      document.body.style.overflow = prevBodyOverflow
-      previouslyFocusedRef.current?.focus?.()
-    }
-  }, [isDrawerActive, onCloseDrawer])
   const [tickerInput, setTickerInput]     = useState(tickers.join(', '))
   const [inputMode, setInputMode]         = useState('pct')
   const [useCustomDate, setUseCustomDate] = useState(false)
