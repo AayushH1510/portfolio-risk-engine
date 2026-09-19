@@ -39,7 +39,10 @@ export default function Cards({ block }) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            // min(230px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
+            // floors" standing decision — a bare 230px floor overflows a
+            // narrower container instead of shrinking into it.
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(230px, 100%), 1fr))',
             gap: '1px',
             border: '1px solid var(--color-line-default)',
             borderRadius: 'var(--radius-lg)',

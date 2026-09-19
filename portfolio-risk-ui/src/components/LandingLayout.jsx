@@ -18,16 +18,24 @@ export function LandingPage({ children }) {
 
 export function LandingHeader({ crossLinkLabel, crossLinkTo }) {
   return (
+    // flexWrap + a clamp() gap — same approach as landing/Nav.jsx, which
+    // already holds cleanly at 320px. Without it, the fixed 48px padding
+    // plus logo + crosslink + button never fit one line below ~360px, and
+    // the button was getting pushed 30px past the edge, truncated to
+    // "LAUNC" (RESPONSIVE_AUDIT.md's landing survey). Two-level wrap, same
+    // as Nav.jsx: the outer row can drop the button-group to its own line,
+    // and that group can itself wrap crosslink/button onto separate lines.
     <header style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '20px 48px', maxWidth: 1140, margin: '0 auto', width: '100%',
+      flexWrap: 'wrap', rowGap: 12,
+      padding: '20px clamp(20px, 6vw, 48px)', maxWidth: 1140, margin: '0 auto', width: '100%',
       flexShrink: 0,
     }}>
       <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
         <Logo variant="horizontal" size={30} ink="var(--text-primary)" />
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 'clamp(14px, 4vw, 28px)' }}>
         <Link
           to={crossLinkTo}
           style={{ fontSize: 13, color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }}

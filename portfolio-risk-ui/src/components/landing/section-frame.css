@@ -1,0 +1,25 @@
+/* SectionFrame's two-column layout — numbered label on the left, content on
+   the right (see SectionFrame.jsx). --layout-labelColumn clamps to a 150px
+   floor (design/tokens.json), which alone eats ~178px of the ~280px
+   available at 320-393px viewports once gutter and sectionGap are counted,
+   leaving as little as ~100px for content — the root cause behind most of
+   the grid overflow found in the responsive audit (RESPONSIVE_AUDIT.md).
+   Below 768px the label stacks above the content at full width instead of
+   holding a side column. This is a landing-local breakpoint, not the app's
+   compact-viewport convention (DESIGN.md: landing is its own design system,
+   inline styles only elsewhere — this file exists because a discrete
+   layout switch, unlike a fluid clamp(), genuinely needs a real media query,
+   which an inline style object cannot express). */
+.section-frame {
+  display: grid;
+  grid-template-columns: var(--layout-labelColumn) minmax(0, 1fr);
+  gap: var(--layout-sectionGap);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .section-frame {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}

@@ -1,0 +1,49 @@
+/* 44x44 tap targets via a zero-layout-footprint ::before (negative inset),
+   not padding — padding would grow NavLink/FooterLink/MoreLink's own box
+   and disturb the tight nav/footer rhythm these components are built
+   around. Same pattern as the app's .chart-expand-btn (Dashboard responsive
+   pass). Each class's inset is sized to that component's own measured box
+   and its actual neighbours at 320px (RESPONSIVE_AUDIT.md's landing
+   survey) — not a single shared value, since NavLink (14px tall, 16px row
+   gap), FooterLink (21px tall, a tight 12px column gap) and the nav's own
+   CTA button (36px tall, hard against the nav-link row above it) each hit a
+   different real boundary before reaching 44px in every direction. Where a
+   full 44px would overlap a neighbour's own enlarged hit area, the inset
+   stops short of that overlap rather than reaching 44px anyway. */
+
+.tap-target-navlink,
+.tap-target-morelink {
+  position: relative;
+}
+.tap-target-navlink::before,
+.tap-target-morelink::before {
+  content: '';
+  position: absolute;
+  inset: -14px -10px;
+}
+
+.tap-target-footerlink {
+  position: relative;
+}
+.tap-target-footerlink::before {
+  content: '';
+  position: absolute;
+  /* Vertical capped at -6px: FooterLink's own column stacks at a 12px gap
+     (Footer.jsx), so a symmetric inset any larger starts overlapping the
+     next link's own hit area rather than just approaching it. */
+  inset: -6px -10px;
+}
+
+.tap-target-navaction {
+  position: relative;
+}
+.tap-target-navaction::before {
+  content: '';
+  position: absolute;
+  /* Asymmetric: only ~1px of headroom exists between this button and the
+     nav-link row stacked directly above it at 320px (16px row gap, and the
+     nav links already claim 14px of that via .tap-target-navlink) — top
+     stays tight while bottom/sides, which have open room below the button
+     in the stacked mobile header, extend further. */
+  inset: -1px -4px -6px -4px;
+}

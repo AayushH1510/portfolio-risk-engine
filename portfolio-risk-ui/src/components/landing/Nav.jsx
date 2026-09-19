@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
 import { typeStyle } from './tokens'
 import Logo from '../Logo'
+import './tap-target.css'
 
 function NavLink({ href, children }) {
   const [hovered, setHovered] = useState(false)
   return (
     <a
       href={href}
+      className="tap-target-navlink"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -30,6 +32,7 @@ function NavAction({ link }) {
   return (
     <a
       href={link.href}
+      className="tap-target-navaction"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{

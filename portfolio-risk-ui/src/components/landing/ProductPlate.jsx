@@ -9,6 +9,10 @@
 // not the landing page's own typographic voice, so those sizes are literal
 // the way the growth-chart SVG path below is literal. Every colour still
 // routes through the token custom properties.
+//
+// The 232px + 1fr layout stacks below 768px — see product-plate.css.
+
+import './product-plate.css'
 
 function Dot() {
   return <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--color-chart-neutral300)', display: 'block' }} />
@@ -80,8 +84,8 @@ export default function ProductPlate({ block }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 232px) minmax(0, 1fr)', minHeight: '460px' }}>
-            <div style={{ borderRight: '1px solid var(--color-line-default)', padding: '22px', background: 'var(--color-bg-raised)', display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          <div className="product-plate-grid">
+            <div className="product-plate-sidebar" style={{ padding: '22px', background: 'var(--color-bg-raised)', display: 'flex', flexDirection: 'column', gap: '22px' }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.16em', color: 'var(--color-text-ghost)', marginBottom: '10px' }}>1. STOCKS</div>
                 <div style={{ border: '1px solid var(--color-line-strong)', borderRadius: 'var(--radius-xs)', padding: '11px 12px', fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-body)', background: 'var(--color-bg-inset)' }}>

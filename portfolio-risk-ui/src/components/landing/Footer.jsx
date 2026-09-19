@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import Logo from '../Logo'
+import './tap-target.css'
 
 function FooterLink({ link }) {
   const [hovered, setHovered] = useState(false)
   return (
     <a
       href={link.href}
+      className="tap-target-footerlink"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{

@@ -1,0 +1,36 @@
+/* ProductPlate's fixed 232px + 1fr two-column mockup (STOCKS/VALUE/WEIGHTS
+   config panel + dashboard content) cannot work once available width drops
+   much below ~560px — the 1fr content track was collapsing to a few px at
+   phone widths, and a percentage-width <svg> inside a near-zero-width
+   container rendered its content at raw, unscaled viewBox-unit size instead
+   of scaling down with it (a Chromium sizing edge case — the growth-chart
+   replica ended up ~788px wide inside a ~6px box, invisible behind the
+   card's own overflow:hidden rather than causing a page scrollbar). See
+   RESPONSIVE_AUDIT.md's landing survey for the full measurement.
+
+   Stack below 768px — same breakpoint as section-frame.css, same audit
+   pass, same reasoning (this is landing's own breakpoint, not the app's
+   compact-viewport convention; DESIGN.md scopes landing as its own design
+   system). Stacked, the config panel's right border would read as a stray
+   line with nothing beside it, so it swaps to a bottom border instead. */
+.product-plate-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 232px) minmax(0, 1fr);
+  min-height: 460px;
+}
+
+.product-plate-sidebar {
+  border-right: 1px solid var(--color-line-default);
+}
+
+@media (max-width: 768px) {
+  .product-plate-grid {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .product-plate-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--color-line-default);
+  }
+}

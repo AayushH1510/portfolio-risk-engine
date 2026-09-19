@@ -11,7 +11,12 @@ function FeatureRow({ feature, isLast }) {
       data-reveal
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))',
+        // min(330px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid floors"
+        // standing decision — a bare 330px floor overflows a narrower
+        // container instead of shrinking into it (this row doesn't sit
+        // inside SectionFrame, so it's exposed at every phone width, not
+        // just below the labelColumn's own breakpoint).
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(330px, 100%), 1fr))',
         gap: 'clamp(40px, 5vw, 90px)',
         alignItems: 'center',
         padding: 'var(--space-18) 0',

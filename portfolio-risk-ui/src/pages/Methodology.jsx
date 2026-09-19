@@ -12,11 +12,19 @@ import { constants, divergencesCallout, dataSourcing, metrics, APP_URL } from '.
 // for formula fragments, constants, and numbers inline in prose — this page's
 // one departure from the landing page's own components, since a methodology
 // page quotes numbers and code far more densely than marketing copy does.
+// overflowWrap:'anywhere' on every branch, not just `code` — plain prose
+// here routinely carries the same long identifiers (TwelveDataRateLimitError,
+// MIN_ROWS_TO_CACHE, etc.) without backticks, and the browser's default
+// overflow-wrap:normal refuses to break them, forcing whatever line they
+// land on to ~194px wide regardless of the actual column width. That was
+// enough to hold scrollWidth at a fixed 392px through 320-384px viewports
+// (RESPONSIVE_AUDIT.md's landing survey — confirmed via ancestor-chain
+// measurement, not guessed).
 function renderInline(text) {
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <span key={i} style={{ color: 'var(--color-text-body)' }}>{part.slice(2, -2)}</span>
+      return <span key={i} style={{ color: 'var(--color-text-body)', overflowWrap: 'anywhere' }}>{part.slice(2, -2)}</span>
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
@@ -25,7 +33,7 @@ function renderInline(text) {
         </code>
       )
     }
-    return <span key={i}>{part}</span>
+    return <span key={i} style={{ overflowWrap: 'anywhere' }}>{part}</span>
   })
 }
 
@@ -197,7 +205,9 @@ export default function Methodology() {
         <div style={{ ...typeStyle('monoSection'), color: 'var(--color-text-ghost)', marginBottom: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-line-default)' }}>
           Constants, read directly from the code
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1px', border: '1px solid var(--color-line-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+        {/* min(220px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
+            floors" standing decision. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1px', border: '1px solid var(--color-line-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
           {constants.map((c) => (
             <div key={c.label} style={{ background: 'var(--color-bg-panel)', padding: '20px 22px' }}>
               <div style={{ ...typeStyle('monoTile'), color: 'var(--color-text-faint)', marginBottom: 'var(--space-3)' }}>{c.label}</div>
@@ -217,7 +227,11 @@ export default function Methodology() {
           <p style={{ ...typeStyle('lead'), color: 'var(--color-text-muted)', maxWidth: '680px', margin: '0 0 var(--space-14)' }}>
             These aren't buried in a footnote. They shape how nearly every number below should be read.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1px', border: '1px solid var(--color-line-default)' }}>
+          {/* min(280px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
+              floors" standing decision — this one was razor-thin even
+              before that finding (280px floor vs. ~280px available at
+              320px), the most marginal of the five grids in this pass. */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '1px', border: '1px solid var(--color-line-default)' }}>
             {divergencesCallout.map((d) => (
               <div key={d.title} style={{ background: 'var(--color-bg-panel)', boxShadow: 'var(--shadow-hairline)', padding: '32px 30px' }}>
                 <h3 style={{ ...typeStyle('headingXS'), color: 'var(--color-accent-mint)', margin: '0 0 var(--space-4)' }}>{d.title}</h3>

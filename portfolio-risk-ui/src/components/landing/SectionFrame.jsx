@@ -1,18 +1,19 @@
 import { typeStyle } from './tokens'
+import './section-frame.css'
 
 // The two-column frame six blocks share: a numbered mono label on the left,
 // content on the right. See README > Screens/Views. Grid columns use clamp()
 // / minmax(0, ...) per README > Responsive rules — never a bare fixed track.
+// The grid itself (display/gridTemplateColumns/gap, including the <768px
+// stack-to-one-column override) lives in section-frame.css, not inline —
+// see that file's own comment for why.
 export default function SectionFrame({ index, label, children, style }) {
   return (
     <div
+      className="section-frame"
       style={{
         maxWidth: 'var(--layout-maxWidth)',
         margin: '0 auto',
-        display: 'grid',
-        gridTemplateColumns: 'var(--layout-labelColumn) minmax(0, 1fr)',
-        gap: 'var(--layout-sectionGap)',
-        alignItems: 'start',
         ...style,
       }}
     >
