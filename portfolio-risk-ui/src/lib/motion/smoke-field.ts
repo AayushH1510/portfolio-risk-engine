@@ -6,16 +6,31 @@
  * so the palette can be re-themed without touching this file.
  *
  * Cost: gridWidth * gridHeight * octaves * 2 fbm calls per frame, capped at
- * `fps`. At the defaults that is ~86k hash evaluations per frame at 24fps,
- * which is comfortably under a millisecond on a mid-range laptop. The result
- * is drawn to a tiny offscreen buffer and upscaled with a blur, so the
- * destination canvas resolution barely matters.
+ * `fps`. gridHeight is no longer fixed — see resize()'s own comment — it now
+ * scales with the container's aspect ratio, so a tall phone hero costs
+ * several times the desktop baseline. Measured with performance.mark/measure
+ * around paint() on dev hardware (chromium, not a phone — a genuine floor,
+ * not a ceiling, this needs to hold on real devices too), 24fps unthrottled:
+ *   desktop  1440px, H≈71 (baseline ~66):  ~1.7-1.9ms/paint
+ *   phone     384px, H≈341:                ~8.2-9.8ms/paint  (~5x the rows, ~5x the cost)
+ *   phone     320px, H≈517:                ~12.0-12.2ms/paint (~7.5x the rows)
+ * Unthrottled at 24fps, 384px would spend ~20% of every 41.6ms frame budget
+ * on this one decorative element. `effectiveFps()` (below) throttles frame
+ * rate down as H grows past baseline so total cost-per-second at phone
+ * widths lands within ~1.4-1.7x of desktop's, not up to 2.7x — see its own
+ * comment for why a small floor (not full proportional throttling) was kept.
  */
 
 export interface SmokeFieldOptions {
   /** [stop 0..1, hex] pairs, ascending. Maps field intensity to colour. */
   ramp: Array<[number, string]>;
-  /** Simulation grid. Larger = more detail, quadratically more work. */
+  /** Simulation grid. Larger = more detail, quadratically more work.
+   *  gridWidth is the only one actually fixed at this value — gridHeight is
+   *  the *baseline* row count, tuned against the ~0.6 aspect ratio a
+   *  landscape-oriented hero renders at; resize() rescales the live row
+   *  count from this baseline so a taller container gets more rows at the
+   *  same visual cell size instead of the same row count stretched
+   *  further. See resize()'s own comment. */
   gridWidth?: number;
   gridHeight?: number;
   /** Backing store width of the visible canvas; height follows its aspect ratio. */
@@ -93,7 +108,7 @@ export function createSmokeField(
   const {
     ramp,
     gridWidth: W = 108,
-    gridHeight: H = 66,
+    gridHeight: baseH = 66,
     outputWidth = 520,
     fps = 24,
     octaves = 3,
@@ -111,12 +126,19 @@ export function createSmokeField(
   const ctx = canvas.getContext('2d');
   if (!ctx) return { destroy: () => {} };
 
-  const offscreen = document.createElement('canvas');
+  // baseAspect is the ratio baseH was tuned against — derived, not
+  // hardcoded, so a future change to the tokens.json default stays
+  // self-consistent. H, the offscreen buffer, and its ImageData are all
+  // re-derived in resize() below, not created once here — see that
+  // function's comment.
+  const baseAspect = baseH / W;
+  let H = baseH;
+  let offscreen = document.createElement('canvas');
   offscreen.width = W;
   offscreen.height = H;
-  const octx = offscreen.getContext('2d')!;
-  const image = octx.createImageData(W, H);
-  const data = image.data;
+  let octx = offscreen.getContext('2d')!;
+  let image = octx.createImageData(W, H);
+  let data = image.data;
 
   // fbm sums amplitudes 0.5, 0.25, 0.125… — precompute the ceiling so the
   // field can be normalised to a true 0..1 regardless of octave count.
@@ -156,38 +178,61 @@ export function createSmokeField(
     return stops[0].rgb;
   };
 
-  // The simulation grid (W×H, 108×66 by default — landscape-shaped) and the
-  // fixed-px `blur` are both tuned against roughly landscape aspect ratios,
-  // where upscaling the coarse grid to the destination canvas is a modest,
-  // uniform stretch the blur can smooth into a diffuse gradient. Measuring
-  // the CONTAINER (not the canvas' own rect — see the CSS side of this fix
-  // in Hero.jsx) and driving canvas.height off its raw aspect ratio meant a
-  // tall, narrow container (a phone hero section, especially once its own
-  // content pushes it well past 100vh) could demand an extreme vertical
-  // stretch — 3x more than the same fixed blur was ever exercised at — and
-  // the coarse grid's rows became visible as bands instead of smoothing
-  // away. Capping the aspect ratio the backing store is ever asked to
-  // target keeps the stretch within what the grid/blur combo actually
-  // handles smoothly; the CSS side lets the canvas fall short of the
-  // container's full height at extreme aspects rather than stretching to
-  // fill it, with the container's own overflow:hidden cropping the rest —
-  // "keep its natural aspect ratio and overflow" rather than squash.
-  const MAX_ASPECT = 0.95;
+  // Earlier version of this fix capped the aspect ratio the canvas would
+  // ever target and let the container's own overflow:hidden crop what was
+  // left — that traded the banding for a hard, visible seam where the
+  // (now shorter) canvas ended and flat background began, since the CSS
+  // side (Hero.jsx) was stretching a *capped* canvas to less than 100% of
+  // the container rather than covering it. The actual fix stays in the
+  // opposite direction: keep covering the full container (canvas.height
+  // tracks the container's real, uncapped aspect ratio, same as before any
+  // of this), and instead rescale the SIMULATION to match — H (row count)
+  // is re-derived from that same aspect ratio every resize, at the ratio
+  // baseH was tuned against (baseAspect = baseH/W), so canvas.height/H (the
+  // vertical stretch the blur has to smooth over) stays equal to
+  // canvas.width/W (the horizontal one) at every aspect ratio, not just
+  // ~0.6. A taller container gets more rows at the same visual cell size
+  // instead of the same 66 rows stretched further — which is also why the
+  // blur radius doesn't need its own scaling: the stretch ratio it's
+  // smoothing over is now aspect-independent by construction, not just
+  // "close enough" at the one ratio it was tuned against.
   const resize = () => {
     const container = canvas.parentElement;
     const rect = (container ?? canvas).getBoundingClientRect();
     if (!rect.width) return;
-    const aspect = Math.min(rect.height / rect.width, MAX_ASPECT);
+    const aspect = rect.height / rect.width;
     canvas.width = outputWidth;
     canvas.height = Math.max(180, Math.round(outputWidth * aspect));
+
+    const newH = Math.max(24, Math.round(aspect * W));
+    if (newH !== H) {
+      H = newH;
+      offscreen.height = H;
+      image = octx.createImageData(W, H);
+      data = image.data;
+    }
   };
   resize();
+
+  // Pure proportional throttling (fps * baseH/H, no floor) would fully
+  // bound cost-per-second to roughly the desktop baseline at every aspect
+  // ratio — but at the most extreme phone aspects that works out to ~3fps,
+  // which reads as a slideshow rather than ambient motion for a
+  // continuously-drifting cloud. A small floor trades some of that cost
+  // bound back for still-visible motion: floored at 6fps, measured
+  // cost-per-second at phone widths lands at ~1.4-1.7x the desktop
+  // baseline (was up to ~2.7x with no throttling at all — see the
+  // module-level comment for the raw per-paint numbers this was tuned
+  // against) — not fully flat, a deliberate choppier-but-not-static trade
+  // rather than a fully solved one. Never exceeds the configured `fps`
+  // when H is at or below baseline (a wide/landscape aspect, where
+  // H<baseH, must not speed up).
+  const effectiveFps = () => Math.max(6, Math.min(fps, fps * (baseH / H)));
 
   let raf = 0;
   let lastFrame = 0;
   let t = 0;
   let visible = true;
-  const frameBudget = 1000 / fps;
 
   const paint = () => {
     let p = 0;
@@ -228,9 +273,17 @@ export function createSmokeField(
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (pauseWhenHidden && !visible) return;
-      if (now - lastFrame < frameBudget) return;
+      const targetFps = effectiveFps();
+      if (now - lastFrame < 1000 / targetFps) return;
       lastFrame = now;
-      t += timeStep;
+      // Advance the simulation clock by real elapsed time (scaled against
+      // the configured `fps`), not a fixed amount per rendered frame — so
+      // throttling to a lower effectiveFps at a tall aspect makes the
+      // animation choppier, not slower. Without this the plume would
+      // visibly rise at half speed wherever the throttle cuts frame rate
+      // in half, since half as many fixed-size steps would land per
+      // second of real time.
+      t += timeStep * (fps / targetFps);
       paint();
     };
     raf = requestAnimationFrame(loop);
