@@ -156,14 +156,30 @@ export function createSmokeField(
     return stops[0].rgb;
   };
 
+  // The simulation grid (W×H, 108×66 by default — landscape-shaped) and the
+  // fixed-px `blur` are both tuned against roughly landscape aspect ratios,
+  // where upscaling the coarse grid to the destination canvas is a modest,
+  // uniform stretch the blur can smooth into a diffuse gradient. Measuring
+  // the CONTAINER (not the canvas' own rect — see the CSS side of this fix
+  // in Hero.jsx) and driving canvas.height off its raw aspect ratio meant a
+  // tall, narrow container (a phone hero section, especially once its own
+  // content pushes it well past 100vh) could demand an extreme vertical
+  // stretch — 3x more than the same fixed blur was ever exercised at — and
+  // the coarse grid's rows became visible as bands instead of smoothing
+  // away. Capping the aspect ratio the backing store is ever asked to
+  // target keeps the stretch within what the grid/blur combo actually
+  // handles smoothly; the CSS side lets the canvas fall short of the
+  // container's full height at extreme aspects rather than stretching to
+  // fill it, with the container's own overflow:hidden cropping the rest —
+  // "keep its natural aspect ratio and overflow" rather than squash.
+  const MAX_ASPECT = 0.95;
   const resize = () => {
-    const rect = canvas.getBoundingClientRect();
+    const container = canvas.parentElement;
+    const rect = (container ?? canvas).getBoundingClientRect();
     if (!rect.width) return;
+    const aspect = Math.min(rect.height / rect.width, MAX_ASPECT);
     canvas.width = outputWidth;
-    canvas.height = Math.max(
-      180,
-      Math.round(outputWidth * (rect.height / rect.width))
-    );
+    canvas.height = Math.max(180, Math.round(outputWidth * aspect));
   };
   resize();
 

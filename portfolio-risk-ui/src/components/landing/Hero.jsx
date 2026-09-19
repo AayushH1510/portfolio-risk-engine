@@ -51,9 +51,21 @@ export default function Hero({ block }) {
       }}
     >
       <div style={{ position: 'absolute', inset: '-10% -5% 0', zIndex: 0, overflow: 'hidden' }}>
+        {/* height:'auto' — not '100%' — lets the canvas's rendered size
+            follow its own width/height attributes (set in smoke-field.ts's
+            resize(), capped at MAX_ASPECT) via the standard replaced-
+            element intrinsic-ratio behaviour, the same way an <img> with
+            only a width set derives its own height. At a tall container
+            (phone hero, especially once its own content pushes it well
+            past 100vh) this canvas now falls short of 100% height rather
+            than stretching a landscape-tuned noise field to fill it — the
+            gap is covered by the wrapper's own overflow:hidden plus the
+            gradient overlays below, which already fade to the page's flat
+            base colour before reaching the old 100% mark anyway. See
+            smoke-field.ts's own comment on MAX_ASPECT for the full story. */}
         <canvas
           ref={canvasRef}
-          style={{ width: '110%', height: '100%', display: 'block', position: 'absolute', top: 0, left: '-5%', filter: 'saturate(1.15)' }}
+          style={{ width: '110%', height: 'auto', display: 'block', position: 'absolute', top: 0, left: '-5%', filter: 'saturate(1.15)' }}
         />
         <div
           style={{

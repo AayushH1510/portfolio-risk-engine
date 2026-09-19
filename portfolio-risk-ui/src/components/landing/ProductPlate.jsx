@@ -145,19 +145,33 @@ export default function ProductPlate({ block }) {
                       <stop offset="100%" stopColor="var(--color-accent-mint)" stopOpacity="0" />
                     </linearGradient>
                   </defs>
+                  {/* Points generated from a seeded random walk (scripts/
+                      gen-chart.mjs — same deterministic-LCG technique as
+                      this file's own visuals.jsx uses for the Monte Carlo
+                      paths), then hard-coded here rather than computed at
+                      runtime: irregular per-step volatility with slow
+                      regime drift (quiet vs. choppy stretches), one
+                      deliberate drawdown with a sharp decline and an
+                      uneven, longer recovery (not a symmetric V), pinned to
+                      the same start/end y-values and viewBox as the
+                      original hand-authored sawtooth so nothing else in
+                      the layout moves. Benchmark is its own independent
+                      draw with a shallower trend and its own offset,
+                      smaller dip — tracks loosely rather than running
+                      parallel to the portfolio line. */}
                   <path
-                    d="M0,192 L20,184 L40,190 L60,170 L80,177 L100,156 L120,161 L140,145 L160,152 L180,131 L200,138 L220,122 L240,133 L260,112 L280,124 L300,105 L320,119 L340,101 L360,115 L380,138 L400,158 L420,178 L440,148 L460,132 L480,118 L500,100 L520,90 L540,97 L560,80 L580,87 L600,68 L620,75 L640,58 L660,65 L680,48 L700,55 L720,36 L740,43 L760,26 L780,31 L800,14 L800,230 L0,230 Z"
+                    d="M0,192.0 L18,191.6 L36,186.4 L55,179.5 L73,176.4 L91,170.3 L109,163.5 L127,157.1 L145,148.7 L164,148.3 L182,144.2 L200,132.0 L218,121.4 L236,111.3 L255,117.5 L273,120.0 L291,111.0 L309,101.3 L327,96.3 L345,95.6 L364,104.3 L382,111.5 L400,125.2 L418,131.0 L436,150.9 L455,145.5 L473,138.4 L491,134.7 L509,121.4 L527,102.9 L545,93.5 L564,90.5 L582,78.0 L600,71.1 L618,64.3 L636,67.0 L655,73.1 L673,70.8 L691,55.3 L709,41.8 L727,21.8 L745,38.8 L764,14.0 L782,21.6 L800,14.0 L800,230 L0,230 Z"
                     fill="url(#vgrow)"
                   />
                   <path
-                    d="M0,192 L20,184 L40,190 L60,170 L80,177 L100,156 L120,161 L140,145 L160,152 L180,131 L200,138 L220,122 L240,133 L260,112 L280,124 L300,105 L320,119 L340,101 L360,115 L380,138 L400,158 L420,178 L440,148 L460,132 L480,118 L500,100 L520,90 L540,97 L560,80 L580,87 L600,68 L620,75 L640,58 L660,65 L680,48 L700,55 L720,36 L740,43 L760,26 L780,31 L800,14"
+                    d="M0,192.0 L18,191.6 L36,186.4 L55,179.5 L73,176.4 L91,170.3 L109,163.5 L127,157.1 L145,148.7 L164,148.3 L182,144.2 L200,132.0 L218,121.4 L236,111.3 L255,117.5 L273,120.0 L291,111.0 L309,101.3 L327,96.3 L345,95.6 L364,104.3 L382,111.5 L400,125.2 L418,131.0 L436,150.9 L455,145.5 L473,138.4 L491,134.7 L509,121.4 L527,102.9 L545,93.5 L564,90.5 L582,78.0 L600,71.1 L618,64.3 L636,67.0 L655,73.1 L673,70.8 L691,55.3 L709,41.8 L727,21.8 L745,38.8 L764,14.0 L782,21.6 L800,14.0"
                     fill="none"
                     stroke="var(--color-accent-mint)"
                     strokeWidth="2"
                     vectorEffect="non-scaling-stroke"
                   />
                   <path
-                    d="M0,200 L60,196 L120,188 L180,182 L240,176 L300,170 L360,166 L400,180 L440,192 L480,176 L540,164 L600,152 L660,140 L720,128 L800,116"
+                    d="M0,200.0 L18,195.4 L36,196.0 L55,191.7 L73,187.4 L91,189.4 L109,186.0 L127,183.1 L145,183.4 L164,182.3 L182,181.4 L200,178.6 L218,176.9 L236,175.7 L255,171.6 L273,167.6 L291,168.6 L309,166.6 L327,168.3 L345,163.9 L364,161.6 L382,157.5 L400,156.2 L418,158.1 L436,163.4 L455,167.7 L473,172.9 L491,180.5 L509,175.4 L527,170.8 L545,162.1 L564,153.2 L582,145.9 L600,141.8 L618,136.4 L636,132.1 L655,128.5 L673,125.7 L691,124.0 L709,122.1 L727,120.2 L745,121.0 L764,120.9 L782,118.0 L800,116.0"
                     fill="none"
                     stroke="var(--color-text-ghost)"
                     strokeWidth="1.5"
