@@ -254,6 +254,40 @@ async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
   console.log(`  ok    ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> ${path.relative(ROOT, file)}${flagStr}`)
 }
 
+// Real, REACHABLE horizontal scroll surfaces only — document.documentElement
+// plus every element that authors overflowY:'auto' (the pattern every
+// scrolling tab root in this app uses, e.g. .dashboard-grid), each measured
+// on its own scrollWidth vs clientWidth. Deliberately NOT measureOverflow()'s
+// "uncontained" bucket: that bucket also catches elements clipped by a
+// plain overflow:hidden ancestor — safe, invisible, unreachable content
+// (the same kind of false positive the "Diversification" MetricCard label
+// ellipsis already produces there) — which is exactly what the
+// overflow:hidden containment fix (Dashboard.jsx, Comparison.jsx) now
+// produces on purpose: a tooltip clipped mid-text at a card's edge, still
+// present in the DOM at its full natural width so its own
+// getBoundingClientRect() still reports past the viewport, but genuinely
+// unreachable and invisible past the clip. Confirmed directly: after the
+// fix, tapping Comparison's growth chart near its right edge left a
+// recharts-tooltip-item's rect legitimately past clientWidth (its own box,
+// clipped, never rendered past the card) while every scrollWidth here
+// stayed unchanged — measureOverflow() flagged that as new "uncontained"
+// overflow, a false positive this function doesn't reproduce.
+async function measureReachableOverflow(page) {
+  return page.evaluate(() => {
+    const doc = { scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }
+    const containers = []
+    for (const el of document.querySelectorAll('body *')) {
+      if (el.style.overflowY === 'auto' || el.style.overflowY === 'scroll') {
+        containers.push({
+          selector: el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : el.tagName.toLowerCase(),
+          scrollWidth: el.scrollWidth, clientWidth: el.clientWidth,
+        })
+      }
+    }
+    return { doc, containers }
+  })
+}
+
 // Touch-triggered chart tooltip overflow — postmortem: Recharts activates
 // its tooltip on touch via touchmove, not touchstart (handleTouchStart only
 // forwards to the onMouseDown prop; handleTouchMove is what actually calls
@@ -267,31 +301,27 @@ async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
 // overflowY:'auto' (every scrolling tab root in this app), which per spec
 // forces a computed overflow-x:auto as a side effect; a real, reachable
 // horizontal scrollbar a user can act on, invisible to a document-level
-// check and exactly the "contained-vertical-only" bucket measureOverflow()
-// already classifies below — reused here rather than re-detected, since a
-// tooltip that escapes this way IS an element whose right edge exceeds the
-// viewport inside a vertical-only-authored ancestor, precisely what that
-// classifier already walks up to find. Recharts' own internal clamp
-// (getTooltipTranslateXY) turned out not to be an absolute safety net —
-// it floors against `viewBox`, populated from ResponsiveContainer's last
-// *committed* measured width (React state), not a live DOM read, so any
-// transient mismatch between that and the chart's actual current size can
-// still produce an unclamped position; not reliably reproducible here via
-// scripted taps/swipes/post-resize races in headless Chromium (real touch
-// devices have different ResizeObserver/rAF timing, and this app
-// deliberately leaves pinch-zoom enabled per this doc's own standing
-// decision — both plausible real triggers this harness can't emulate), so
-// this check is a regression guard against the known failure *shape*, not
-// a proof it will catch every possible trigger. The actual fix is
-// CSS containment (overflow:hidden on each chart's wrapper div,
-// Dashboard.jsx) — this check exists so a future change that removes that
-// containment, or reintroduces the same class of bug somewhere else,
+// check. Recharts' own internal clamp (getTooltipTranslateXY) turned out
+// not to be an absolute safety net — it floors against `viewBox`,
+// populated from ResponsiveContainer's last *committed* measured width
+// (React state), not a live DOM read, so any transient mismatch between
+// that and the chart's actual current size can still produce an unclamped
+// position; not reliably reproducible here via scripted taps/swipes/
+// post-resize races in headless Chromium (real touch devices have
+// different ResizeObserver/rAF timing, and this app deliberately leaves
+// pinch-zoom enabled per RESPONSIVE_AUDIT.md's own standing decision —
+// both plausible real triggers this harness can't emulate), so this check
+// is a regression guard against the known failure *shape*, not a proof it
+// will catch every possible trigger. The actual fix is CSS containment
+// (overflow:hidden on each chart's wrapper div — Dashboard.jsx,
+// Comparison.jsx) — this check exists so a future change that removes
+// that containment, or reintroduces the same class of bug somewhere else,
 // doesn't go unnoticed again.
 async function checkTouchChartOverflow(page, outDir, viewportLabel, slug, results) {
   const wrapperCount = await page.locator('.recharts-wrapper').count()
   if (wrapperCount === 0) return
 
-  const before = await measureOverflow(page)
+  const before = await measureReachableOverflow(page)
 
   const charts = Math.min(wrapperCount, 5)
   for (let i = 0; i < charts; i++) {
@@ -317,26 +347,46 @@ async function checkTouchChartOverflow(page, outDir, viewportLabel, slug, result
   }
   await page.waitForTimeout(200)
 
-  const after = await measureOverflow(page)
-  const newUncontained = after.top5Uncontained.length > before.top5Uncontained.length ||
-    after.maxRight > before.maxRight + 1
-  const newVerticalOnly = after.verticalOnlyContainedCount > before.verticalOnlyContainedCount
-  const touchOverflow = newUncontained || newVerticalOnly
+  const after = await measureReachableOverflow(page)
+  const docOverflowed = after.doc.scrollWidth > after.doc.clientWidth + 1 &&
+    after.doc.scrollWidth > before.doc.scrollWidth + 1
+  // Matched by selector, not array index — the set of overflowY:'auto'
+  // elements is stable in practice (one scrolling root per tab), but
+  // selector matching is correct even if querySelectorAll's order ever
+  // isn't, where a positional zip wouldn't be.
+  // Paired by position, not re-queried by selector: the set of
+  // overflowY:'auto' elements is identical before and after (tapping a
+  // chart adds a position:absolute tooltip node, not another auto-overflow
+  // container, so nothing here is inserted, removed, or reordered) — a
+  // plain index zip is correct and, critically, keeps every container
+  // aligned with its own earlier self even when it ISN'T currently
+  // overflowing. An earlier version of this filtered out non-overflowing
+  // entries before advancing a per-selector queue, which — for two
+  // className-less "div" containers on the same page, one pre-existing
+  // and overflowing, one not — could desync the pairing and compare the
+  // real one against the wrong baseline, misreporting existing, unrelated
+  // overflow (RiskAnalysis's own documented §4 finding, nothing to do
+  // with touch) as "new" from the tap. Confirmed via a direct before/after
+  // measurement with zero taps involved: the overflow was already there.
+  const newContainerOverflow = after.containers
+    .map((c, i) => ({ c, b: before.containers[i] }))
+    .filter(({ c, b }) => c.scrollWidth > c.clientWidth + 1 && (!b || c.scrollWidth > b.scrollWidth + 1))
+    .map(({ c }) => c)
+  const touchOverflow = docOverflowed || newContainerOverflow.length > 0
 
   results.push({
     viewport: viewportLabel, view: `${slug}-touch-check`,
     chartsTapped: charts, touchOverflow,
-    before: { maxRight: before.maxRight, verticalOnlyContainedCount: before.verticalOnlyContainedCount },
-    after: { maxRight: after.maxRight, verticalOnlyContainedCount: after.verticalOnlyContainedCount, top5VerticalOnlyContained: after.top5VerticalOnlyContained },
+    before, after, newContainerOverflow,
     ok: true,
   })
 
   if (touchOverflow) {
     const file = path.join(outDir, `${slug}-touch-overflow.png`)
     await page.screenshot({ path: file, fullPage: true })
-    console.log(`  FAIL  ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> touch tap on a chart introduced horizontal overflow (see ${path.relative(ROOT, file)})`)
+    console.log(`  FAIL  ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> touch tap on a chart introduced a REACHABLE horizontal scroll surface (see ${path.relative(ROOT, file)})`)
   } else {
-    console.log(`  ok    ${viewportLabel.padEnd(20)} ${(slug + '-touch').padEnd(20)} -> ${charts} chart(s) tapped, no new overflow`)
+    console.log(`  ok    ${viewportLabel.padEnd(20)} ${(slug + '-touch').padEnd(20)} -> ${charts} chart(s) tapped, no new reachable overflow`)
   }
 }
 
@@ -591,7 +641,11 @@ async function main() {
   }
   if (touchOverflowing.length) {
     console.log(`\n${touchOverflowing.length} view(s) introduced horizontal overflow from a chart TAP that wasn't there before (see checkTouchChartOverflow in this file):`)
-    for (const t of touchOverflowing) console.log(`  ${t.viewport.padEnd(20)} ${t.view.padEnd(20)} maxRight ${t.before.maxRight}->${t.after.maxRight}, vertical-only-contained ${t.before.verticalOnlyContainedCount}->${t.after.verticalOnlyContainedCount}`)
+    for (const t of touchOverflowing) {
+      const docLine = `doc scrollWidth ${t.before.doc.scrollWidth}->${t.after.doc.scrollWidth} (clientWidth ${t.after.doc.clientWidth})`
+      const containerLines = t.newContainerOverflow.map(c => `${c.selector} scrollWidth->${c.scrollWidth} (clientWidth ${c.clientWidth})`).join('; ')
+      console.log(`  ${t.viewport.padEnd(20)} ${t.view.padEnd(20)} ${docLine}${containerLines ? '  |  ' + containerLines : ''}`)
+    }
   }
   if (sidebarBlocked.length) {
     console.log(`\n${sidebarBlocked.length} view(s) needed a forced click, blocked by the fixed 260px sidebar (nav.clientWidth === 0 — no header-only fix closes this) — expected until the sidebar/drawer redesign, not a regression:`)

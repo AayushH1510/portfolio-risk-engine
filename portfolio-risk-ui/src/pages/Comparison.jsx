@@ -160,7 +160,13 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Cumulative returns
           </div>
-          <div style={{ flex: 1, minHeight: 200 }}>
+          {/* overflow:'hidden' — containment backstop for Recharts'
+              tooltip-position clamp, which isn't an absolute safety net
+              (it floors against ResponsiveContainer's last-*committed*
+              measured width, not a live DOM read); same fix, same
+              reasoning as Dashboard.jsx's chart wrappers — see
+              RESPONSIVE_AUDIT.md's touch-tooltip-overflow postmortem. */}
+          <div style={{ flex: 1, minHeight: 200, overflow: 'hidden' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={growthData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <XAxis dataKey="date" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
@@ -190,7 +196,9 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
             ))}
           </div>
         </div>
-        <div style={{ height: 180 }}>
+        {/* overflow:'hidden' — same containment backstop as the growth
+            chart's wrapper above. */}
+        <div style={{ height: 180, overflow: 'hidden' }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={mcData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
               <XAxis dataKey="day" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} label={{ value:'Trading days', position:'insideBottom', offset:-2, fill:'var(--text-muted)', fontSize:10 }} />

@@ -568,9 +568,17 @@ aside.sidebar-shell.sidebar-open {
      height normally — replaced with a fixed floor here since it's no
      longer filling leftover space in a height-constrained column; this is
      the secondary chart of the pair so it gets a shorter floor than
-     growth's 240px, not the same one. */
+     growth's 240px, not the same one.
+
+     245px, not the original 160px: 160 left only ~86-90px for the actual
+     plot area once the card's own overhead (28px padding + ~24px label
+     row + ~22px "Worst drop" row ≈ 74px) is subtracted — enough to prove a
+     line exists, not enough to actually read the trough's shape, which is
+     the entire point of a drawdown chart. 245px targets ~170px of plot
+     area (245-74), in the middle of the 160-180px range that's actually
+     legible. */
   .dashboard-right-col__gauge    { order: 2; }
-  .dashboard-right-col__drawdown { order: 1; flex: none; min-height: 160px; }
+  .dashboard-right-col__drawdown { order: 1; flex: none; min-height: 245px; }
   /* Without this, the outer grid's own "auto" row-sizing for "right"
      measures ~13px instead of what this pair actually needs — verified via
      getComputedStyle: RiskGauge's aspect-ratio canvas contributes near-zero
@@ -580,13 +588,10 @@ aside.sidebar-shell.sidebar-open {
      Dashboard's own overflowY:'auto' covers it, but not something to leave
      relying on overflow spillover). An explicit min-height sidesteps that
      calculation the same way growth's does above, rather than depending on
-     it. 350px, not the original 453px: that number was sized to the gauge
-     card's old full-square canvas (~287px tall); the gauge cap below
-     (.risk-gauge-canvas's phone aspect-ratio) shrinks the gauge card to
-     ~172px, so drawdown's 160px + 10px gap + ~172px gauge is the new floor.
-     Keep this in sync if either card's mobile sizing changes again. */
+     it. 430px: ~172px gauge + 10px gap + drawdown's own 245px above. Keep
+     this in sync if either card's mobile sizing changes again. */
   .dashboard-grid__right {
-    min-height: 350px;
+    min-height: 430px;
   }
 
   /* Uniform, compact metric cards — row1/row2 only; MetricCard itself is
@@ -744,19 +749,51 @@ aside.sidebar-shell.sidebar-open {
 /* Expand/collapse control (Dashboard.jsx, growth card header) — a small
    mono glyph, not a Button-Ghost/Primary: DESIGN.md's button specs are for
    real actions, this is meant to read as unobtrusive chrome sitting next
-   to the Combined/By Holding toggle, not compete with it. */
+   to the Combined/By Holding toggle, not compete with it. It's also the
+   main affordance on the whole tab at phone width, so it can't just be
+   small and quiet either — a 44x44 tap target (WCAG's minimum) and a
+   hairline border that's visible at rest, not just on :hover (a touch
+   device has no hover state at all, so a hover-only affordance is
+   invisible to the exact input method this control exists for — border is
+   what makes it discoverable, per DESIGN.md's "structure comes from
+   hairlines, not shadows").
+
+   The tap target is a `::before` positioned via `inset: -11px`, not the
+   button's own box — the button itself stays a 22x22 visual element that
+   contributes exactly that much to the header row's flex layout; a
+   literal 44x44 button here previously grew the row's height by ~24px
+   and, since the growth card's own height is a fixed min-height (not
+   grow-to-fit), ate directly into the chart's already-tight plot area
+   (~65px down to ~41px, confirmed by measuring the rendered SVG). The
+   pseudo-element is absolutely positioned — removed from flow entirely —
+   so it extends the tappable area without moving anything else, the
+   standard technique for "bigger tap target, same visual footprint." */
 .chart-expand-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-hairline);
   background: none;
-  border: none;
-  padding: 2px;
+  padding: 0;
   margin: 0;
   color: var(--text-muted);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1;
+  transition: border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+.chart-expand-btn::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
 }
 .chart-expand-btn:hover {
+  border-color: var(--line-emphasis);
   color: var(--text-primary);
 }
 

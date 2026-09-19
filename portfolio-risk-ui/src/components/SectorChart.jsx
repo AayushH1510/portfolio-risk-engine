@@ -10,9 +10,31 @@ const truncate = (label, max = 24) =>
 // axis has a `width` prop — independent of (and on top of) tickFormatter. A
 // plain <text> tick bypasses that entirely so `truncate` is the only thing
 // that ever shortens the label.
-function SectorTick({ x, y, payload }) {
+//
+// anchor='end' (desktop, default) is untouched: Recharts' own `x` already
+// sits at the axis's right edge, flush against the bars, and right-aligned
+// text reads back from there exactly as it always has.
+//
+// anchor='start' (phone — see isPhone below) ignores Recharts' `x`
+// entirely and pins text to a small fixed left offset instead. Recharts'
+// `x` for a left-side category axis is always the axis's RIGHT edge
+// (adjacent to the plot area) regardless of text-anchor — switching only
+// textAnchor to 'start' while keeping that x would start each label right
+// where the bars begin and run it further right, into the plot itself.
+// Anchoring to the axis's own left edge (~margin.left) instead is what
+// actually closes the gap the fixed-165px column leaves on a narrow
+// phone-width card — see SectorChart's own comment on yAxisWidth.
+function SectorTick({ x, y, payload, anchor = 'end', leftX = 2 }) {
   return (
-    <text x={x} y={y} dy={3} textAnchor="end" fill="var(--text-muted)" fontSize={10} fontFamily="var(--font-mono)">
+    <text
+      x={anchor === 'start' ? leftX : x}
+      y={y}
+      dy={3}
+      textAnchor={anchor}
+      fill="var(--text-muted)"
+      fontSize={10}
+      fontFamily="var(--font-mono)"
+    >
       {truncate(payload.value)}
     </text>
   )
@@ -37,7 +59,7 @@ function SectorTooltip({ active, payload, label }) {
   )
 }
 
-export default function SectorChart({ sectorData, loading }) {
+export default function SectorChart({ sectorData, loading, isPhone }) {
   if (loading) {
     return (
       <div className="card" style={{
@@ -87,6 +109,19 @@ export default function SectorChart({ sectorData, loading }) {
   // sector always gets enough room to keep its label.
   const chartHeight = Math.max(96, 34 + sectorData.length * 24)
 
+  // Desktop's fixed 165px label column is a small fraction of a wide card
+  // there, so it's never actually been a problem — but on a phone-width
+  // card (single column, ~290-360px total) it reserves nearly half the
+  // chart for text, right-aligned with a lot of empty space to its own
+  // left, and correspondingly compresses the bars into whatever's left.
+  // Phone only: shrink the column to fit the longest truncated label
+  // actually present (not a guessed constant — same data-driven-by-content
+  // approach RiskAnalysis's correlation matrix already uses for its own
+  // cell sizing) and left-align within it, so bars get the width back.
+  // ~6.2px/char is Geist Mono's advance width at this 10px size.
+  const longestLabel = Math.max(...sectorData.map(d => truncate(d.sector).length))
+  const yAxisWidth = isPhone ? Math.max(60, Math.min(140, Math.round(longestLabel * 6.2) + 12)) : 165
+
   return (
     <div className="card" style={{ padding: '10px 16px', height: chartHeight, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
@@ -111,10 +146,10 @@ export default function SectorChart({ sectorData, loading }) {
             <YAxis
               type="category"
               dataKey="sector"
-              tick={<SectorTick />}
+              tick={<SectorTick anchor={isPhone ? 'start' : 'end'} leftX={4} />}
               tickLine={false}
               axisLine={false}
-              width={165}
+              width={yAxisWidth}
             />
             <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(var(--text-primary-rgb),0.03)' }} />
             <Bar dataKey="weight" fill="var(--signal-positive)" radius={[0, 0, 0, 0]} barSize={8}>

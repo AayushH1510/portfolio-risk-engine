@@ -41,6 +41,34 @@ const CHART_STYLE = {
   fontFamily: 'var(--font-mono)',
 }
 
+// Recharts' default YAxis domain rounds OUT to "nice" tick values (e.g.
+// -10%/30% for data that actually runs -2% to 27%) — reasonable in
+// isolation, but on a chart this short (the inline card) or this tall (the
+// fullscreen expand) it leaves the line occupying a thin band in the
+// middle of a lot of dead vertical space, exactly backwards from what
+// either size actually needs. Computes the true min/max across every
+// series actually plotted (not just "portfolio" — by-holding mode plots
+// several tickers plus an optional benchmark, and the domain has to cover
+// whichever's most extreme) and pads by a fixed fraction of the range
+// rather than rounding to a "nice" number, so the line reliably fills most
+// of the available height without ever touching the plot edges. Falls
+// back to Recharts' own 'auto' when there's no finite range to measure
+// (e.g. an empty by-holding dataset before the toggle is shown).
+function computeYDomain(rows, keys, padFraction = 0.1) {
+  let min = Infinity, max = -Infinity
+  for (const row of rows) {
+    for (const key of keys) {
+      const v = row[key]
+      if (typeof v !== 'number' || !isFinite(v)) continue
+      if (v < min) min = v
+      if (v > max) max = v
+    }
+  }
+  if (!isFinite(min) || !isFinite(max)) return ['auto', 'auto']
+  const pad = (max - min) * padFraction || Math.abs(max || 1) * padFraction
+  return [min - pad, max + pad]
+}
+
 const AXIS_STYLE = { fill: 'var(--text-muted)', fontSize: 10 }
 
 // Clickable ticker symbol — opens the Stock Drawer. Same pattern as
@@ -180,6 +208,21 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const ddData = ddSeries.dates.map((d, i) => ({
     date: d.slice(5), drawdown: ddSeries.values[i],
   }))
+
+  // Tightened Y-axis domains — see computeYDomain's comment. Same domain
+  // for the inline and expanded growth chart (both render from this exact
+  // JSX, see growthCardEl below) — a thin band in the middle of empty
+  // space is a legibility problem at the inline card's ~65px plot height
+  // too, not just the fullscreen view. Gated on isCompactViewport, not
+  // applied universally: this whole pass was scoped to phone width, and
+  // desktop's own domain behavior (Recharts' default 'auto') stays
+  // byte-for-byte untouched rather than "probably fine, close enough."
+  const growthYDomain = isCompactViewport
+    ? computeYDomain(growthData, bench ? ['portfolio', 'benchmark'] : ['portfolio'])
+    : ['auto', 'auto']
+  const holdingYDomain = isCompactViewport
+    ? computeYDomain(holdingData, bench ? [...tickers, 'benchmark'] : tickers)
+    : ['auto', 'auto']
 
   const sharpeColor = sharpe > 2 ? 'good' : sharpe > 1 ? 'good' : sharpe > 0 ? 'warning' : 'bad'
   const ddColor     = Math.abs(dd) < 0.15 ? 'good' : Math.abs(dd) < 0.30 ? 'warning' : 'bad'
@@ -323,7 +366,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={growthData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                   <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                  <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
+                  <YAxis domain={growthYDomain} tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
                   <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
                   <Tooltip content={<CustomTooltip pct />} />
                   <Area type="monotone" dataKey="portfolio" stroke="var(--signal-positive)" strokeWidth={1.5} fill="var(--signal-positive)" fillOpacity={0.08} dot={false} name="Portfolio" />
@@ -334,7 +377,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={holdingData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                   <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                  <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
+                  <YAxis domain={holdingYDomain} tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={42} />
                   <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
                   <Tooltip content={<CustomTooltip pct />} />
                   {tickers.map((tk, i) => (
@@ -418,7 +461,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
 
       {/* Sector exposure */}
       <div className="dashboard-grid__sector">
-        <SectorChart sectorData={sectorData} loading={sectorLoading} />
+        <SectorChart sectorData={sectorData} loading={sectorLoading} isPhone={isPhone} />
       </div>
 
       {/* Growth chart — the point of the page. Built as growthCardEl above
