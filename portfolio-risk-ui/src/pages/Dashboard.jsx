@@ -127,9 +127,16 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
 
   // Reactive, not computed once — same real-capability-detection pattern as
   // Sidebar's isNarrow check (matchMedia, not a resize listener), keyed to
-  // --breakpoint-phone (768px) rather than --breakpoint-tablet. Drives
-  // MetricCard's own `small` prop on the top metrics row only — every other
-  // `small` usage in the app is deliberate at every width and stays as-is.
+  // --breakpoint-phone (768px) rather than --breakpoint-tablet. Width-only
+  // is deliberate here and only here: SectorChart's label column needs to
+  // know whether the CARD itself is narrow, which tracks literal viewport
+  // width even at a reflowed landscape phone (852x393 stacks to a single
+  // column, but that column is ~820px wide — plenty of room for the
+  // desktop-style fixed label column, no need for the narrow-card
+  // treatment there). Do not reuse this for anything tied to the compact-
+  // viewport CSS rules below (min-height:64px etc.) — see isCompactViewport
+  // and its own history with this exact card grid for why that's a
+  // different question with a different answer.
   const [isPhone, setIsPhone] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
   )
@@ -140,11 +147,23 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
     return () => mql.removeEventListener('change', handler)
   }, [])
 
-  // Distinct from isPhone above — that one is width-only, which is right
-  // for MetricCard's font sizing but wrong for the growth chart's fullscreen
-  // expand. A phone rotated to landscape (A54: 852x393) has a width well
-  // past 767px but is still a phone, and it's exactly the orientation where
-  // expanding a wide time series pays off most. COMPACT_VIEWPORT_QUERY
+  // Distinct from isPhone above, and NOT interchangeable with it — two
+  // real, different questions that happen to often agree. A phone rotated
+  // to landscape (A54: 852x393) has a width well past 767px but is still
+  // a phone, and it's exactly the orientation where expanding a wide time
+  // series pays off most, so the growth-chart expand control needs the
+  // dual-axis answer. Row1's MetricCards (small={isCompactViewport} below)
+  // need it too, for a reason discovered the hard way: index.css's
+  // .dashboard-grid__row1 .card height:64px is itself gated on this same
+  // dual-axis condition, and previously row1 passed small={isPhone}
+  // (width-only) — at 852x393 that CSS 64px constraint was active while
+  // isPhone was false, so MetricCard rendered its large variant (22px
+  // value, 14px padding, ~70px of content) inside a box tuned for the
+  // small variant (18px/12px, ~62px) — confirmed by direct screenshot: the
+  // label's top sliver visibly clipped off, exactly as reported. Whatever
+  // JS decision feeds a size that a compact-viewport-gated CSS rule then
+  // constrains must be driven by that same dual-axis condition, or the two
+  // can disagree at exactly this orientation. COMPACT_VIEWPORT_QUERY
   // (lib/breakpoints.js) is the single source for this condition — CSS
   // can't import it (media conditions can't read custom properties), so
   // index.css's "Compact viewport" block hand-writes the same 767 literal
@@ -425,26 +444,36 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
         ))}
       </div>
 
-      {/* Top metrics row — auto-fit, no media query needed for column count;
+      {/* Top metrics row — flex-wrap, not grid auto-fit: see
+          .dashboard-grid__row1's own comment in index.css for why (flush
+          last row without reordering or hand-counting a remainder).
           `small` on each card is the one part of this row that does need a
           breakpoint (MetricCard's font-size is prop-driven, not CSS-driven),
-          hence the isPhone check above instead of a pure CSS approach here. */}
-      <div className="dashboard-grid__row1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
-        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isPhone} />
-        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isPhone} />
+          hence the isCompactViewport check above instead of a pure CSS
+          approach here. isCompactViewport, not isPhone: this row's CSS
+          height:64px is itself gated on the dual-axis condition, so the
+          font/padding variant driving how much space the content actually
+          needs has to be gated on the exact same condition — see that
+          state's own comment for the clipping bug this fixes. */}
+      <div className="dashboard-grid__row1" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <MetricCard label={<MetricTooltip metricKey="annual_return">Annual Return</MetricTooltip>}  value={fmt(ret)}           tone={retColor}   sub={ba ? `${fmt(ba.alpha)} alpha` : null} small={isCompactViewport} />
+        <MetricCard label={<MetricTooltip metricKey="volatility">Volatility</MetricTooltip>}     value={fmt(vol)}           tone={vol < 0.2 ? 'good' : vol < 0.35 ? 'warning' : 'bad'} small={isCompactViewport} />
         <div data-tour="sharpe-card">
-          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" small={isPhone} />
+          <MetricCard label={<MetricTooltip metricKey="sharpe_ratio">Sharpe Ratio</MetricTooltip>} value={sharpe.toFixed(2)} tone={sharpeColor} sub="above 1.0 is good" small={isCompactViewport} />
         </div>
-        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} small={isPhone} />
-        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} small={isPhone} />
+        <MetricCard label={<MetricTooltip metricKey="sortino_ratio">Sortino Ratio</MetricTooltip>}  value={sortino.toFixed(2)} tone={sharpeColor} small={isCompactViewport} />
+        <MetricCard label={<MetricTooltip metricKey="max_drawdown">Max Drawdown</MetricTooltip>}   value={fmt(dd)}            tone={ddColor} small={isCompactViewport} />
       </div>
 
-      {/* Second metrics row — dynamic, already `small`; auto-fit replaces the
-          fixed repeat(N, 1fr) so it densely wraps rather than squeezing N
-          columns arbitrarily narrow. Phone width adds margin-top here (CSS,
-          not gap) purely as a visual-hierarchy signal separating this row
-          from the primary one above — see .dashboard-grid__row2 in index.css. */}
-      <div className="dashboard-grid__row2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))', gap: 10 }}>
+      {/* Second metrics row — dynamic count (3-5 items depending on data
+          availability), already `small`. flex-wrap, not grid auto-fit — see
+          .dashboard-grid__row1's comment above; this row needs the flush-
+          last-row behavior even more than row1 does, since its count
+          genuinely varies instead of always being 5. Phone width adds
+          margin-top here (CSS, not gap) purely as a visual-hierarchy signal
+          separating this row from the primary one above — see
+          .dashboard-grid__row2 in index.css. */}
+      <div className="dashboard-grid__row2" style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
         {secondRowItems.map(item => (
           <MetricCard
             key={item.label}

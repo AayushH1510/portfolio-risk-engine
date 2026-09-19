@@ -475,6 +475,28 @@ aside.sidebar-shell.sidebar-open {
 .dashboard-grid__growth { grid-area: growth; min-height: 0; }
 .dashboard-grid__right  { grid-area: right; }
 
+/* Metric card rows (Dashboard.jsx) — flex-wrap, not grid's
+   repeat(auto-fit, minmax(88px, 1fr)): auto-fit's column COUNT is shared
+   across every row it wraps to, so a row that doesn't divide evenly (row1
+   is always 5 cards; row2 varies 3-5 depending on which optional metrics
+   the response includes) leaves its last row's leftover cards sized to a
+   single column each instead of filling the row — a ragged, unfinished-
+   looking final row, worse the fewer cards land in it. flex-wrap sizes
+   each wrapped LINE independently: flex-grow on every card fills
+   whatever's left on ITS OWN row, full stop, for any remainder, without
+   hand-counting columns or special-casing "row1 always has 2 left over."
+   flex-basis 88px is the same minimum auto-fit used, so wrapping points
+   are unchanged; min-width:0 is still required per-card (a flex item's
+   default min-width is content-based, same reason it was needed under
+   grid — see the mobile block below). Applies at every width: desktop
+   already never hits a ragged row (5 cards routinely fit one line), so
+   there's nothing for this to visibly change there. */
+.dashboard-grid__row1 > *,
+.dashboard-grid__row2 > * {
+  flex: 1 1 88px;
+  min-width: 0;
+}
+
 /* Gauge/drawdown pairing — flex, not a nested grid: a grid item that is
    itself a grid container produced an unreliable "auto" row height for the
    outer .dashboard-grid's "right" row at mobile width (RiskGauge's
@@ -553,12 +575,23 @@ aside.sidebar-shell.sidebar-open {
 
   /* The chart is the point of the page: give it real height instead of
      letting min-height:0 (desktop's rule, above) collapse it to its label
-     row. ~240px keeps period pills + chart within the ~727px usable
-     height measured on the A54 (384x854) — the chart is the first
-     substantial thing on screen, with the top of the metric-card grid
-     peeking in below as a scroll affordance. */
+     row. 390px, not the original 240px: 240 gave the plot area itself
+     only ~53px (240 minus ~187px of fixed overhead — header row with the
+     Combined/By Holding toggle and expand control, the legend, the
+     compact InsightBox, and the card's own padding, none of which shrink
+     with the card) — thinner than drawdown's own plot area even though
+     growth is the tab's primary element. 390 targets ~200px of plot
+     (390-187), deliberately more than drawdown's ~170px, not just equal
+     to it. Verified this still clears the ~727px usable-height budget
+     (measured on the A54, 384x854) with room to spare: at 390px the
+     growth card's own bottom edge lands around y=489 (pills ~87 + growth
+     390 + top offset), leaving row1 not just peeking but fully visible
+     before the 727px mark — the original design intent ("top of the
+     metric-card grid peeking in") undersold how much room was actually
+     available once the height that mattered (growth's, not row1's) was
+     sized to its content instead of a guess. */
   .dashboard-grid__growth {
-    min-height: 240px;
+    min-height: 390px;
   }
 
   /* Swap the gauge/drawdown pair to drawdown-first, matching the reorder
@@ -624,12 +657,11 @@ aside.sidebar-shell.sidebar-open {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* The Sharpe card sits inside its own wrapper (data-tour anchor for
-     OnboardingTour) — that wrapper, not .card, is the actual auto-fit
-     grid item, so it needs the same min-width:0. */
-  .dashboard-grid__row1 [data-tour="sharpe-card"] {
-    min-width: 0;
-  }
+  /* The Sharpe card's own min-width:0 (it sits inside a wrapper div — a
+     data-tour anchor for OnboardingTour — that wrapper, not .card, is the
+     actual flex item) now comes from the universal
+     .dashboard-grid__row1 > * rule above, same as every other direct
+     child; no longer needs its own rule here. */
   .dashboard-grid__row1 .metric-card-sub,
   .dashboard-grid__row2 .metric-card-sub {
     display: none;
