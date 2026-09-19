@@ -86,11 +86,9 @@ Error handling on Run Analysis
 
 FOR LATER — from pre-launch regression test
 
-Yahoo Finance intermittently blocking/rate-limiting Render's IP for the CORE analysis endpoint (not just stock drawer/valuation, those are already on Finnhub), not urgent right now since the honest-error fix is in, but if this keeps recurring during testing, may eventually need to consider moving core historical price fetching off yfinance too, bigger decision, not todays fix
-ExportPDF.jsx has two style={{...}} props on the same element in two places (lines 82 and 128), JSX silently drops the first one, some intended PDF styling is likely being lost, Vite flags this as a build warning
-Valuation.jsx doesn't wire onTickerClick to open the Stock Drawer, even though CLAUDE.md documents it as wired there, clicking a row only selects it for the Key Metrics panel below, doc/reality mismatch, not a functional break
-
 STILL OPEN / QUEUED
+Green Indicators with Solid Green Sidebar looks too ai change it across app
+
 Other economical benchmarks like GOLD with SNP500
 Combination of APIs for different markets
 Test Casing more tickers not just 3 - 5 (Potn csv of ticker drop to analysis)
