@@ -1,0 +1,32 @@
+/* Below 768px the 5 nav links collapse behind a menu toggle instead of
+   wrapping onto their own row. A wrapped 3-row nav rendered ~109px tall at
+   every scroll position (nav is position:fixed, so this wasn't just an
+   initial-load cost) — and because Hero.jsx's own top padding was tuned
+   against nav's DESIGNED 72px single-row height (--layout-navHeight), not
+   the wrapped one, the eyebrow row rendered partially underneath the nav.
+   See RESPONSIVE_AUDIT.md's landing survey.
+
+   The "Varense" wordmark next to the logo mark also drops below 768px:
+   logo + toggle + the "Launch the app" CTA don't fit one row at 320px with
+   the full wordmark alongside them, and the icon mark alone is a standard,
+   legible mobile-nav pattern on its own. Same 768px breakpoint as
+   section-frame.css/product-plate.css/steps.css — this session's landing
+   fixes all key off it. */
+.nav-links {
+  display: flex;
+}
+.nav-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  .nav-brand-name {
+    display: none;
+  }
+  .nav-menu-toggle {
+    display: flex;
+  }
+}

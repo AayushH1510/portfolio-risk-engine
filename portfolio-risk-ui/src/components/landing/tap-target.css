@@ -47,3 +47,16 @@
      in the stacked mobile header, extend further. */
   inset: -1px -4px -6px -4px;
 }
+
+.tap-target-menu-toggle {
+  position: relative;
+}
+.tap-target-menu-toggle::before {
+  content: '';
+  position: absolute;
+  /* Unlike the nav links, the toggle sits alone in the collapsed mobile
+     header row — logo to its left, the CTA to its right, both with their
+     own gap — so a plain symmetric inset reaches the full 44px in both
+     directions with no neighbour to overlap. */
+  inset: -4px;
+}

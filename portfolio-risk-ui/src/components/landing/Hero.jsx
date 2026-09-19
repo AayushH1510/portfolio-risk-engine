@@ -36,7 +36,18 @@ export default function Hero({ block }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: 'clamp(100px, 14vh, 150px) 40px 0',
+        // The clamp() alone used to be the whole story, independently tuned
+        // and only coincidentally larger than nav's height — it drifted out
+        // of sync the moment nav wrapped to 3 rows at phone width (109px)
+        // instead of its designed 72px, burying the eyebrow row under the
+        // fixed nav. The max(..., calc(var(--layout-navHeight) + 24px))
+        // floor ties this padding to the same token nav's own height comes
+        // from (design/tokens.json), so a future change to nav's height
+        // carries this along automatically instead of needing a human to
+        // remember to re-tune this clamp too. A no-op today (100px already
+        // clears 72px+24px=96px) — see design/tokens.json's own comment on
+        // navHeight and RESPONSIVE_AUDIT.md's landing survey.
+        padding: 'max(clamp(100px, 14vh, 150px), calc(var(--layout-navHeight) + 24px)) 40px 0',
       }}
     >
       <div style={{ position: 'absolute', inset: '-10% -5% 0', zIndex: 0, overflow: 'hidden' }}>

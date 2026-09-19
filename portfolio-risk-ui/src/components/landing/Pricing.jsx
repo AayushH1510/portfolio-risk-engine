@@ -133,7 +133,12 @@ export default function Pricing({ block }) {
         <h2 style={{ ...typeStyle('displayM'), margin: '0 0 var(--space-16)', color: 'var(--color-text-primary)', maxWidth: '640px' }}>
           {block.heading}
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(255px, 1fr))', gap: 'var(--space-5)' }}>
+        {/* min(255px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
+            floors" standing decision — noted but not fixed in the previous
+            pass since SectionFrame's own fix left this one just barely
+            clearing 320px; fixing it now for consistency rather than
+            relying on that margin staying positive. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(255px, 100%), 1fr))', gap: 'var(--space-5)' }}>
           {block.tiers.map((tier) => (
             <TierCard key={tier.name} tier={tier} />
           ))}

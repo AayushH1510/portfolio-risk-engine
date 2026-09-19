@@ -1,0 +1,49 @@
+/* Each step row is a 3-column grid: a fixed 64px ordinal, a flexible title+
+   body column, and an annotation column capped at 260px. That 260px column
+   has no `fr` unit, so CSS Grid sizes it from its own content (up to the
+   260px cap) in the same non-flexible pass that resolves every other
+   non-fr track — *before* the flexible `1fr` title column gets whatever
+   space is left over. At phone width the 3 columns don't have ~64+1fr+260px
+   worth of room to begin with (~280px total gutter-to-gutter), so the
+   annotation column claims its content-sized ~244px first and the title
+   column is left with 0px — its own text still has to render somewhere, so
+   it overflows rightward out of its collapsed cell and visually overlaps
+   the annotation column sitting right next to it, one word per line all
+   the way down. Same container-starvation family as SectionFrame's label
+   column and ProductPlate's 232px sidebar (RESPONSIVE_AUDIT.md), just
+   reached through grid content-sizing rather than an explicit floor.
+
+   Below 768px: stack the annotation row under ordinal+title instead of
+   beside them, same breakpoint as section-frame.css/product-plate.css. */
+.step-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(0, 260px);
+  grid-template-areas: "ordinal title annotation";
+  gap: clamp(18px, 2.5vw, 40px);
+  align-items: baseline;
+}
+
+.step-ordinal { grid-area: ordinal; }
+.step-title { grid-area: title; }
+.step-annotation {
+  grid-area: annotation;
+  border-left: 1px solid var(--color-line-default);
+  padding-left: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .step-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      "ordinal title"
+      "annotation annotation";
+    row-gap: 16px;
+  }
+
+  .step-annotation {
+    border-left: none;
+    border-top: 1px solid var(--color-line-default);
+    padding-left: 0;
+    padding-top: var(--space-5);
+  }
+}
