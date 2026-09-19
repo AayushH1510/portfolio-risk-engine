@@ -305,7 +305,13 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
               )}
             </div>
           </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
+          {/* overflow:'hidden' is a deliberate containment backstop, not
+              incidental — see the touch-tooltip-overflow postmortem
+              (RESPONSIVE_AUDIT.md) for why this can't just rely on
+              Recharts' own clamping. Confirmed harmless to the normal
+              (correctly-positioned) tooltip in every width/mode tested;
+              it only ever engages as a backstop. */}
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             {sectorLoading ? (
               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <svg className="spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -438,7 +444,9 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             <MetricTooltip metricKey="drawdown">Drawdown</MetricTooltip>
           </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
+          {/* overflow:'hidden' — same containment backstop as the growth
+              chart's wrapper above; see that comment. */}
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={ddData} style={CHART_STYLE} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <XAxis dataKey="date" tick={{ ...AXIS_STYLE, fontSize: 9 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />

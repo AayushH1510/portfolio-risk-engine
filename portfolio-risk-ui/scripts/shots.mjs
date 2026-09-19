@@ -254,6 +254,92 @@ async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
   console.log(`  ok    ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> ${path.relative(ROOT, file)}${flagStr}`)
 }
 
+// Touch-triggered chart tooltip overflow — postmortem: Recharts activates
+// its tooltip on touch via touchmove, not touchstart (handleTouchStart only
+// forwards to the onMouseDown prop; handleTouchMove is what actually calls
+// throttleTriggeredAfterMouseMove and sets isTooltipActive), so every check
+// above — which only ever moves a mouse — has never exercised this code
+// path at all. Confirmed once by forcing the failure mode directly
+// (Dashboard's growth chart, 384px): pushing .recharts-tooltip-wrapper's
+// translate far outside the chart grew .dashboard-grid's scrollWidth from
+// 352px to 1410px while document.documentElement stayed unchanged at
+// 384/384 — the escape happens through whichever ancestor authors only
+// overflowY:'auto' (every scrolling tab root in this app), which per spec
+// forces a computed overflow-x:auto as a side effect; a real, reachable
+// horizontal scrollbar a user can act on, invisible to a document-level
+// check and exactly the "contained-vertical-only" bucket measureOverflow()
+// already classifies below — reused here rather than re-detected, since a
+// tooltip that escapes this way IS an element whose right edge exceeds the
+// viewport inside a vertical-only-authored ancestor, precisely what that
+// classifier already walks up to find. Recharts' own internal clamp
+// (getTooltipTranslateXY) turned out not to be an absolute safety net —
+// it floors against `viewBox`, populated from ResponsiveContainer's last
+// *committed* measured width (React state), not a live DOM read, so any
+// transient mismatch between that and the chart's actual current size can
+// still produce an unclamped position; not reliably reproducible here via
+// scripted taps/swipes/post-resize races in headless Chromium (real touch
+// devices have different ResizeObserver/rAF timing, and this app
+// deliberately leaves pinch-zoom enabled per this doc's own standing
+// decision — both plausible real triggers this harness can't emulate), so
+// this check is a regression guard against the known failure *shape*, not
+// a proof it will catch every possible trigger. The actual fix is
+// CSS containment (overflow:hidden on each chart's wrapper div,
+// Dashboard.jsx) — this check exists so a future change that removes that
+// containment, or reintroduces the same class of bug somewhere else,
+// doesn't go unnoticed again.
+async function checkTouchChartOverflow(page, outDir, viewportLabel, slug, results) {
+  const wrapperCount = await page.locator('.recharts-wrapper').count()
+  if (wrapperCount === 0) return
+
+  const before = await measureOverflow(page)
+
+  const charts = Math.min(wrapperCount, 5)
+  for (let i = 0; i < charts; i++) {
+    const wrapper = page.locator('.recharts-wrapper').nth(i)
+    const box = await wrapper.boundingBox().catch(() => null)
+    if (!box || box.width === 0 || box.height === 0) continue
+    for (const frac of [0.1, 0.5, 0.9]) {
+      await wrapper.evaluate((node, [px, py]) => {
+        // pageX/pageY are independent TouchInit fields, not derived from
+        // clientX/clientY by the Touch() constructor — a real touch has
+        // them set correctly by the browser; an incomplete synthetic one
+        // silently no-ops inside Recharts (getMouseInfo reads event.pageX/
+        // pageY, and NaN chartX/chartY fails its own inRange check).
+        const touch = new Touch({
+          identifier: Date.now() + Math.random(), target: node,
+          clientX: px, clientY: py, pageX: px + window.scrollX, pageY: py + window.scrollY,
+        })
+        const mk = (type, t) => new TouchEvent(type, { bubbles: true, cancelable: true, touches: [t], changedTouches: [t], targetTouches: [t] })
+        node.dispatchEvent(mk('touchstart', touch))
+        node.dispatchEvent(mk('touchmove', touch))
+      }, [box.x + box.width * frac, box.y + box.height * 0.5]).catch(() => {})
+    }
+  }
+  await page.waitForTimeout(200)
+
+  const after = await measureOverflow(page)
+  const newUncontained = after.top5Uncontained.length > before.top5Uncontained.length ||
+    after.maxRight > before.maxRight + 1
+  const newVerticalOnly = after.verticalOnlyContainedCount > before.verticalOnlyContainedCount
+  const touchOverflow = newUncontained || newVerticalOnly
+
+  results.push({
+    viewport: viewportLabel, view: `${slug}-touch-check`,
+    chartsTapped: charts, touchOverflow,
+    before: { maxRight: before.maxRight, verticalOnlyContainedCount: before.verticalOnlyContainedCount },
+    after: { maxRight: after.maxRight, verticalOnlyContainedCount: after.verticalOnlyContainedCount, top5VerticalOnlyContained: after.top5VerticalOnlyContained },
+    ok: true,
+  })
+
+  if (touchOverflow) {
+    const file = path.join(outDir, `${slug}-touch-overflow.png`)
+    await page.screenshot({ path: file, fullPage: true })
+    console.log(`  FAIL  ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> touch tap on a chart introduced horizontal overflow (see ${path.relative(ROOT, file)})`)
+  } else {
+    console.log(`  ok    ${viewportLabel.padEnd(20)} ${(slug + '-touch').padEnd(20)} -> ${charts} chart(s) tapped, no new overflow`)
+  }
+}
+
 async function captureStaticRoutes(page, routes, base, outDir, viewportLabel, results) {
   for (const route of routes) {
     try {
@@ -412,6 +498,8 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
         tabClickForced: forced, tabClickDispatched: dispatched, tabSwitchVerified: verified,
         navClientWidth, blockedBySidebar: navClientWidth === 0,
       })
+
+      await checkTouchChartOverflow(page, outDir, viewportLabel, `app-${tab.id}`, results)
     }
 
     // Scoped to the header specifically: at least one app tab's own content
@@ -489,6 +577,7 @@ async function main() {
 
   const failed     = results.filter(r => !r.ok)
   const overflowing = results.filter(r => r.ok && r.overflowsHorizontally)
+  const touchOverflowing = results.filter(r => r.ok && r.touchOverflow)
   const forcedClicks = results.filter(r => r.ok && r.tabClickForced)
   const sidebarBlocked = forcedClicks.filter(r => r.blockedBySidebar)
   const unexpectedForced = forcedClicks.filter(r => !r.blockedBySidebar)
@@ -499,6 +588,10 @@ async function main() {
   if (overflowing.length) {
     console.log(`\n${overflowing.length} view(s) overflow horizontally:`)
     for (const o of overflowing) console.log(`  ${o.viewport.padEnd(20)} ${o.view.padEnd(20)} maxRight=${o.maxRight} > clientWidth=${o.clientWidth}  (widest: ${o.widestSelector || '?'})`)
+  }
+  if (touchOverflowing.length) {
+    console.log(`\n${touchOverflowing.length} view(s) introduced horizontal overflow from a chart TAP that wasn't there before (see checkTouchChartOverflow in this file):`)
+    for (const t of touchOverflowing) console.log(`  ${t.viewport.padEnd(20)} ${t.view.padEnd(20)} maxRight ${t.before.maxRight}->${t.after.maxRight}, vertical-only-contained ${t.before.verticalOnlyContainedCount}->${t.after.verticalOnlyContainedCount}`)
   }
   if (sidebarBlocked.length) {
     console.log(`\n${sidebarBlocked.length} view(s) needed a forced click, blocked by the fixed 260px sidebar (nav.clientWidth === 0 — no header-only fix closes this) — expected until the sidebar/drawer redesign, not a regression:`)
@@ -512,7 +605,7 @@ async function main() {
     console.log(`\n${unverifiedSwitches.length} view(s) may show the WRONG tab's content — click (even forced) never actually switched activeTab, verified via aria-current, even after a direct dispatchEvent('click'):`)
     for (const u of unverifiedSwitches) console.log(`  ${u.viewport.padEnd(20)} ${u.view}`)
   }
-  if (failed.length || unexpectedForced.length || unverifiedSwitches.length) process.exitCode = 1
+  if (failed.length || unexpectedForced.length || unverifiedSwitches.length || touchOverflowing.length) process.exitCode = 1
 }
 
 main()
