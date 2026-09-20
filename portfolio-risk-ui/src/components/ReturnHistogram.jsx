@@ -349,8 +349,14 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
         )}
       </div>
 
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+      {/* Stats row — flex-wrap, not grid repeat(4,1fr): the outstanding
+          RESPONSIVE_AUDIT.md item this fixes ("OBSERVATIONS" truncating at
+          320px). Same reasoning and fix as Dashboard's metric-card rows and
+          MonteCarlo's own metrics row (index.css) — grid shares one column
+          count across every wrapped row, stranding a non-dividing remainder
+          at a narrow shared width; flex sizes each wrapped line
+          independently. */}
+      <div className="return-histogram-stats-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {[
           { key: 'mean_daily',    label: 'Mean daily',    value: fmtS(mean),  color: mean >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)' },
           { key: 'std_dev',       label: 'Std dev',       value: fmtS(std),   color: 'var(--text-primary)' },

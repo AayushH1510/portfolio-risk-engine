@@ -497,6 +497,27 @@ aside.sidebar-shell.sidebar-open {
   min-width: 0;
 }
 
+/* MonteCarlo's metrics row (MonteCarlo.jsx) — same flex-wrap-over-grid
+   reasoning as .dashboard-grid__row1/row2 above, same failure mode
+   (repeat(4,1fr) cut "Chance of Loss" off at the right edge instead of
+   reflowing). flex-basis 88px, same as row1/row2, not .backtest-strategy-
+   row's 150px: these are the same `MetricCard small` component at the same
+   density Dashboard's rows already use, not the denser StrategyCard. */
+.montecarlo-metrics-row > * {
+  flex: 1 1 88px;
+  min-width: 0;
+}
+
+/* ReturnHistogram's stats row (ReturnHistogram.jsx) — the outstanding
+   RESPONSIVE_AUDIT.md item this fixes ("OBSERVATIONS" truncating at
+   320px), same reasoning and fix as the rows above. flex-basis 88px: each
+   pill is a plain label+value with no sub-row, at least as compact as a
+   small MetricCard. */
+.return-histogram-stats-row > * {
+  flex: 1 1 88px;
+  min-width: 0;
+}
+
 /* Backtest's summary-card row (Backtest.jsx) — same flex-wrap-over-grid
    reasoning as .dashboard-grid__row1/row2 above, same failure mode (three
    cards that don't all fit one line stranding the odd one out at a grid's
@@ -576,6 +597,20 @@ aside.sidebar-shell.sidebar-open {
    permanently shadowed it. Reproduces the original inline value exactly —
    desktop is untouched. */
 .backtest-chart-card {
+  min-height: 0;
+}
+
+/* MonteCarlo's chart card (MonteCarlo.jsx) base rule — same inline-shadowing
+   fix, same reason, as .backtest-chart-card above: this card's inline style
+   set minHeight:0 directly, which permanently wins over any stylesheet
+   min-height regardless of media query, so it had to move out to CSS before
+   a compact-viewport floor could do anything at all. Diagnosed and
+   confirmed before fixing, not assumed from Backtest's precedent alone: at
+   320x568 and 852x393 landscape specifically, the chart's inner flex
+   wrapper measured 0px tall with zero rendered line paths and no SVG at
+   all — title and legend visible, no plot, the identical symptom and
+   identical mechanism Backtest had. */
+.montecarlo-chart-card {
   min-height: 0;
 }
 
@@ -845,6 +880,29 @@ aside.sidebar-shell.sidebar-open {
      applying everywhere. */
   .backtest-returns-table {
     table-layout: fixed;
+  }
+
+  /* ─── MonteCarlo chart card (MonteCarlo.jsx) ───
+     Same diagnosis and same fix as Backtest's chart card above — see
+     .montecarlo-chart-card's own base-rule comment for the confirmed
+     mechanism (inline minHeight:0 shadowing, zero-height flex wrapper,
+     Recharts rendering no SVG at all). 440px, taller than Backtest's 280px:
+     this card holds more nested content than Backtest's did — a header row
+     (now with a fourth legend item, "Simulated paths", alongside Bad/
+     Median/Good) *and* the "Monte Carlo insight" InsightBox both sit inside
+     this same flex column, sharing its floor with the chart, not sitting
+     outside it as separate siblings the way Backtest's InsightBoxes do.
+     Measured directly rather than guessed: at the widths that already
+     cleared a usable plot before any floor was added (384px/393px), header
+     + InsightBox + padding — everything except the chart itself — took
+     ~257px on their own (more than Backtest's ~88px, consistent with the
+     extra content), so a floor sized like Backtest's would have left this
+     card's plot area thinner than intended, not merely absent. 440 targets
+     roughly the same ~190px of actual plot after that ~257px de facto
+     floor for the surrounding chrome, the same target Backtest and
+     RiskAnalysis's own chart floors use, not a bare minimum. */
+  .montecarlo-chart-card {
+    min-height: 440px;
   }
 
   /* ─── RiskGauge (RiskGauge.jsx) ───
