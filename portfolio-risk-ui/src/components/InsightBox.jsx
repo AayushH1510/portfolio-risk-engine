@@ -4,12 +4,15 @@ import { COMPACT_VIEWPORT_QUERY } from '../lib/breakpoints'
 // `priority` is opt-in and additive — every existing call site (Dashboard,
 // Monte Carlo, Efficient Frontier, Valuation, Backtest, Compare) omits it
 // entirely and keeps today's always-expanded, no-affordance behaviour
-// exactly as before. Only a tab dense enough to need triage marks a subset
-// of its boxes 'secondary'; that tab's remaining box either gets 'primary'
-// (self-documenting — "this is the one that stays expanded") or is left
-// unmarked, which behaves identically. This is the generic mechanism
-// RiskAnalysis needed rather than RiskAnalysis.jsx hardcoding which of its
-// three boxes collapses — other dense tabs can reuse it the same way.
+// exactly as before. Only a tab dense enough to need triage marks its boxes:
+// 'secondary' collapses by default on a compact viewport (still toggleable
+// everywhere); 'primary' gets the identical toggle affordance so a group of
+// boxes reads as one consistent control, not "two have a button and one is
+// just broken," but always DEFAULTS to expanded regardless of viewport —
+// it's the one the reader shouldn't have to open. This is the generic
+// mechanism RiskAnalysis needed rather than RiskAnalysis.jsx hardcoding
+// which of its three boxes collapses — other dense tabs can reuse it the
+// same way.
 export default function InsightBox({ label, text, tone = 'neutral', compact = false, priority }) {
   const colors = {
     good:    { border: 'var(--signal-positive)', label: 'var(--signal-positive)', wash: 'var(--signal-positive-wash)' },
@@ -19,7 +22,7 @@ export default function InsightBox({ label, text, tone = 'neutral', compact = fa
   }
   const c = colors[tone] || colors.neutral
 
-  const collapsible = priority === 'secondary'
+  const collapsible = priority === 'primary' || priority === 'secondary'
   // Seeded once at mount from the current viewport, not tracked live —
   // "session-only" (no localStorage) is about not remembering a collapse
   // across visits, but a live matchMedia listener here would also fight a
@@ -29,8 +32,10 @@ export default function InsightBox({ label, text, tone = 'neutral', compact = fa
   // the same dual-axis "phone, either orientation" signal every other
   // phone-gated rule in the app uses — see RESPONSIVE_AUDIT.md's standing
   // decision on why a width-only check would miss a landscape phone.
+  // Only 'secondary' ever seeds collapsed — 'primary' is collapsible (same
+  // toggle, same tap target) but always starts expanded, viewport included.
   const [collapsed, setCollapsed] = useState(
-    () => collapsible && typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
+    () => priority === 'secondary' && typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
   )
 
   return (

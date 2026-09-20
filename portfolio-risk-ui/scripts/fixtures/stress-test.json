@@ -1,0 +1,29 @@
+{
+  "scenarios": [
+    {
+      "name": "2008 Financial Crisis",
+      "period": "2008-09-01 to 2009-03-31",
+      "portfolio_return": -0.4213,
+      "worst_day": -0.0891,
+      "recovery_days": 378,
+      "excluded_tickers": []
+    },
+    {
+      "name": "COVID Crash",
+      "period": "2020-02-01 to 2020-03-31",
+      "portfolio_return": -0.2764,
+      "worst_day": -0.1156,
+      "recovery_days": 118,
+      "excluded_tickers": []
+    },
+    {
+      "name": "2022 Rate Shock",
+      "period": "2022-01-01 to 2022-12-31",
+      "portfolio_return": -0.3342,
+      "worst_day": -0.0487,
+      "recovery_days": 411,
+      "excluded_tickers": []
+    }
+  ],
+  "portfolio_value": 10000
+}

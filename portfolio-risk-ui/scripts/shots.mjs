@@ -87,8 +87,9 @@ function loadFixtures() {
   const summary = read('analyse-summary.json')
   const full    = read('analyse-full.json')
   const fundamentals = read('fundamentals.json')
+  const stressTest    = read('stress-test.json')
   return {
-    summary, full, fundamentals,
+    summary, full, fundamentals, stressTest,
     tickers: Object.keys(full.per_ticker_cumulative_returns),
     benchmark: full.benchmark,
   }
@@ -104,6 +105,17 @@ async function mockApiRoutes(page, fixtures) {
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtures.full) }))
   await page.route('**/api/fundamentals*', r =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtures.fundamentals) }))
+  // /api/stress-test (RiskAnalysis.jsx's Historical Scenarios section) — see
+  // fixtures/README.md's postmortem: this call was left unmocked for a while,
+  // which meant it hit a live (slow, non-deterministic) backend and stayed on
+  // its loading spinner well past every other tab's fixed post-click wait —
+  // long enough that the resulting 3-card grid never existed in the DOM by
+  // the time capture() measured overflow, and a real repeat(3,1fr) phone-
+  // width overflow in it went undetected. Mocking it removes that race
+  // instead of just widening the wait (see settleNetwork() below for the
+  // other half of that fix, for whatever the next unmocked/slow call is).
+  await page.route('**/api/stress-test', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fixtures.stressTest) }))
 }
 
 function parseArgs(argv) {
@@ -224,6 +236,30 @@ async function measureOverflow(page) {
       containedOverflowCount: containedHorizontalCount,
     }
   })
+}
+
+// Backstop for any tab section whose content depends on a request that
+// isn't in mockApiRoutes (either a gap not yet noticed, or a genuinely
+// unmocked call this harness doesn't know about yet) — waits for in-flight
+// network activity to quiet down before capture() measures overflow, so a
+// still-loading section's eventual DOM (and whatever it overflows) isn't
+// measured before it exists. This is a backstop, not the primary fix for a
+// known-slow call: see fixtures/README.md's stress-test.json entry for the
+// actual bug this exists because of — a live, unmocked /api/stress-test
+// call routinely outlasted every tab's fixed post-click waitForTimeout, so
+// its 3-card grid didn't exist in the DOM yet when overflow was measured,
+// and a real phone-width overflow in it shipped undetected. Mocking that
+// specific call is the real fix (deterministic, fast, matches every other
+// endpoint this harness already mocks); this wait is what keeps the next
+// accidentally-unmocked or newly-added slow call from reproducing the same
+// blind spot rather than relying on every future contributor remembering to
+// widen a fixed timeout by hand. Short timeout and swallowed rejection
+// because some pages are never truly idle (the smoke-field canvas's rAF
+// loop doesn't count as network activity, but a genuinely open connection —
+// a dev-tools-attached long-poll, unrelated to anything this harness drives
+// — would otherwise hang capture() indefinitely).
+async function settleNetwork(page) {
+  await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
 }
 
 async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
@@ -544,6 +580,7 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
         }
       }
 
+      await settleNetwork(page)
       await capture(page, outDir, `app-${tab.id}`, viewportLabel, results, {
         tabClickForced: forced, tabClickDispatched: dispatched, tabSwitchVerified: verified,
         navClientWidth, blockedBySidebar: navClientWidth === 0,

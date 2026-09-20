@@ -2,11 +2,12 @@ import {
   LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ReturnHistogram from '../components/ReturnHistogram'
 import StressTest from '../components/StressTest'
 import MetricTooltip from '../components/MetricTooltip'
 import InsightBox from '../components/InsightBox'
+import { COMPACT_VIEWPORT_QUERY } from '../lib/breakpoints'
 
 const fmt  = v => `${(v * 100).toFixed(2)}%`
 const fmtS = v => `${(v * 100).toFixed(1)}%`
@@ -188,6 +189,27 @@ function CorrMatrix({ corr, onTickerClick }) {
 }
 
 export default function RiskAnalysis({ data, tickers, weights, portfolioValue, onTickerClick }) {
+  // Same dual-axis "phone, either orientation" signal as Dashboard.jsx's own
+  // isCompactViewport (lib/breakpoints.js's COMPACT_VIEWPORT_QUERY is the one
+  // canonical JS-side definition) — live-tracked, not seeded once, because
+  // this drives which text actually renders (folding "95%"/"99%" into each
+  // MetricPill's own label below 768px, once the confidence-level header row
+  // that used to carry that meaning is gone): a stale value here would
+  // mislabel data across an orientation change, not just look untidy.
+  // Placed before the `!data` early return below so the hook always runs the
+  // same number of times regardless of whether data is loaded yet — data
+  // genuinely toggles null -> non-null within one mounted instance of this
+  // component (before/after Run Analysis), so this isn't just a formality.
+  const [isCompactViewport, setIsCompactViewport] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
+  )
+  useEffect(() => {
+    const mql = window.matchMedia(COMPACT_VIEWPORT_QUERY)
+    const handler = e => setIsCompactViewport(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   if (!data) return null
 
   const {
@@ -331,32 +353,42 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
             <MetricTooltip metricKey="downside_risk">Downside risk</MetricTooltip>
           </div>
 
-          {/* Confidence level headers */}
-          <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
-            {[
-              { label: '95% confidence', color: 'var(--signal-negative)', borderColor: 'rgba(var(--signal-negative-rgb),0.19)' },
-              { label: '99% confidence', color: 'var(--signal-negative-strong)', borderColor: 'rgba(var(--signal-negative-strong-rgb),0.19)' },
-            ].map(({ label, color, borderColor }) => (
-              <div key={label} style={{
-                fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
-                letterSpacing: '0.07em', color, textAlign: 'center',
-                padding: '3px 0', borderBottom: `1px solid ${borderColor}`,
-              }}>
-                {label}
-              </div>
-            ))}
-          </div>
+          {/* Confidence level headers — desktop only. At phone width this
+              row's grid stacks (.ra-grid-2col), and once the two VaR cards
+              (and the two CVaR cards below) no longer sit side by side under
+              it, a header that only says "95% CONFIDENCE" / "99% CONFIDENCE"
+              in a column position has nothing to attach to — the four cards
+              below would read as VAR, VAR, CVAR, CVAR with no way to tell
+              which confidence level each one is. Folding "95%"/"99%" into
+              each card's own label below (isCompactViewport) is what keeps
+              that meaning instead of just dropping this row unconditionally. */}
+          {!isCompactViewport && (
+            <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
+              {[
+                { label: '95% confidence', color: 'var(--signal-negative)', borderColor: 'rgba(var(--signal-negative-rgb),0.19)' },
+                { label: '99% confidence', color: 'var(--signal-negative-strong)', borderColor: 'rgba(var(--signal-negative-strong-rgb),0.19)' },
+              ].map(({ label, color, borderColor }) => (
+                <div key={label} style={{
+                  fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.07em', color, textAlign: 'center',
+                  padding: '3px 0', borderBottom: `1px solid ${borderColor}`,
+                }}>
+                  {label}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* VaR row */}
           <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
             <MetricPill
-              label={<MetricTooltip metricKey="var_95">VaR</MetricTooltip>}
+              label={<MetricTooltip metricKey="var_95">{isCompactViewport ? '95% VaR' : 'VaR'}</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar.var_pct))}`}
               color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.var_dollar).toFixed(0)} per day`}
             />
             <MetricPill
-              label={<MetricTooltip metricKey="var_99">VaR</MetricTooltip>}
+              label={<MetricTooltip metricKey="var_99">{isCompactViewport ? '99% VaR' : 'VaR'}</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar_99?.var_pct ?? 0))}`}
               color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.var_dollar ?? 0).toFixed(0)} per day`}
@@ -366,13 +398,13 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           {/* CVaR row */}
           <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
             <MetricPill
-              label={<MetricTooltip metricKey="cvar_95">CVaR (avg tail)</MetricTooltip>}
+              label={<MetricTooltip metricKey="cvar_95">{isCompactViewport ? '95% CVaR (avg tail)' : 'CVaR (avg tail)'}</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar.cvar_pct))}`}
               color="var(--signal-negative)"
               sub={`$${Math.abs(var_cvar.cvar_dollar).toFixed(0)} avg`}
             />
             <MetricPill
-              label={<MetricTooltip metricKey="cvar_99">CVaR (avg tail)</MetricTooltip>}
+              label={<MetricTooltip metricKey="cvar_99">{isCompactViewport ? '99% CVaR (avg tail)' : 'CVaR (avg tail)'}</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar_99?.cvar_pct ?? 0))}`}
               color="var(--signal-negative-strong)"
               sub={`$${Math.abs(var_cvar_99?.cvar_dollar ?? 0).toFixed(0)} avg`}

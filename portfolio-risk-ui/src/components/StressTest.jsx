@@ -134,7 +134,14 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
       )}
 
       {scenarios && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+        // gridTemplateColumns lives in CSS (.ra-grid-3col, index.css), not
+        // inline — an inline style always wins over a stylesheet rule
+        // regardless of media-query match, so the compact-viewport override
+        // there couldn't reach it otherwise (same reasoning as RiskAnalysis's
+        // own .ra-grid-2col rows). Three independent cards, not a table —
+        // stacked full-width below 768px rather than horizontal-scrolled or
+        // carouselled, per RESPONSIVE_AUDIT.md.
+        <div className="ra-grid-3col" style={{ display: 'grid', gap: 10 }}>
           {scenarios.map(s => (
             <ScenarioCard key={s.name} scenario={s} portfolioValue={portfolioValue} />
           ))}

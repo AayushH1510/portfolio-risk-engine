@@ -529,6 +529,13 @@ aside.sidebar-shell.sidebar-open {
   grid-template-columns: 1fr 1fr;
 }
 
+/* StressTest's Historical Scenarios row (StressTest.jsx) — three independent
+   scenario cards, same "inline can't be overridden by a stylesheet" reason
+   as .ra-grid-2col above for why gridTemplateColumns lives here. */
+.ra-grid-3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    COMPACT VIEWPORT — every rule below, until the closing brace, is gated
    on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
@@ -699,6 +706,16 @@ aside.sidebar-shell.sidebar-open {
      headers, VaR row, CVaR row) stack the same way so 95%/99% read top-to-
      bottom instead of two ~110px-wide columns once that card is full width. */
   .ra-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  /* ─── StressTest scenario cards (StressTest.jsx) ───
+     Not horizontal scroll, not a carousel: three independent cards rather
+     than a table needing aligned columns — side-scroll wouldn't let you
+     compare two at once anyway, and a carousel would mean inventing a
+     pattern DESIGN.md doesn't have for three items. Each card gets full
+     width stacked; desktop (base rule, above) keeps the row unchanged. */
+  .ra-grid-3col {
     grid-template-columns: 1fr;
   }
 
