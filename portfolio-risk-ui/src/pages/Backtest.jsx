@@ -1,8 +1,12 @@
+import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import HeavyTierPending from '../components/HeavyTierPending'
 import InsightBox from '../components/InsightBox'
+import useOverlay from '../hooks/useOverlay'
+import useCompactViewport from '../hooks/useCompactViewport'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
@@ -72,8 +76,26 @@ function ReturnsTable({ backtest, strategies }) {
       <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 12 }}>
         Year-by-year returns
       </div>
+      {/* overflowX:'auto' already made this reachable at any width — the
+          complaint was distribution, not overflow: with no explicit column
+          widths, the browser's default auto table layout sizes each column
+          to its own content's max-content width, so "Year" (4 characters)
+          gets a narrow column while the three longer strategy-label/percent
+          columns bunch into the remaining space instead of sharing it. Below
+          768px (.backtest-returns-table, index.css) table-layout:fixed
+          divides the available width evenly across all four columns
+          instead, regardless of what any one column's content needs — a
+          phone-width fix, not a blanket relayout: at desktop width the
+          table's content already has enough room that auto-layout's
+          content-based columns and an even four-way split land close
+          enough that forcing the change everywhere isn't worth trading away
+          "desktop stays byte-for-byte as before," so table-layout stays
+          the plain CSS default there (base rule, index.css). table-layout
+          lives in a class, not inline — same "inline always wins over a
+          stylesheet rule" reason as every other viewport-conditional style
+          this pass touched. */}
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: 'var(--font-mono)' }}>
+        <table className="backtest-returns-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontFamily: 'var(--font-mono)' }}>
           <thead>
             <tr>
               <th style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 10px 8px 4px', borderBottom: 'var(--border-default)' }}>
@@ -114,6 +136,19 @@ function ReturnsTable({ backtest, strategies }) {
 }
 
 export default function Backtest({ data, tickers, heavyError }) {
+  // Same dual-axis "phone, either orientation" signal Dashboard's growth-
+  // chart expand and RiskAnalysis's confidence-header fold both use.
+  // Hooks placed before either early return below (both `data` and
+  // `backtest` genuinely toggle null -> non-null within one mounted
+  // instance of this component, before/after Run Analysis and while the
+  // heavy tier is still loading) so they always run the same number of
+  // times regardless of which return path fires.
+  const isCompactViewport = useCompactViewport()
+  const [expandRequested, setExpandRequested] = useState(false)
+  const isChartExpanded = expandRequested && isCompactViewport
+  const chartCardRef = useRef(null)
+  useOverlay(isChartExpanded, chartCardRef, () => setExpandRequested(false))
+
   if (!data) return null
 
   const backtest = data.backtest
@@ -153,6 +188,90 @@ export default function Backtest({ data, tickers, heavyError }) {
     sp500:          backtest.sp500.cumulative_returns.values[i],
   }))
 
+  // Built once here, referenced twice below (normal flex slot vs.
+  // portalled fullscreen) — see the render call's own comment for why a
+  // portal is required, not just a CSS class swap in place.
+  const chartCardEl = (
+    <div
+      ref={chartCardRef}
+      // min-height lives in CSS (.backtest-chart-card, index.css), not
+      // inline — an inline value always wins over a stylesheet rule
+      // regardless of media-query match, so a compact-viewport min-height
+      // override couldn't reach an inline minHeight:0 here. Dashboard.jsx's
+      // growth chart hit this exact bug first (see .dashboard-grid__growth's
+      // own comment): min-height:260px inline-shadowed by minHeight:0 was
+      // silently inert. Confirmed here too, not just inferred from that
+      // precedent — the min-height:280px rule below measured 0 effect until
+      // this moved out.
+      className={`backtest-chart-card card${isChartExpanded ? ' chart-fullscreen-expanded' : ''}`}
+      style={{ padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
+            Cumulative return - {backtest.period.start} to {backtest.period.end}
+          </div>
+          {/* Rendered only on a compact viewport — desktop and tablet never
+              see it, so isChartExpanded can never become true there
+              regardless of expandRequested. Same control, same 44x44
+              ::before tap target, as Dashboard's growth chart
+              (.chart-expand-btn, index.css) — reused, not reimplemented. */}
+          {isCompactViewport && (
+            <button
+              onClick={() => setExpandRequested(v => !v)}
+              className="chart-expand-btn"
+              aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+              title={isChartExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isChartExpanded ? '✕' : '⤢'}
+            </button>
+          )}
+        </div>
+        {/* flexWrap — same as Dashboard's identical growth-chart legend row
+            (Dashboard.jsx); without it this was the one remaining clipped
+            element found in the full re-sweep (RESPONSIVE_AUDIT.md), a
+            small (~37px) contained-vertical-only overflow at 320px from the
+            three-item legend not fitting one line and having no wrap
+            behaviour to fall back on. */}
+        <div style={{ display: 'flex', gap: 14, fontSize: 10, flexWrap: 'wrap' }}>
+          {strategies.map(s => (
+            <span key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
+              <svg width="20" height="2" style={{ flexShrink: 0 }}>
+                <line x1="0" y1="1" x2="20" y2="1" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '4 3' : 'none'} />
+              </svg>
+              {s.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      {/* overflow:'hidden' — same Recharts tooltip-position containment
+          backstop as Dashboard/Comparison/RiskAnalysis's chart wrappers
+          (see RESPONSIVE_AUDIT.md); this tab's chart didn't have it yet. */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} style={CHART_STYLE} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+            <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+            <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
+            <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
+            <Tooltip content={<CustomTooltip />} />
+            {strategies.map(s => (
+              <Line
+                key={s.key}
+                type="monotone"
+                dataKey={s.key}
+                name={s.label}
+                stroke={s.color}
+                strokeWidth={s.key === 'your_portfolio' ? 2 : 1.5}
+                strokeDasharray={s.dash ? '5 4' : undefined}
+                dot={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
 
@@ -162,11 +281,20 @@ export default function Backtest({ data, tickers, heavyError }) {
       <InsightBox
         label="Why run the backtest"
         compact
+        priority="primary"
         text={`Stop guessing whether your weights make sense. This runs your exact allocation through the real historical period, side by side with a plain equal split and ${getBenchmarkPhrase(data.benchmark)}, same buy-and-hold, same dates for all three. See which one would actually have come out ahead.`}
       />
 
-      {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, flexShrink: 0 }}>
+      {/* Summary cards — flex-wrap, not grid repeat(3,1fr): see
+          .backtest-strategy-row's own comment in index.css. At a width
+          where all three don't fit one line, grid's auto-fit/repeat shares
+          one column count across every wrapped row, so a 3-into-2 wrap
+          strands the last card at one-third width on its own line instead
+          of filling it — the identical failure mode Dashboard's metric-card
+          rows already fixed the same way (RESPONSIVE_AUDIT.md). flex sizes
+          each wrapped line independently, so the lone third card grows to
+          fill its own row. */}
+      <div className="backtest-strategy-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, flexShrink: 0 }}>
         <StrategyCard
           label="Your Portfolio"
           sub={tickers?.join(', ')}
@@ -178,46 +306,16 @@ export default function Backtest({ data, tickers, heavyError }) {
         <StrategyCard label={strategies[2].label} color="var(--text-muted)" stats={backtest.sp500} />
       </div>
 
-      {/* Cumulative return chart */}
-      <div className="card" style={{ padding: '14px 16px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexShrink: 0 }}>
-          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-            Cumulative return - {backtest.period.start} to {backtest.period.end}
-          </div>
-          <div style={{ display: 'flex', gap: 14, fontSize: 10 }}>
-            {strategies.map(s => (
-              <span key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
-                <svg width="20" height="2" style={{ flexShrink: 0 }}>
-                  <line x1="0" y1="1" x2="20" y2="1" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '4 3' : 'none'} />
-                </svg>
-                {s.label}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} style={CHART_STYLE} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
-              <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
-              <Tooltip content={<CustomTooltip />} />
-              {strategies.map(s => (
-                <Line
-                  key={s.key}
-                  type="monotone"
-                  dataKey={s.key}
-                  name={s.label}
-                  stroke={s.color}
-                  strokeWidth={s.key === 'your_portfolio' ? 2 : 1.5}
-                  strokeDasharray={s.dash ? '5 4' : undefined}
-                  dot={false}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* Cumulative return chart — built once, rendered either in its normal
+          flex slot or through a portal when expanded, same reasoning as
+          Dashboard's growthCardEl (see that const's own comment,
+          Dashboard.jsx): App.jsx's .fade-up mount-animation wrapper leaves a
+          resting transform that makes it a containing block for any
+          position:fixed descendant, so a plain position:fixed here would
+          resolve against .fade-up's box instead of the viewport — portalling
+          to document.body (which has no such ancestor) is required, not a
+          style preference. */}
+      {isChartExpanded ? createPortal(chartCardEl, document.body) : chartCardEl}
 
       {/* Year-by-year table */}
       <ReturnsTable backtest={backtest} strategies={strategies} />

@@ -2,12 +2,12 @@ import {
   LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import ReturnHistogram from '../components/ReturnHistogram'
 import StressTest from '../components/StressTest'
 import MetricTooltip from '../components/MetricTooltip'
 import InsightBox from '../components/InsightBox'
-import { COMPACT_VIEWPORT_QUERY } from '../lib/breakpoints'
+import useCompactViewport from '../hooks/useCompactViewport'
 
 const fmt  = v => `${(v * 100).toFixed(2)}%`
 const fmtS = v => `${(v * 100).toFixed(1)}%`
@@ -200,15 +200,10 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
   // same number of times regardless of whether data is loaded yet — data
   // genuinely toggles null -> non-null within one mounted instance of this
   // component (before/after Run Analysis), so this isn't just a formality.
-  const [isCompactViewport, setIsCompactViewport] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
-  )
-  useEffect(() => {
-    const mql = window.matchMedia(COMPACT_VIEWPORT_QUERY)
-    const handler = e => setIsCompactViewport(e.matches)
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
-  }, [])
+  // The subscription itself is useCompactViewport (hooks/) — was inlined
+  // here, extracted once Backtest.jsx needed the identical pattern a third
+  // time; see that hook's own comment.
+  const isCompactViewport = useCompactViewport()
 
   if (!data) return null
 

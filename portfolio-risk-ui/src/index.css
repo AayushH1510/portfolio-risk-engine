@@ -497,6 +497,37 @@ aside.sidebar-shell.sidebar-open {
   min-width: 0;
 }
 
+/* Backtest's summary-card row (Backtest.jsx) — same flex-wrap-over-grid
+   reasoning as .dashboard-grid__row1/row2 above, same failure mode (three
+   cards that don't all fit one line stranding the odd one out at a grid's
+   shared column width instead of filling its own row). flex-basis 150px,
+   not row1/row2's 88px: a StrategyCard holds a label+sub header plus three
+   full label/value Rows, genuinely denser content than a MetricCard, and
+   needs more room per card before wrapping is the right call. */
+.backtest-strategy-row > * {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+/* Backtest's chart card (Backtest.jsx) base rule — min-height:0 here, not
+   inline, for the same reason .dashboard-grid__growth's does (that rule's
+   own comment, above): the compact-viewport override below has to live in
+   CSS too, and an inline style always wins over a stylesheet rule
+   regardless of media-query match, so a competing inline value would have
+   permanently shadowed it. Reproduces the original inline value exactly —
+   desktop is untouched. */
+.backtest-chart-card {
+  min-height: 0;
+}
+
+/* Backtest's year-by-year table (Backtest.jsx) base rule — plain browser
+   default, explicit rather than left implicit so the compact-viewport
+   override below reads as a deliberate change from a known starting point,
+   not a mystery value appearing out of nowhere. */
+.backtest-returns-table {
+  table-layout: auto;
+}
+
 /* Gauge/drawdown pairing — flex, not a nested grid: a grid item that is
    itself a grid container produced an unreliable "auto" row height for the
    outer .dashboard-grid's "right" row at mobile width (RiskGauge's
@@ -719,6 +750,44 @@ aside.sidebar-shell.sidebar-open {
     grid-template-columns: 1fr;
   }
 
+  /* ─── Backtest cumulative-return chart (Backtest.jsx) ───
+     Diagnosed before fixing: the chart wasn't overflowing or misplaced, it
+     was rendering at genuinely zero height. The chart card is flex:1 inside
+     a plain flex column (Backtest.jsx's own overflowY:'auto' root) whose
+     other children — the InsightBox, the summary-card row, and (below the
+     chart) the year-by-year table — take a combined height that doesn't
+     shrink with the viewport. On a viewport tall enough that leftover room
+     exists after those, flex:1 gets a real (if often cramped) share of it;
+     on one that isn't, flex:1's paired minHeight:0 lets the browser satisfy
+     both constraints literally and gives the chart's wrapper 0px — and
+     Recharts' ResponsiveContainer renders no SVG at all at 0 height, which
+     is exactly "title and legend visible, no plot." Confirmed by direct
+     measurement, not assumed: at 320x568, 360x740, and 852x393 landscape
+     the chart's inner flex wrapper measured 0px tall with zero rendered
+     line paths; at 384x854 and 393x852 specifically (the paired heights
+     this project's own viewport table already uses for those widths) it
+     happened to still clear a nonzero, if thin, height — which is why this
+     reads as intermittent/width-dependent rather than a clean binary break,
+     even though the actual variable is height, not width. Same fix as
+     Dashboard's growth chart (.dashboard-grid__growth's own min-height
+     above, index.css): stop relying on flex:1 to produce a floor and give
+     it one directly. 280px, not 390px like Dashboard's — this card's own
+     overhead is smaller (a single title+legend header row, no mode toggle)
+     but still real (~60px measured header + 28px card padding ≈ 88px),
+     targeting roughly 190px of actual plot, in the same range as Dashboard
+     and RiskAnalysis's own chart floors rather than a bare minimum. */
+  .backtest-chart-card {
+    min-height: 280px;
+  }
+
+  /* ─── Backtest year-by-year table (Backtest.jsx) ───
+     Even column distribution — see .backtest-returns-table's own base-rule
+     comment above for why this stays scoped to phone width rather than
+     applying everywhere. */
+  .backtest-returns-table {
+    table-layout: fixed;
+  }
+
   /* ─── RiskGauge (RiskGauge.jsx) ───
      Below 768px (or on a landscape phone — see this block's banner
      comment) the card would otherwise stretch to the full mobile column
@@ -764,11 +833,15 @@ aside.sidebar-shell.sidebar-open {
   display: block;
 }
 
-/* Growth chart fullscreen expand (Dashboard.jsx) — phone/landscape-phone
-   only (gated in JS by isCompactViewport, not by this rule; see Dashboard's
+/* Chart fullscreen expand — shared by Dashboard.jsx's growth chart and
+   Backtest.jsx's cumulative-return chart (originally Dashboard-only,
+   generalized once Backtest needed the identical behaviour rather than a
+   second copy of it — see each component's own useOverlay/expandRequested
+   comment for the state side of this). Phone/landscape-phone only (gated in
+   JS by isCompactViewport, not by this rule — see either component's own
    comment on that state for why it isn't a plain max-width check). Applied
-   to the same .dashboard-grid__growth.card element used at normal size, not
-   a second element, so no chart content is duplicated.
+   to the same chart-card element used at normal size, not a second element,
+   so no chart content is duplicated.
 
    position:fixed here is deliberate over the grid's own layout: a fixed
    item is removed from grid flow entirely (its containing block becomes
@@ -790,15 +863,15 @@ aside.sidebar-shell.sidebar-open {
    border is left as-is rather than stripped — DESIGN.md's overlay
    constraints, satisfied by simply not touching what .card already does.
 
-   Selector is the compound `.dashboard-growth-expanded.card`, not
-   `.dashboard-growth-expanded` alone: `.card` sets `position: relative`
+   Selector is the compound `.chart-fullscreen-expanded.card`, not
+   `.chart-fullscreen-expanded` alone: `.card` sets `position: relative`
    for its own grain-texture pseudo-element (further down this file, see
    "Shared grain texture" below), and at equal single-class specificity the
    later rule wins regardless of which one you meant to win — silently
    flattening this back to `relative` and leaving the card sized correctly
-   (100vw/100dvh, unaffected) but positioned wherever the grid happened to
-   place it instead of pinned to the viewport. Same bug, same fix as
-   `aside.sidebar-shell` elsewhere in this file: raise specificity so
+   (100vw/100dvh, unaffected) but positioned wherever the grid/flex-column
+   happened to place it instead of pinned to the viewport. Same bug, same
+   fix as `aside.sidebar-shell` elsewhere in this file: raise specificity so
    source order stops mattering. Confirmed via getBoundingClientRect() —
    without the compound selector this measured top:99/left:16 (wherever
    the grid put it) instead of top:0/left:0.
@@ -807,10 +880,10 @@ aside.sidebar-shell.sidebar-open {
    else (DESIGN.md: lets the page vignette show through a card sitting on
    the canvas), but this card no longer sits beside the vignette, it sits
    in front of the entire rest of the app: at 90% opacity the whole
-   dashboard underneath (every other card, each also 90% opaque over the
+   dashboard/tab underneath (every other card, each also 90% opaque over the
    vignette) visibly ghosted through, busy and unreadable behind the
    chart. A fullscreen view needs a solid backing. */
-.dashboard-growth-expanded.card {
+.chart-fullscreen-expanded.card {
   position: fixed;
   inset: 0;
   z-index: 900;

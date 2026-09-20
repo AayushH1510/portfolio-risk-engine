@@ -11,8 +11,8 @@ import SectorChart from '../components/SectorChart'
 import FirstResultCallout from '../components/FirstResultCallout'
 import MetricTooltip from '../components/MetricTooltip'
 import useOverlay from '../hooks/useOverlay'
+import useCompactViewport from '../hooks/useCompactViewport'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
-import { COMPACT_VIEWPORT_QUERY } from '../lib/breakpoints'
 
 // Distinct hues for the Portfolio Growth chart's "By Holding" mode — one
 // line per ticker, differentiated by hue rather than dash pattern (dashing
@@ -167,17 +167,12 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // (lib/breakpoints.js) is the single source for this condition — CSS
   // can't import it (media conditions can't read custom properties), so
   // index.css's "Compact viewport" block hand-writes the same 767 literal
-  // and points back at that module in its banner comment; this is the one
-  // and only place it's defined for JS.
-  const [isCompactViewport, setIsCompactViewport] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia(COMPACT_VIEWPORT_QUERY).matches
-  )
-  useEffect(() => {
-    const mql = window.matchMedia(COMPACT_VIEWPORT_QUERY)
-    const handler = (e) => setIsCompactViewport(e.matches)
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
-  }, [])
+  // and points back at that module in its banner comment. The live
+  // useState+matchMedia subscription itself lives in useCompactViewport
+  // (hooks/) — RiskAnalysis.jsx and Backtest.jsx need the identical pattern
+  // and duplicating it a third time was the exact "one fact, N copies" bug
+  // shape this project keeps tripping on elsewhere.
+  const isCompactViewport = useCompactViewport()
 
   // Mirrors Sidebar's isDrawerActive pattern: `expanded` is a plain request,
   // not the source of truth — deriving it from isCompactViewport means
@@ -304,7 +299,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   const growthCardEl = (
     <div
         ref={growthCardRef}
-        className={`dashboard-grid__growth card${isGrowthExpanded ? ' dashboard-growth-expanded' : ''}`}
+        className={`dashboard-grid__growth card${isGrowthExpanded ? ' chart-fullscreen-expanded' : ''}`}
         style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column' }}
       >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
