@@ -509,6 +509,65 @@ aside.sidebar-shell.sidebar-open {
   min-width: 0;
 }
 
+/* Backtest strategy-card visual order (Backtest.jsx) — deliberately its own
+   `@media (max-width: ...)`, not a subsection of the "Compact viewport"
+   block below, and that split is the point, not an oversight: this rule
+   answers "does .backtest-strategy-row's own flex-wrap actually wrap,"
+   which is a pure single-axis (width) question, not "is this a phone."
+   Gating it on the dual-axis compact-viewport condition instead (852x393
+   landscape included) was tried first and was wrong — landscape is wide
+   enough that the row never wraps there (three cards fit one line, per its
+   own flex-basis math below), so the swap fired for no layout benefit and
+   scrambled the most-to-least-relevant reading order on a viewport where
+   desktop's original order was already fine. Folding a landscape exception
+   into the dual-axis block would have "fixed" that one case while leaving
+   the actual mismatch (phone-ness vs. wrap-ness are different questions)
+   to resurface at the next viewport that's wide-but-short or narrow-but-
+   tall; a width-only condition matched to what actually drives wrapping
+   removes the mismatch instead of patching around it.
+
+   The threshold is exact and derived, not eyeballed: three cards at
+   flex-basis 150px plus two 10px gaps need 470px of the row's own content
+   width before they stop wrapping (150*3 + 10*2 = 470); the row's content
+   width is the viewport width minus <main>'s own 32px padding (App.jsx,
+   16px each side) at every width this matters for (sidebar is an off-canvas
+   drawer — zero layout width — anywhere below the 1024px tablet breakpoint,
+   which covers this whole range). 470 + 32 = 502. Confirmed empirically
+   with a 1px-step resize sweep, not just computed: row content width is
+   469px (wraps, 2 rows) at viewport 501px and exactly 470px (1 row) at
+   502px, a clean single-pixel transition with no ambiguous middle ground.
+   Also confirmed content-independent, which is what makes a fixed width
+   threshold safe to hard-code rather than something that could drift under
+   this component: the same sweep against a much longer 5-ticker "Your
+   Portfolio" sub-text (which lengthens that card's own content) produced
+   the identical 501->502 transition, because flex-basis is a fixed 150px,
+   not content-derived, and min-width:0 above removes the content-based
+   floor that would otherwise let a long sub-text push its own card wider
+   and shift the wrap point. If .backtest-strategy-row's own flex-basis
+   (150px), gap (10px), or <main>'s padding ever change, recompute 502 from
+   this same arithmetic rather than eyeballing a new value. */
+@media (max-width: 501px) {
+  /* Your Portfolio, S&P 500 (the benchmark card), Equal Weight — instead of
+     DOM/desktop order Your Portfolio, Equal Weight, S&P 500. At the 2-then-1
+     wrap this rule's own width range guarantees, the third card is the one
+     that gets the full-width second row to itself; this puts the benchmark
+     comparison there instead of Equal Weight. `order` only, not a JSX
+     reorder: the DOM keeps its semantic sequence (matching the chart legend
+     and the year-by-year table columns) and every viewport this rule
+     doesn't match — desktop included — is untouched by construction.
+     Targeted by nth-child since StrategyCard renders a plain .card with no
+     per-card className to hook: 2nd DOM child (Equal Weight) becomes
+     visually last, 3rd DOM child (S&P 500) becomes visually second; the 1st
+     (Your Portfolio) needs no explicit order — default 0 already sorts
+     before both 2 and 3. */
+  .backtest-strategy-row > *:nth-child(2) {
+    order: 3;
+  }
+  .backtest-strategy-row > *:nth-child(3) {
+    order: 2;
+  }
+}
+
 /* Backtest's chart card (Backtest.jsx) base rule — min-height:0 here, not
    inline, for the same reason .dashboard-grid__growth's does (that rule's
    own comment, above): the compact-viewport override below has to live in
