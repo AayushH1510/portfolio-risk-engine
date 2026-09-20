@@ -51,20 +51,22 @@ export default function Hero({ block }) {
       }}
     >
       <div style={{ position: 'absolute', inset: '-10% -5% 0', zIndex: 0, overflow: 'hidden' }}>
-        {/* height:'100%' — covers the full container at every aspect ratio,
-            including a tall phone hero. An earlier version capped the
-            canvas's own aspect and switched this to height:'auto' so it
-            would fall short of 100% and let overflow:hidden crop it — that
-            traded the original banding for a visible seam where the
-            (shorter) canvas ended and flat background began. The actual
-            fix lives entirely in smoke-field.ts's resize(): the simulation
-            grid's row count now scales with the container's real,
-            uncapped aspect ratio instead of the canvas itself being
-            capped, so the field can cover the whole hero without banding
-            *or* a seam. See that file's own comment. */}
+        {/* width/height are set imperatively by smoke-field.ts's resize()
+            (a background-size:cover-style scale-up of a fixed-resolution
+            canvas, not driven by React state) — left:'50%' +
+            translateX(-50%) here is the one static half of that, centring
+            whatever size resize() lands on so its overflow — usually
+            substantial width overflow on a tall phone hero, since height
+            is almost always the binding axis there — clips symmetrically
+            off both sides instead of one. Two earlier attempts (a hard
+            aspect cap that produced a seam; per-aspect grid/blur/fps
+            retuning that fixed the seam but cost 5-7x more per frame on a
+            phone) both tried to make the SIMULATION adapt to viewport
+            shape. This one doesn't: one field, one resolution, at every
+            viewport — see smoke-field.ts's own comment. */}
         <canvas
           ref={canvasRef}
-          style={{ width: '110%', height: '100%', display: 'block', position: 'absolute', top: 0, left: '-5%', filter: 'saturate(1.15)' }}
+          style={{ display: 'block', position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', filter: 'saturate(1.15)' }}
         />
         <div
           style={{
