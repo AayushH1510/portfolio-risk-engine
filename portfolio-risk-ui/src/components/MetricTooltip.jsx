@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { metricExplanations } from '../content/metricExplanations'
+import { supportsHover } from '../lib/pointer'
 
 const POPOVER_WIDTH = 200
 const GAP = 6
@@ -16,12 +17,10 @@ const GAP = 6
 // their content in a container with overflow:hidden (App.jsx's <main>), which
 // silently clips a relatively-positioned popover whenever the label sits near
 // that container's edge.
-// Touchscreens synthesize mouseenter/mouseleave around a tap alongside the
-// click event — with both hover and click handlers wired to the same
-// element, that synthetic pair can toggle `open` shut again right after the
-// click opens it. Only bind the hover handlers on devices that actually
-// support hover, so touch is left to the click-toggle alone.
-const supportsHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches
+//
+// supportsHover lives in lib/pointer.js, not here — only bind the hover
+// handlers below on devices that actually support hover (see that module's
+// comment for why), so touch is left to the click-toggle alone.
 
 export default function MetricTooltip({ metricKey, children }) {
   const [open, setOpen] = useState(false)

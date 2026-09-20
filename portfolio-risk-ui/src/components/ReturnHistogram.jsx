@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { cssVar } from '../lib/cssVar'
 import MetricTooltip from './MetricTooltip'
+import useCanvasSize from '../hooks/useCanvasSize'
+import { supportsHover } from '../lib/pointer'
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 
 export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, varDollar, cvarDollar, confidence }) {
   const canvasRef = useRef(null)
@@ -25,17 +29,25 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
   const annualisedStd = std * Math.sqrt(252)
   const tightSpread    = annualisedStd < 0.20
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    const W   = canvas.offsetWidth
-    const H   = canvas.offsetHeight
-    canvas.width  = W * window.devicePixelRatio
-    canvas.height = H * window.devicePixelRatio
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-    const PAD = { top: 16, right: 16, bottom: 36, left: 36 }
+  const draw = useCallback((ctx, W, H) => {
+    // Horizontal padding scales with the canvas's own width, the same
+    // proportional approach RiskGauge's R-relative drawing math uses
+    // (RESPONSIVE_AUDIT §5 flagged this as the one canvas component still on
+    // fixed px padding). Vertical padding stays a fixed constant on purpose:
+    // this canvas's CSS height is a literal 200px at every viewport (see the
+    // <canvas> style below), so there's no vertical size to scale against —
+    // only width actually varies with the container. The clamp ceilings
+    // equal the original fixed values (36/16); any container wider than
+    // ~420px (the point at which W*0.085 and W*0.03 both hit their ceiling)
+    // still resolves to exactly those, which is every desktop width this
+    // renders at. The floors keep enough room for the axis-label text once
+    // the card narrows to phone width.
+    const PAD = {
+      top: 16,
+      right: clamp(W * 0.03, 10, 16),
+      bottom: 36,
+      left: clamp(W * 0.085, 24, 36),
+    }
     const PW  = W - PAD.left - PAD.right
     const PH  = H - PAD.top  - PAD.bottom
 
@@ -187,7 +199,9 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
       })),
     }
 
-  }, [portfolioReturns, varPct, cvarPct])
+  }, [portfolioReturns, varPct, cvarPct, confidence])
+
+  useCanvasSize(canvasRef, draw)
 
   const handleMouseMove = e => {
     const canvas = canvasRef.current
@@ -222,6 +236,24 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
     if (Math.abs(mx - g.cvarX) < LINE_TOL) { setTooltip({ kind: 'cvar', left: g.cvarX, top: my }); return }
     if (Math.abs(mx - g.meanX) < LINE_TOL) { setTooltip({ kind: 'mean', left: g.meanX, top: my }); return }
 
+    const bin = g.bins.find(b => mx >= b.x && mx < b.x + b.width)
+    setTooltip(bin ? { kind: 'bar', left: mx, top: my, bin } : null)
+  }
+
+  // Touch path — bound instead of handleMouseMove/handleMouseLeave when
+  // supportsHover is false (see the canvas element below). The histogram's
+  // bins are discrete and already wide enough to be a clean tap target on
+  // their own, so this skips the axis-strip/line-tolerance cascade above
+  // entirely and just answers "which bin, if any, was tapped" — tapping
+  // between bins (or in the margin) clears the tooltip the same way a miss
+  // does for the mouse path.
+  const handleBinTap = e => {
+    const canvas = canvasRef.current
+    const g = geomRef.current
+    if (!canvas || !g) return
+    const rect = canvas.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
     const bin = g.bins.find(b => mx >= b.x && mx < b.x + b.width)
     setTooltip(bin ? { kind: 'bar', left: mx, top: my, bin } : null)
   }
@@ -295,9 +327,10 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
       }}>
         <canvas
           ref={canvasRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setTooltip(null)}
-          style={{ width: '100%', height: 200, display: 'block', cursor: tooltip ? 'crosshair' : 'default' }}
+          {...(supportsHover
+            ? { onMouseMove: handleMouseMove, onMouseLeave: () => setTooltip(null) }
+            : { onClick: handleBinTap })}
+          style={{ width: '100%', height: 200, display: 'block', cursor: supportsHover && tooltip ? 'crosshair' : 'default' }}
         />
         {tooltip && (
           <div style={{

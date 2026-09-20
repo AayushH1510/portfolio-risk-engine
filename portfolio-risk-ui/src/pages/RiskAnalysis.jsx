@@ -17,27 +17,34 @@ const TIP  = {
   fontSize: 11, padding: '6px 10px',
 }
 
+// overflow:'hidden' — containment backstop for Recharts' tooltip-position
+// clamp, which isn't an absolute safety net (it floors against
+// ResponsiveContainer's last-*committed* measured width, not a live DOM
+// read); same fix, same reasoning as Dashboard.jsx's chart wrappers and
+// Comparison.jsx's growth/Monte-Carlo wrappers.
 function MiniChart({ data, dataKey, color, filled, refVal }) {
   return (
-    <ResponsiveContainer width="100%" height={72}>
-      {filled ? (
-        <AreaChart data={data} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
-          <XAxis dataKey="date" hide />
-          <YAxis hide />
-          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="3 3" />}
-          <Tooltip formatter={v => fmtS(v)} contentStyle={TIP} itemStyle={{ color }} />
-          <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} fill={color} fillOpacity={0.08} dot={false} />
-        </AreaChart>
-      ) : (
-        <LineChart data={data} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
-          <XAxis dataKey="date" hide />
-          <YAxis hide />
-          {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="3 3" />}
-          <Tooltip formatter={v => v?.toFixed(2)} contentStyle={TIP} itemStyle={{ color }} />
-          <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} dot={false} />
-        </LineChart>
-      )}
-    </ResponsiveContainer>
+    <div style={{ overflow: 'hidden' }}>
+      <ResponsiveContainer width="100%" height={72}>
+        {filled ? (
+          <AreaChart data={data} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
+            <XAxis dataKey="date" hide />
+            <YAxis hide />
+            {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="3 3" />}
+            <Tooltip formatter={v => fmtS(v)} contentStyle={TIP} itemStyle={{ color }} />
+            <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} fill={color} fillOpacity={0.08} dot={false} />
+          </AreaChart>
+        ) : (
+          <LineChart data={data} margin={{ top: 4, right: 2, bottom: 0, left: 2 }}>
+            <XAxis dataKey="date" hide />
+            <YAxis hide />
+            {refVal != null && <ReferenceLine y={refVal} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="3 3" />}
+            <Tooltip formatter={v => v?.toFixed(2)} contentStyle={TIP} itemStyle={{ color }} />
+            <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} dot={false} />
+          </LineChart>
+        )}
+      </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -217,10 +224,11 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
       <InsightBox
         label="Why risk-adjusted metrics matter"
         text="Two portfolios can have the same return but very different risk. These metrics show whether you're being compensated fairly for the risk you're taking, not just how much you made."
+        priority="primary"
       />
 
       {/* Row 1: Rolling charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div className="ra-grid-2col" style={{ display: 'grid', gap: 10 }}>
 
         <div className="card" style={{ padding: '14px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -294,7 +302,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
 
       {/* Row 1.5: Benchmark-relative ratios */}
       {(treynor != null || infoRatio != null) && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <div className="ra-grid-2col" style={{ display: 'grid', gap: 10 }}>
           {treynor != null && (
             <MetricPill
               label={<MetricTooltip metricKey="treynor_ratio">Treynor ratio</MetricTooltip>}
@@ -315,7 +323,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
       )}
 
       {/* Row 2: VaR + Correlation */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div className="ra-grid-2col" style={{ display: 'grid', gap: 10 }}>
 
         {/* Downside risk — 95% and 99% side by side */}
         <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
@@ -324,7 +332,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           </div>
 
           {/* Confidence level headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+          <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
             {[
               { label: '95% confidence', color: 'var(--signal-negative)', borderColor: 'rgba(var(--signal-negative-rgb),0.19)' },
               { label: '99% confidence', color: 'var(--signal-negative-strong)', borderColor: 'rgba(var(--signal-negative-strong-rgb),0.19)' },
@@ -340,7 +348,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           </div>
 
           {/* VaR row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+          <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 6 }}>
             <MetricPill
               label={<MetricTooltip metricKey="var_95">VaR</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar.var_pct))}`}
@@ -356,7 +364,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           </div>
 
           {/* CVaR row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
+          <div className="ra-grid-2col" style={{ display: 'grid', gap: 6, marginBottom: 12 }}>
             <MetricPill
               label={<MetricTooltip metricKey="cvar_95">CVaR (avg tail)</MetricTooltip>}
               value={`−${fmt(Math.abs(var_cvar.cvar_pct))}`}
@@ -425,6 +433,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
           <InsightBox
             label="Why the daily returns distribution matters"
             text="This chart plots every daily return your portfolio produced over the selected period. The x-axis is the size of a single day's gain or loss, from a big loss on the left to a big gain on the right. The y-axis is how many days landed in that range - a tall bar means a lot of days moved by roughly that amount. A narrow, tight cluster near the middle means your day-to-day performance has been consistent and predictable. A wide, lumpy spread, especially with bars reaching far to either side, means bigger day-to-day swings and occasional sharp outlier days - a portfolio with these 'fat tails' can look calm most days while still carrying serious downside risk."
+            priority="secondary"
           />
           <div className="card" style={{ padding: '14px 16px' }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 14 }}>
@@ -446,6 +455,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
       <InsightBox
         label="Why stress testing matters"
         text="Backtested returns show how your portfolio performs in normal conditions. Stress tests show what happens when markets panic, the scenario most investors are least prepared for."
+        priority="secondary"
       />
       <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
 

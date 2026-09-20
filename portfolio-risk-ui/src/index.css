@@ -517,6 +517,18 @@ aside.sidebar-shell.sidebar-open {
 .dashboard-right-col__gauge    { order: 1; }
 .dashboard-right-col__drawdown { order: 2; flex: 1; min-height: 0; }
 
+/* RiskAnalysis's six 2-column rows (RiskAnalysis.jsx:223,297,318,327,343,359)
+   — rolling-metric charts, Treynor/Info-ratio pair, VaR/CVaR + correlation
+   matrix, and the nested confidence-header/VaR-row/CVaR-row grids inside the
+   Downside Risk card all share this one class. gridTemplateColumns lives
+   here, not inline, for the same reason .risk-gauge-canvas's does (see that
+   rule's own comment below): an inline style always wins over a stylesheet
+   rule regardless of media-query match, so the compact-viewport override
+   below couldn't reach it otherwise. */
+.ra-grid-2col {
+  grid-template-columns: 1fr 1fr;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    COMPACT VIEWPORT — every rule below, until the closing brace, is gated
    on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
@@ -677,6 +689,19 @@ aside.sidebar-shell.sidebar-open {
     margin-top: 8px;
   }
 
+  /* ─── RiskAnalysis 2-column grids (RiskAnalysis.jsx) ───
+     Six rows collapse to one column. The two top-level rows (rolling
+     volatility/Sharpe charts; VaR/CVaR card + correlation matrix) are the
+     ones that actually overflowed — per RESPONSIVE_AUDIT §6 the correlation
+     matrix already adapts its own density by ticker count, it was only ever
+     being starved of room by sharing a fixed 1fr 1fr row with the VaR/CVaR
+     card. The three nested grids inside the Downside Risk card (confidence
+     headers, VaR row, CVaR row) stack the same way so 95%/99% read top-to-
+     bottom instead of two ~110px-wide columns once that card is full width. */
+  .ra-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
   /* ─── RiskGauge (RiskGauge.jsx) ───
      Below 768px (or on a landscape phone — see this block's banner
      comment) the card would otherwise stretch to the full mobile column
@@ -827,6 +852,41 @@ aside.sidebar-shell.sidebar-open {
 .chart-expand-btn:hover {
   border-color: var(--line-emphasis);
   color: var(--text-primary);
+}
+
+/* Insight box collapse toggle (InsightBox.jsx, priority="secondary") — same
+   shape and same reasoning as .chart-expand-btn immediately above: a small
+   mono glyph rather than a real button so it reads as unobtrusive chrome,
+   and a 44x44 ::before{inset} tap target rather than growing the visible
+   box, since a literal 44x44 button would grow the header row and disturb
+   the label's own vertical rhythm. border-color is set inline per instance
+   (RiskAnalysis.jsx) since InsightBox has no fixed tone — it takes whatever
+   signal colour the box itself is using. */
+.insight-toggle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-hairline);
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.insight-toggle-btn::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+}
+.insight-toggle-btn:hover {
+  border-color: var(--line-emphasis);
 }
 
 /* Shared grain texture — one definition, reused via .grain-canvas (page
