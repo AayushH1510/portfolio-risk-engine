@@ -968,6 +968,32 @@ aside.sidebar-shell.sidebar-open {
     min-height: 450px;
   }
 
+  /* ─── Fullscreen expand overrides all four floors above ───
+     Compound selectors (two classes each), so this wins over every single-
+     class floor rule above regardless of source order — same reasoning as
+     .chart-fullscreen-expanded.card's own compound-selector comment further
+     down this file. Found while fixing Frontier's expanded scatter cutting
+     off around the 20% gridline at 852x393 landscape: the card's own
+     compact-viewport min-height (sized to stop the *inline* card collapsing
+     inside the page's flex column) was still winning once expanded, even
+     though a 393px-tall viewport can't contain a 450px-tall card. Wrong
+     fix target — the floor exists for the inline case, and the expanded
+     case already has a hard, definite height from .chart-fullscreen-
+     expanded.card's own 100dvh, so it doesn't need a floor at all; flex:1 +
+     minHeight:0 on the inner chart wrapper (already the case in all four)
+     correctly fills whatever's left under the header once nothing fights
+     it. Confirmed this shape isn't Frontier-specific: all three Recharts
+     consumers share the exact same mechanism (one compact-viewport floor,
+     unconditional, on the same element .chart-fullscreen-expanded gets
+     added to), so all four needed this same override, not just the one
+     that prompted finding it. */
+  .dashboard-grid__growth.chart-fullscreen-expanded,
+  .backtest-chart-card.chart-fullscreen-expanded,
+  .montecarlo-chart-card.chart-fullscreen-expanded,
+  .frontier-chart-card.chart-fullscreen-expanded {
+    min-height: 0;
+  }
+
   /* ─── RiskGauge (RiskGauge.jsx) ───
      Below 768px (or on a landscape phone — see this block's banner
      comment) the card would otherwise stretch to the full mobile column

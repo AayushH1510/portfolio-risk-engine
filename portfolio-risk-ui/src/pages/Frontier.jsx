@@ -218,22 +218,131 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
     ctx.fillText('Risk (volatility) →', PAD.left+PW/2, H-2)
     ctx.save(); ctx.translate(12, PAD.top+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('Return →', 0, 0); ctx.restore()
 
-    // Dynamic CELL size — scales with vol range so dots aren't over-merged
-    // with 3 tickers: ~0.0028, with 5 tickers: slightly larger to reduce clutter
-    const CELL       = 0.002
     const bucketSize = Math.max(0.002, volRange / 60)
 
+    // Dot scale — proportional to plot width, ceiling = the original fixed
+    // radius formula (1.6 + pct*1.2, +0.6 glow), reached at or above the
+    // same smallest-real-desktop-plot-width reference the PAD ceiling above
+    // uses: 868px, 1280x800's own PW once PAD is at its own ceiling (954
+    // canvas width minus 54+32 fixed padding). Same "ceiling reached at the
+    // tightest real desktop case, capped there for the other two" method as
+    // PAD/font — confirmed 1366/1440's own PW (954/1028) both clear 868, so
+    // all three desktop widths resolve dotScale to exactly 1, and therefore
+    // the radius/glow formulas below to exactly their original values, not
+    // approximately.
+    //
+    // Below that reference, radius shrinks with the plot instead of staying
+    // fixed — at ~200-330px of phone plot width the untouched fixed radius
+    // (1.6-2.8px, +0.6 glow) packed thousands of simulated portfolios into a
+    // near-solid blob (screenshot-confirmed, not assumed). Floored at 0.8px
+    // so a dot never disappears entirely, and the glow ring — which only
+    // ever added definition at desktop density — is dropped below a 0.4
+    // scale rather than shrunk to a sub-pixel smear that reads as noise
+    // rather than glow.
+    const DOT_SCALE_REF_PW = 868
+    const DOT_SCALE_REF_PH = 289 // 1280x800's own PH once PAD is at its ceiling — same reference case DOT_SCALE_REF_PW is, just the H-axis half of it
+    const dotScale       = clamp(PW / DOT_SCALE_REF_PW, 0, 1)
+    const isDesktopScale = PW >= DOT_SCALE_REF_PW
+    const showGlow       = dotScale > 0.4
+
+    // Cloud dedup — screen space below desktop scale, the untouched original
+    // data-space algorithm at and above it. The old approach bucketed by raw
+    // volatility/return units (CELL = 0.002 fixed), so the number of
+    // surviving points never changed regardless of how many screen pixels
+    // the plot actually had — 5,000 simulated portfolios collapsed to the
+    // same few thousand buckets whether the plot was 950px or 200px wide,
+    // which is the other half of why the phone-width cloud read as a solid
+    // mass (dot size alone wasn't the whole story). Bucketing by rendered
+    // pixel position instead makes the surviving point count scale with the
+    // plot's actual screen area: a narrow plot has fewer, larger buckets, so
+    // proportionally fewer points draw.
+    //
+    // Gated on isDesktopScale rather than applied everywhere, unlike the
+    // radius/glow formulas above: those two are already exact at dotScale=1
+    // by construction (the scale factor itself clamps to exactly 1, so
+    // multiplying by it changes nothing), but a different bucketing space
+    // selects a genuinely different *set* of points even when the two cell
+    // sizes produce a similar count — there's no scale factor that makes
+    // screen-space and data-space bucketing agree point-for-point. Desktop's
+    // pixel-identical guarantee is worth keeping over unifying the code
+    // path, so desktop runs the literal original algorithm, untouched down
+    // to the CELL constant and iteration order — confirmed via a direct
+    // pixel diff against the pre-existing build (git HEAD before this fix)
+    // at 1280/1366/1440, reducedMotion:'reduce' on both sides (the Optimal
+    // marker's pulse is the only non-deterministic-per-frame part of this
+    // canvas, the same static-frame convention the smoke-field canvas's own
+    // screenshot comparisons already rely on): 0 differing pixels at all
+    // three, reconfirmed after every revision below.
+    //
+    // pixelCellX/Y are DERIVED per axis, not fitted. A first attempt fit one
+    // shared constant (3.64) against this app's committed fixture, which
+    // reproduced that fixture's own boundary count well but has no reason to
+    // generalize — the screen-pixel size CELL=0.002 corresponds to depends
+    // on each portfolio's own axis range (a tightly-clustered low-vol mix
+    // and a wide-spread concentrated one don't share one "equivalent
+    // pixels" constant). Deriving it instead — the actual toX/toY scale
+    // this render already computed above, at the same reference case
+    // DOT_SCALE_REF_PW/PH represent — makes the two algorithms coincide at
+    // the boundary by construction, for any portfolio's real spread, not by
+    // luck: confirmed against three portfolios with deliberately different
+    // spreads (this app's real fixture, a rescaled low-vol bonds+broad-
+    // index shape, and a rescaled high-vol concentrated shape — all three
+    // built by affine-rescaling the real fixture's own frontier cloud, so
+    // each preserves realistic clustering rather than being uniform noise)
+    // — all three land within a few percent of the old algorithm's own
+    // count at the boundary, see RESPONSIVE_AUDIT.md for the numbers.
+    //
+    // X and Y each get their own scale factor (dotScale for X, PH's own
+    // ratio to DOT_SCALE_REF_PH for Y) rather than sharing dotScale for
+    // both: PW and PH don't shrink together across every required viewport
+    // (a fullscreen-expanded portrait phone is narrow but tall), and
+    // forcing Y to follow PW-driven dotScale merged the return axis far
+    // more aggressively than that shape's own real height ever needed.
+    //
+    // Each axis's floor is capped at its own reference value
+    // (Math.min(ABS_FLOOR, ref)), not a bare constant — capping is what
+    // keeps the boundary exact for a portfolio whose derived reference is
+    // already small (a tightly-clustered return range can derive a
+    // sub-2px reference cell; a bare 2px floor would override it and
+    // silently win right at the boundary, the same mismatch the fitted
+    // constant had, just relocated). The floor engaging is also what makes
+    // this a genuine fix rather than a no-op: cell size scaling linearly
+    // with PW keeps the *equivalent data-space cell* constant (no
+    // adaptation at all, provably — the PW terms cancel), so real
+    // adaptation only starts once the cell stops shrinking and PW keeps
+    // shrinking past it.
+    //
+    // "highest Sharpe wins the bucket" is unchanged in both branches, so the
+    // frontier's upper edge (drawn from this same `pts` set below) survives
+    // dedup intact regardless of density or which branch ran.
+    const CELL = 0.002
     const grid = {}
-    vols.forEach((v, i) => {
-      const cx = Math.round(v/CELL), cy = Math.round(returns[i]/CELL), key = `${cx},${cy}`
-      if (!grid[key] || sharpes[i] > grid[key].s) grid[key] = { v, r: returns[i], s: sharpes[i] }
-    })
+    if (isDesktopScale) {
+      vols.forEach((v, i) => {
+        const cx = Math.round(v/CELL), cy = Math.round(returns[i]/CELL), key = `${cx},${cy}`
+        if (!grid[key] || sharpes[i] > grid[key].s) grid[key] = { v, r: returns[i], s: sharpes[i], px: toX(v), py: toY(returns[i]) }
+      })
+    } else {
+      const ABS_FLOOR = 2
+      const refX = CELL * DOT_SCALE_REF_PW / (maxV - minV)
+      const refY = CELL * DOT_SCALE_REF_PH / (maxR - minR)
+      const dotScaleY = clamp(PH / DOT_SCALE_REF_PH, 0, 1)
+      const pixelCellX = Math.max(refX * dotScale,  Math.min(ABS_FLOOR, refX))
+      const pixelCellY = Math.max(refY * dotScaleY, Math.min(ABS_FLOOR, refY))
+      vols.forEach((v, i) => {
+        const px = toX(v), py = toY(returns[i])
+        const cx = Math.round(px / pixelCellX), cy = Math.round(py / pixelCellY), key = `${cx},${cy}`
+        if (!grid[key] || sharpes[i] > grid[key].s) grid[key] = { v, r: returns[i], s: sharpes[i], px, py }
+      })
+    }
     const pts = Object.values(grid)
-    ptsRef.current = pts.map(p => ({ ...p, px: toX(p.v), py: toY(p.r), pct: maxS !== minS ? (p.s-minS)/(maxS-minS) : 0.5 }))
+    ptsRef.current = pts.map(p => ({ ...p, pct: maxS !== minS ? (p.s-minS)/(maxS-minS) : 0.5 }))
 
     ptsRef.current.forEach(p => {
-      const radius = 1.6 + p.pct * 1.2, alpha = 0.5 + p.pct * 0.4
-      ctx.beginPath(); ctx.arc(p.px, p.py, radius+0.6, 0, Math.PI*2); ctx.fillStyle = cssVar('var(--canvas-gradient-6)'); ctx.fill()
+      const radius = Math.max((1.6 + p.pct * 1.2) * dotScale, 0.8), alpha = 0.5 + p.pct * 0.4
+      if (showGlow) {
+        ctx.beginPath(); ctx.arc(p.px, p.py, radius + 0.6*dotScale, 0, Math.PI*2); ctx.fillStyle = cssVar('var(--canvas-gradient-6)'); ctx.fill()
+      }
       ctx.beginPath(); ctx.arc(p.px, p.py, radius, 0, Math.PI*2); ctx.fillStyle = sharpeColor(p.pct, alpha); ctx.fill()
     })
 
