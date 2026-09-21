@@ -508,6 +508,28 @@ aside.sidebar-shell.sidebar-open {
   min-width: 0;
 }
 
+/* Frontier's bottom row (Frontier.jsx) — Sharpe insight panel + two
+   WeightCards, same flex-wrap-over-grid fix as the rows above, same
+   failure mode (1fr 1fr 1fr squeezed a WeightCard's per-ticker rows and
+   the insight panel's own content well below what either needs). 260px,
+   not row1/row2's 88px or even .backtest-strategy-row's 150px — measured,
+   not assumed, per the request: the binding constraint isn't a WeightCard
+   (its longest title, "Optimal - Sharpe 1.87", needs ~129px of content
+   width, ~157px of card width) but the insight panel's Sharpe-value +
+   headline-badge row — the badge is deliberately whiteSpace:'nowrap'
+   (Frontier.jsx's own comment there), and its real worst-case content
+   ("Rebalancing recommended", the longest of the four possible headlines,
+   confirmed by rendering it in this exact fixture, not synthesized) plus
+   the adjacent Sharpe value and their 10px gap measured 227px, +28px card
+   padding = 255px. 260px rounds that up with a little headroom. One
+   shared basis, not a smaller one for the WeightCards specifically: they
+   simply get more breathing room than their own floor requires, which is
+   harmless, rather than each card negotiating a different wrap point. */
+.frontier-bottom-row > * {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
 /* ReturnHistogram's stats row (ReturnHistogram.jsx) — the outstanding
    RESPONSIVE_AUDIT.md item this fixes ("OBSERVATIONS" truncating at
    320px), same reasoning and fix as the rows above. flex-basis 88px: each
@@ -597,6 +619,20 @@ aside.sidebar-shell.sidebar-open {
    permanently shadowed it. Reproduces the original inline value exactly —
    desktop is untouched. */
 .backtest-chart-card {
+  min-height: 0;
+}
+
+/* Frontier's scatter canvas wrapper (Frontier.jsx) base rule — same
+   inline-shadowing fix, same reason, as .backtest-chart-card/
+   .montecarlo-chart-card above. Found while verifying .frontier-bottom-row's
+   flex-wrap fix, not requested up front: wrapping that row to three
+   stacked full-width cards at phone width (vs. one ~150px row before)
+   starves this canvas of the same flex:1 leftover space, measured at a
+   literal 0px tall at several required viewports before this floor
+   existed — worse than Backtest's or MonteCarlo's pre-fix state, not
+   milder, because the bottom row's new wrapped height is so much taller
+   than what a 3-up grid row ever was. */
+.frontier-canvas-wrapper {
   min-height: 0;
 }
 
@@ -903,6 +939,19 @@ aside.sidebar-shell.sidebar-open {
      RiskAnalysis's own chart floors use, not a bare minimum. */
   .montecarlo-chart-card {
     min-height: 440px;
+  }
+
+  /* ─── Frontier scatter canvas (Frontier.jsx) ───
+     320px — this chart is the tab's entire subject (its own header literally
+     reads "Efficient Frontier"), so it gets the most generous floor of any
+     chart this project has added one for, not the smallest. Unlike
+     Backtest's and MonteCarlo's charts, this one's own internal padding
+     (PAD, drawn inside the canvas) is proportional rather than fixed below
+     768px (see the canvas-sizing comment in Frontier.jsx), so the floor
+     here only has to guarantee a plot exists at all, not hit an exact
+     target plot size the way the other two do. */
+  .frontier-canvas-wrapper {
+    min-height: 320px;
   }
 
   /* ─── RiskGauge (RiskGauge.jsx) ───
