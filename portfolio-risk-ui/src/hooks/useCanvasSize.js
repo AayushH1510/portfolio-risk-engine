@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Shared canvas sizing for RiskGauge/ReturnHistogram/Frontier-style raw-canvas
 // components. Per RESPONSIVE_AUDIT §5, none of them redraw on a pure resize —
@@ -20,28 +20,58 @@ import { useEffect } from 'react'
 // dependencies (e.g. [score]) — a new `draw` reference re-runs this effect
 // (redrawing at the current size immediately), while the ResizeObserver
 // keeps redrawing at whatever the latest `draw` closure is on a pure resize.
+//
+// Returns a callback ref — attach it to the <canvas> (`ref={setCanvasNode}`)
+// instead of passing `canvasRef` straight to the element. `canvasRef.current`
+// still ends up holding the node either way (this writes it), so any
+// existing caller code that reads `canvasRef.current` elsewhere (hit-testing
+// in mousemove handlers, tooltip positioning) is untouched. What changes is
+// *how* the sizing effect below learns the node exists: a plain object ref
+// can silently start pointing at a different DOM node (canvasRef.current
+// reassigned during a commit) without canvasRef's own identity changing, and
+// an effect keyed on [canvasRef, draw] has no way to notice that — it goes
+// on observing whatever node it originally attached to, even after that
+// node is removed from the DOM. That's exactly what happens when a
+// <canvas>'s enclosing subtree gets unmounted and remounted elsewhere
+// without the *component* that owns canvasRef unmounting with it — Frontier
+// portalling its chart card to document.body on expand is the case this was
+// found from: the div/canvas subtree remounts (fresh DOM nodes) but Frontier
+// itself, and therefore its useCanvasSize call, does not, so [canvasRef,
+// draw] never changes and the old ResizeObserver is left watching a
+// detached node forever — canvas.width/height stuck at the browser's 300x150
+// default, never resized or redrawn. Routing the node through state (via
+// this callback ref) makes the *node itself* the effect's dependency, so a
+// swap — remount-driven or otherwise — reliably retriggers setup.
 export default function useCanvasSize(canvasRef, draw) {
+  const [node, setNode] = useState(null)
+
+  const setCanvasNode = useCallback(el => {
+    canvasRef.current = el
+    setNode(el)
+  }, [canvasRef])
+
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    if (!node) return
 
     const resize = () => {
-      const W = canvas.offsetWidth
-      const H = canvas.offsetHeight
+      const W = node.offsetWidth
+      const H = node.offsetHeight
       if (!W || !H) return
       const dpr = window.devicePixelRatio || 1
       const bw = Math.round(W * dpr)
       const bh = Math.round(H * dpr)
-      canvas.width = bw
-      canvas.height = bh
-      const ctx = canvas.getContext('2d')
+      node.width = bw
+      node.height = bh
+      const ctx = node.getContext('2d')
       ctx.scale(bw / W, bh / H)
       draw(ctx, W, H)
     }
 
     resize()
     const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
+    ro.observe(node)
     return () => ro.disconnect()
-  }, [canvasRef, draw])
+  }, [node, draw])
+
+  return setCanvasNode
 }

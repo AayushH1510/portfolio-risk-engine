@@ -624,15 +624,24 @@ aside.sidebar-shell.sidebar-open {
 
 /* Frontier's scatter canvas wrapper (Frontier.jsx) base rule — same
    inline-shadowing fix, same reason, as .backtest-chart-card/
-   .montecarlo-chart-card above. Found while verifying .frontier-bottom-row's
-   flex-wrap fix, not requested up front: wrapping that row to three
-   stacked full-width cards at phone width (vs. one ~150px row before)
-   starves this canvas of the same flex:1 leftover space, measured at a
-   literal 0px tall at several required viewports before this floor
-   existed — worse than Backtest's or MonteCarlo's pre-fix state, not
-   milder, because the bottom row's new wrapped height is so much taller
-   than what a 3-up grid row ever was. */
+   .montecarlo-chart-card above. min-height:0 only here now, no compact-
+   viewport floor of its own — this wrapper moved inside .frontier-chart-
+   card (below) when that card gained the expand-to-fullscreen control, so
+   it's no longer a direct flex:1 sibling of .frontier-bottom-row at the
+   top-level column and no longer starved by it; the floor that guards
+   against that now lives on .frontier-chart-card itself, one level up. */
 .frontier-canvas-wrapper {
+  min-height: 0;
+}
+
+/* Frontier's chart card (Frontier.jsx) base rule — header + scatter canvas
+   together, same inline-shadowing fix as every other chart card here. New
+   with the expand-to-fullscreen control: previously the header and canvas
+   wrapper were separate top-level children with no shared border: this
+   wraps both in one .card, matching Backtest's/MonteCarlo's chart-card
+   shape (one outer border, not a second one nested around just the
+   canvas) since the expand mechanism needs a single element to portal. */
+.frontier-chart-card {
   min-height: 0;
 }
 
@@ -941,17 +950,22 @@ aside.sidebar-shell.sidebar-open {
     min-height: 440px;
   }
 
-  /* ─── Frontier scatter canvas (Frontier.jsx) ───
-     320px — this chart is the tab's entire subject (its own header literally
-     reads "Efficient Frontier"), so it gets the most generous floor of any
-     chart this project has added one for, not the smallest. Unlike
-     Backtest's and MonteCarlo's charts, this one's own internal padding
-     (PAD, drawn inside the canvas) is proportional rather than fixed below
-     768px (see the canvas-sizing comment in Frontier.jsx), so the floor
-     here only has to guarantee a plot exists at all, not hit an exact
-     target plot size the way the other two do. */
-  .frontier-canvas-wrapper {
-    min-height: 320px;
+  /* ─── Frontier chart card (Frontier.jsx) ───
+     Floor moved here from .frontier-canvas-wrapper when that wrapper became
+     a nested child of this card (the expand-to-fullscreen control needed
+     one portal-able element, see Frontier.jsx's chartCardEl comment).
+     Re-derived, not just carried over: measured directly at 320-393px, the
+     header now runs three lines at this width (title+expand-button, then
+     the legend wrapping to two lines of its own below it) for ~85px, plus
+     12px marginBottom plus 32px of card padding — 129px of chrome the
+     original 320px canvas-only floor never had to account for, since header
+     and canvas used to be separate top-level siblings sized independently.
+     450px (129 chrome + the same 320px plot target the canvas-only floor
+     used) keeps this the most generous floor of any chart this project has
+     added one for, still by design — the canvas measured ~190px tall at
+     the old 320px card floor, well short of that target, before this. */
+  .frontier-chart-card {
+    min-height: 450px;
   }
 
   /* ─── RiskGauge (RiskGauge.jsx) ───

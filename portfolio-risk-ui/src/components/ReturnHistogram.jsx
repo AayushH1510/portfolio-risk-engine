@@ -201,7 +201,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
 
   }, [portfolioReturns, varPct, cvarPct, confidence])
 
-  useCanvasSize(canvasRef, draw)
+  const setCanvasNode = useCanvasSize(canvasRef, draw)
 
   const handleMouseMove = e => {
     const canvas = canvasRef.current
@@ -326,7 +326,7 @@ export default function ReturnHistogram({ portfolioReturns, varPct, cvarPct, var
         border: '1px solid rgba(var(--text-primary-rgb),0.05)',
       }}>
         <canvas
-          ref={canvasRef}
+          ref={setCanvasNode}
           {...(supportsHover
             ? { onMouseMove: handleMouseMove, onMouseLeave: () => setTooltip(null) }
             : { onClick: handleBinTap })}

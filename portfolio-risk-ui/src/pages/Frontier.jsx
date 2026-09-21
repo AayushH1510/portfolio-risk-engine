@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cssVar } from '../lib/cssVar'
 import HeavyTierPending from '../components/HeavyTierPending'
 import InsightBox from '../components/InsightBox'
 import useCanvasSize from '../hooks/useCanvasSize'
+import useOverlay from '../hooks/useOverlay'
+import useCompactViewport from '../hooks/useCompactViewport'
 import { supportsHover } from '../lib/pointer'
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -139,23 +142,38 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
     // canvas used unconditionally before. Ceiling = the original fixed
     // values (32/32/48/54, 9px), reached at or above the smallest real
     // desktop canvas this renders at — measured directly (not assumed):
-    // 1280x800's own canvas is 986px wide, 1366x768's is 373px tall, the
+    // 1280x800's own canvas is 954px wide, 1366x768's is 337px tall, the
     // narrower dimension of each at the three desktop widths this app
     // targets. Any canvas at or past those resolves to exactly the
-    // original numbers, not merely close. Floors keep axis labels legible
-    // once .frontier-canvas-wrapper's own compact-viewport min-height
-    // (320px) is the binding constraint — that floor pins canvas height to
-    // a near-constant ~318px across every phone width (286-818px wide),
-    // which is why the font scales with H, not W: H barely moves across
-    // the phone range once floored, W moves a lot, but legibility is
-    // fundamentally a height-of-canvas question (do two stacked lines of
-    // axis text fit) more than a width one.
-    const axisFontSize = clamp(H * (9/373), 7, 9)
+    // original numbers, not merely close.
+    //
+    // 954/337, not 986/373 — re-measured when the expand-to-fullscreen
+    // control wrapped the header and this canvas in one shared
+    // .frontier-chart-card, because that's what actually changed the real
+    // desktop canvas size: 32px of card padding wasn't there before (was
+    // 986-32=954 wide), and the header-to-canvas gap went from the parent
+    // column's plain 8px gap to this card's own 12px marginBottom, on top
+    // of that same 32px padding vertically (373-36=337 tall). Left at the
+    // old constants, PAD would have quietly stopped hitting the ceiling at
+    // 1280/1366 — confirmed this was actually happening (954x369 and
+    // 1040x337 measured against a 986/373 reference resolved to ~31/31/47/
+    // 52px and an 8.9px font, not the fixed originals) before re-deriving
+    // these. 1440x900 alone would have masked it, since its own canvas
+    // (1114x469) clears either reference easily.
+    //
+    // Floors keep axis labels legible once .frontier-chart-card's own
+    // compact-viewport min-height (450px) is the binding constraint — that
+    // floor pins canvas height to a constant 320px across every phone width
+    // (254-818px wide), which is why the font scales with H, not W: H is
+    // fixed across the whole phone range once floored, W moves a lot, but
+    // legibility is fundamentally a height-of-canvas question (do two
+    // stacked lines of axis text fit) more than a width one.
+    const axisFontSize = clamp(H * (9/337), 7, 9)
     const PAD = {
-      top:    clamp(H * (32/373), 20, 32),
-      right:  clamp(W * (32/986), 14, 32),
-      bottom: clamp(H * (48/373), 34, 48),
-      left:   clamp(W * (54/986), 32, 54),
+      top:    clamp(H * (32/337), 20, 32),
+      right:  clamp(W * (32/954), 14, 32),
+      bottom: clamp(H * (48/337), 34, 48),
+      left:   clamp(W * (54/954), 32, 54),
     }
     const PW = W - PAD.left - PAD.right
     const PH = H - PAD.top  - PAD.bottom
@@ -191,7 +209,12 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
     for (let i = 0; i <= 5; i++) { const v = minV+(i/5)*(maxV-minV); ctx.fillText(`${(v*100).toFixed(1)}%`, PAD.left+(i/5)*PW, H-12) }
     ctx.textAlign = 'right'
     for (let i = 0; i <= 4; i++) { const v = minR+(1-i/4)*(maxR-minR); ctx.fillText(`${(v*100).toFixed(0)}%`, PAD.left-8, PAD.top+(i/4)*PH+4) }
-    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.3)'); ctx.font = `${axisFontSize}px ${cssVar('var(--font-mono)')}`; ctx.textAlign = 'center'
+    // 0.5, not the 0.3 this used before — matching this same canvas's own
+    // tick-label contrast a few lines up (and ReturnHistogram's axis text,
+    // 0.45-0.55) rather than sitting noticeably dimmer than both for no
+    // reason tied to hierarchy (these captions aren't secondary to the tick
+    // numbers, they're what the tick numbers are measuring).
+    ctx.fillStyle = cssVar('rgba(var(--chart-sage-dark-rgb),0.5)'); ctx.font = `${axisFontSize}px ${cssVar('var(--font-mono)')}`; ctx.textAlign = 'center'
     ctx.fillText('Risk (volatility) →', PAD.left+PW/2, H-2)
     ctx.save(); ctx.translate(12, PAD.top+PH/2); ctx.rotate(-Math.PI/2); ctx.fillText('Return →', 0, 0); ctx.restore()
 
@@ -300,7 +323,15 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
     }
   }, [data])
 
-  useCanvasSize(canvasRef, draw)
+  // setCanvasNode (a callback ref), not canvasRef directly, is what goes on
+  // the <canvas> below — see useCanvasSize's own comment for why: this is
+  // the exact remount case that comment was written from (this card's
+  // subtree unmounts/remounts on the portal swap below, Frontier itself
+  // doesn't, so a plain object ref would leave the sizing effect watching a
+  // detached node after every expand/collapse). canvasRef.current still
+  // ends up holding the live node either way, so handleMouseMove/handleTap/
+  // the tooltip's own position calc below all keep reading it unchanged.
+  const setCanvasNode = useCanvasSize(canvasRef, draw)
 
   // Unmount-only cleanup for the pulsing "Optimal" marker's rAF loop — see
   // draw()'s own comment above for why this can't live inside draw() or
@@ -309,6 +340,30 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
   // current) right before starting a new one, above), so this only ever
   // needs to fire once, when Frontier unmounts entirely.
   useEffect(() => () => cancelAnimationFrame(animRef.current), [])
+
+  // Fourth consumer of the shared expand-to-fullscreen mechanism (useOverlay,
+  // .chart-expand-btn, .chart-fullscreen-expanded) — Dashboard's growth
+  // chart, Backtest's cumulative-return chart, and MonteCarlo's simulation
+  // chart already use it; reused here rather than reimplemented. Hooks run
+  // unconditionally before the early returns below, same reasoning as
+  // Backtest.jsx's/MonteCarlo's identical placement: `data`/`hasFrontier`
+  // genuinely toggle within one mounted instance of this component.
+  //
+  // Portalling this card (below) swaps the tree from a plain host element
+  // to a Portal at the same position, which React can't reconcile against
+  // the previous fiber — it unmounts the old canvas and mounts a fresh one.
+  // That's relied on, not fought: the fresh instance gets fresh refs
+  // (canvasRef/animRef/specRef all reset to their initial values) and
+  // useCanvasSize's effect runs its own resize()+draw() from scratch on
+  // mount, so the redraw at the new size, the marker positions specRef
+  // holds for handleTap, and the rAF loop's cancel-on-unmount (the effect
+  // just above) all fall out of ordinary mount/unmount semantics instead of
+  // needing special-cased transition logic here.
+  const isCompactViewport = useCompactViewport()
+  const [expandRequested, setExpandRequested] = useState(false)
+  const isChartExpanded = expandRequested && isCompactViewport
+  const chartCardRef = useRef(null)
+  useOverlay(isChartExpanded, chartCardRef, () => setExpandRequested(false))
 
   if (!data) return null
 
@@ -372,17 +427,26 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
 
   const optimalWeights = max_sharpe_weights ? Object.entries(max_sharpe_weights).map(([t,w]) => ({ ticker: t, w })) : []
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto' }}>
-
-      {/* Why the mix matters — the only InsightBox on this tab, so primary
-          by default (same reasoning as Backtest's one box). */}
-      <InsightBox
-        label="Why the mix matters"
-        compact
-        priority="primary"
-        text="You already picked the stocks. This shows if you picked the right mix. Somewhere on this curve is the version of your portfolio that gets more return for the same risk, or the same return for less. See how close you already are."
-      />
+  // Header + canvas, built once here and rendered either in its normal flex
+  // slot or through a portal when expanded — same chartCardEl pattern as
+  // Backtest.jsx's/MonteCarlo's own (see either's comment on their render
+  // call for why a portal is required, not a style choice: App.jsx's
+  // .fade-up mount-animation wrapper leaves a resting transform that makes
+  // it a containing block for a position:fixed descendant, so a plain
+  // position:fixed chart-fullscreen-expanded would resolve against that
+  // wrapper's box instead of the viewport). The bottom row (Sharpe insight +
+  // weight cards) and the tab's one InsightBox stay outside this card and
+  // outside the portal — expanding the scatter shouldn't also carry those
+  // along.
+  const chartCardEl = (
+    <div
+      ref={chartCardRef}
+      // min-height lives in CSS (.frontier-chart-card, index.css), not
+      // inline, for the same inline-always-wins-over-a-stylesheet-rule
+      // reason as every other chart floor this project has needed.
+      className={`frontier-chart-card card${isChartExpanded ? ' chart-fullscreen-expanded' : ''}`}
+      style={{ padding: 16, flex: 1, display: 'flex', flexDirection: 'column' }}
+    >
 
       {/* Header — flexWrap on both rows, same as Dashboard's/Backtest's/
           MonteCarlo's legend rows. Traced directly to this being the actual
@@ -392,10 +456,27 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
           badge ("Min vol") measured a right edge of exactly 403px, matching
           that number precisely — the canvas itself is fully contained by
           this pass's other fixes and contributes zero overflow. */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-          Efficient Frontier
-          <span style={{ fontWeight: 'var(--weight-regular)', marginLeft: 8, opacity: 0.6 }}>5,000 simulated portfolios</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
+            Efficient Frontier
+            <span style={{ fontWeight: 'var(--weight-regular)', marginLeft: 8, opacity: 0.6 }}>5,000 simulated portfolios</span>
+          </div>
+          {/* Rendered only on a compact viewport — desktop and tablet never
+              see it, so isChartExpanded can never become true there
+              regardless of expandRequested. Same control, same 44x44
+              ::before tap target, as the other three (.chart-expand-btn,
+              index.css) — reused, not reimplemented. */}
+          {isCompactViewport && (
+            <button
+              onClick={() => setExpandRequested(v => !v)}
+              className="chart-expand-btn"
+              aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+              title={isChartExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isChartExpanded ? '✕' : '⤢'}
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 10, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -406,27 +487,39 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
             <span style={{ opacity: 0.6 }}>Low → High Sharpe</span>
           </div>
           <span style={{ opacity: 0.2 }}>|</span>
-          {[{ color: 'var(--signal-positive)', label: 'Your portfolio' }, { color: 'var(--signal-caution)', label: 'Optimal' }, { color: 'rgba(var(--chart-teal-alt-rgb),0.9)', label: 'Min vol' }].map(l => (
-            <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 7, height: 7, background: l.color }}/>{l.label}
-            </span>
-          ))}
+          {/* Grouped, not flat, so the three marker badges wrap together as
+              one unit instead of splitting mid-list: at 384px "Min vol" was
+              landing alone on its own line while "Your portfolio"/"Optimal"
+              stayed on the line above (found by measurement, not the
+              gradient swatch splitting or any badge overflowing — a wrap
+              orphan, not a clipping bug). No flexWrap on this inner group,
+              so the whole triplet moves to the next line together instead
+              of breaking inside itself. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {[{ color: 'var(--signal-positive)', label: 'Your portfolio' }, { color: 'var(--signal-caution)', label: 'Optimal' }, { color: 'rgba(var(--chart-teal-alt-rgb),0.9)', label: 'Min vol' }].map(l => (
+              <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: 7, height: 7, background: l.color }}/>{l.label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Canvas — min-height lives in CSS (.frontier-canvas-wrapper,
-          index.css), not inline, for the same inline-always-wins-over-a-
-          stylesheet-rule reason as every other chart floor this project has
-          needed. Found empirically while verifying the flex-wrap change
-          above, not anticipated: the bottom row wrapping to three stacked
-          full-width cards at phone width (versus one ~150px-tall row
-          before) starves this canvas of the same flex:1 leftover space
-          Dashboard's, Backtest's, and MonteCarlo's own charts already hit —
-          worse here, measuring literal 0px tall at 320x568, 360x740, and
-          852x393 before this floor existed, not just thin. See that class's
-          own comment for the floor value and its derivation. */}
-      <div className="frontier-canvas-wrapper" style={{ flex: 1, background: 'var(--surface-card)', border: 'var(--border-default)', overflow: 'hidden', position: 'relative' }}>
-        <canvas ref={canvasRef}
+      {/* Canvas — min-height:0 lives in CSS (.frontier-canvas-wrapper,
+          index.css), not inline, same inline-shadowing reason as the card's
+          own min-height above. No compact-viewport floor of its own any
+          more: that now lives on .frontier-chart-card (see its comment) —
+          this wrapper sits inside the card's own flex column, isolated from
+          the bottom row entirely, so the starvation this originally guarded
+          against (the bottom row eating this canvas's flex:1 leftover
+          space at the top-level column) no longer reaches it directly.
+          position:relative — not the outer card — is what the tooltip
+          below is actually positioned against (its left/top are canvas-
+          local pixel coordinates), and background/border moved to the
+          outer .card so there's one border framing header+canvas together,
+          not a nested second one around just the canvas. */}
+      <div className="frontier-canvas-wrapper" style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <canvas ref={setCanvasNode}
           {...(supportsHover
             ? { onMouseMove: handleMouseMove, onMouseLeave: () => setTooltip(null) }
             : { onClick: handleTap })}
@@ -454,6 +547,22 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
           </div>
         )}
       </div>
+    </div>
+  )
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto' }}>
+
+      {/* Why the mix matters — the only InsightBox on this tab, so primary
+          by default (same reasoning as Backtest's one box). */}
+      <InsightBox
+        label="Why the mix matters"
+        compact
+        priority="primary"
+        text="You already picked the stocks. This shows if you picked the right mix. Somewhere on this curve is the version of your portfolio that gets more return for the same risk, or the same return for less. See how close you already are."
+      />
+
+      {isChartExpanded ? createPortal(chartCardEl, document.body) : chartCardEl}
 
       {/* Bottom row — insight + weight cards. flex-wrap, not grid
           1fr 1fr 1fr: see .frontier-bottom-row's own comment in index.css

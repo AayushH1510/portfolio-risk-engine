@@ -126,7 +126,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
 
   }, [score])
 
-  useCanvasSize(canvasRef, draw)
+  const setCanvasNode = useCanvasSize(canvasRef, draw)
 
   return (
     <div className="card" style={{ padding:'14px 16px', display:'flex', flexDirection:'column' }}>
@@ -147,7 +147,7 @@ export default function RiskGauge({ vol, drawdown, varPct }) {
           background:'var(--surface-card)',
         }}
       >
-        <canvas ref={canvasRef} className="risk-gauge-canvas" />
+        <canvas ref={setCanvasNode} className="risk-gauge-canvas" />
       </div>
     </div>
   )
