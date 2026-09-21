@@ -755,6 +755,13 @@ aside.sidebar-shell.sidebar-open {
   grid-template-columns: repeat(var(--compareb-weight-cols, 1), 1fr);
 }
 
+/* Valuation's risk-assessment panel (Valuation.jsx) — metrics breakdown
+   card + flags/positives column, same inline-always-wins reason as
+   .ra-grid-2col above for why gridTemplateColumns lives here. */
+.valuation-risk-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    COMPACT VIEWPORT — every rule below, until the closing brace, is gated
    on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
@@ -1050,6 +1057,16 @@ aside.sidebar-shell.sidebar-open {
     border: none;
     background: var(--signal-positive);
     cursor: pointer;
+  }
+
+  /* ─── Valuation risk-assessment panel (Valuation.jsx) ───
+     Metrics breakdown card + flags/positives column collapse to one
+     column — the tab's own 337px/17px-past-320 overflow, confirmed by
+     measurement (three .card children plus their shared wrapper div all
+     read a maxRight of 337px) before this fix, not assumed from the grid
+     shape alone. */
+  .valuation-risk-grid {
+    grid-template-columns: 1fr;
   }
 
   /* ─── Backtest cumulative-return chart (Backtest.jsx) ───

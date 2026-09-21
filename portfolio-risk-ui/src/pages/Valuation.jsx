@@ -3,6 +3,7 @@ import axios from 'axios'
 import { errorMessage } from '../lib/errorMessage'
 import InsightBox from '../components/InsightBox'
 import MetricTooltip from '../components/MetricTooltip'
+import useCompactViewport from '../hooks/useCompactViewport'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -26,7 +27,25 @@ const COLUMNS = [
   { label: 'V/G Score',   metricKey: 'vg_score' },
 ]
 
-function ColHeader({ label, metricKey }) {
+// Sticky Ticker column (compact viewport only — see the table wrapper's own
+// comment below for why this is gated rather than unconditional). Shared by
+// the header <th> and every body <td> so the solid-background/hairline
+// treatment can't drift between them. `tint` layers a translucent overlay
+// (the row's own selected/hover colour, or none for the header) UNDER an
+// opaque base via a stacked background — the actual "solid" part of "solid
+// background so scrolled cells don't show through": the header and resting
+// rows pass no tint (plain var(--surface-card)), a selected or hovered row
+// passes its own rgba so the sticky cell still reflects row state instead
+// of reading as a dead strip while the rest of the row is tinted.
+const STICKY_COL_STYLE = (tint) => ({
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  background: tint ? `linear-gradient(${tint}, ${tint}), var(--surface-card)` : 'var(--surface-card)',
+  borderRight: '1px solid var(--line-hairline)',
+})
+
+function ColHeader({ label, metricKey, sticky }) {
   return (
     <th style={{
       padding: '10px 14px',
@@ -34,6 +53,7 @@ function ColHeader({ label, metricKey }) {
       fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
       textTransform: 'uppercase', color: 'var(--text-muted)',
       whiteSpace: 'nowrap', userSelect: 'none',
+      ...(sticky ? STICKY_COL_STYLE() : {}),
     }}>
       {metricKey ? <MetricTooltip metricKey={metricKey}>{label}</MetricTooltip> : label}
     </th>
@@ -106,6 +126,10 @@ export default function Valuation({ tickers, onTickerClick }) {
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState(null)
   const [selected, setSelected] = useState(null)
+  // Same hooks-before-early-return placement as every other tab this pass
+  // touched (Comparison.jsx/MonteCarlo.jsx/etc.) — the loading/error/no-data
+  // returns below aren't hit on every render, so this has to run before them.
+  const isCompactViewport = useCompactViewport()
 
   useEffect(() => {
     if (!tickers?.length) return
@@ -177,9 +201,14 @@ export default function Valuation({ tickers, onTickerClick }) {
       </div>
 
       {allFunds ? (
+        // priority="primary": the one thing on the tab when it renders —
+        // mutually exclusive with the "Why fundamentals" box below, so
+        // both get the identical always-open-but-toggleable treatment
+        // rather than one having the affordance and the other not.
         <InsightBox
           tone="neutral"
           label="Not applicable"
+          priority="primary"
           text="Your portfolio is made up of funds and ETFs, which each hold many companies rather than being one themselves - so per-company valuation ratios like P/S, EV/EBITDA, and gross margin don't apply to the fund wrapper itself. Valuation works best with individual stock holdings."
         />
       ) : (
@@ -189,17 +218,30 @@ export default function Valuation({ tickers, onTickerClick }) {
       <InsightBox
         label="Why fundamentals, not just price"
         compact
+        priority="primary"
         text="Price tells you what the market thinks. Fundamentals tell you why. This ranks each holding on what it earns, how fast it's growing, and how much debt it's carrying, then surfaces the risk flags and strengths automatically so you don't have to dig for them. See whether the numbers back up the price."
       />
 
-      {/* Valuation table */}
+      {/* Valuation table. At compact viewport: the '#' rank column drops
+          (pure row index once the table can't show every column at once —
+          the ticker still identifies the row, and the V/G Score column's
+          own "· Best"/"· Worst" suffix already carries the one thing the
+          rank badge said beyond plain order: which row is the top pick),
+          and the Ticker column goes sticky so a reader who's scrolled the
+          table horizontally can still tell which row they're looking at —
+          see STICKY_COL_STYLE's own comment above for the background
+          mechanism. Both are gated on isCompactViewport, not unconditional:
+          at desktop the table fits without scrolling (§6 of this audit:
+          8 columns need ≥600-650px, comfortably inside 1280+), so nothing
+          here would ever visibly activate there — gating keeps desktop
+          pixel-identical rather than relying on that inertness alone. */}
       <div className="card" style={{ padding:0, flexShrink:0 }}>
         <div style={{ overflowX: 'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
           <thead>
             <tr style={{ borderBottom:'1px solid rgba(var(--text-primary-rgb),0.06)' }}>
-              {COLUMNS.map(col => (
-                <ColHeader key={col.label} label={col.label} metricKey={col.metricKey} />
+              {COLUMNS.filter(col => !(isCompactViewport && col.label === '#')).map(col => (
+                <ColHeader key={col.label} label={col.label} metricKey={col.metricKey} sticky={isCompactViewport && col.label === 'Ticker'} />
               ))}
             </tr>
           </thead>
@@ -220,21 +262,45 @@ export default function Valuation({ tickers, onTickerClick }) {
                     cursor: hasError || isFund ? 'default' : 'pointer',
                     transition:'background 0.12s',
                   }}
-                  onMouseEnter={e => !isSelected && (e.currentTarget.style.background = 'rgba(var(--text-primary-rgb),0.02)')}
-                  onMouseLeave={e => !isSelected && (e.currentTarget.style.background = 'transparent')}
+                  // The sticky Ticker cell (when present) needs its own
+                  // background kept in sync with the row's hover state too
+                  // — a plain background on the <tr> doesn't paint through
+                  // a sticky descendant's own explicit background, so the
+                  // row's imperative hover handlers reach into the sticky
+                  // cell by class and update it the same way.
+                  onMouseEnter={e => {
+                    if (isSelected) return
+                    e.currentTarget.style.background = 'rgba(var(--text-primary-rgb),0.02)'
+                    const sticky = e.currentTarget.querySelector('.valuation-sticky-col')
+                    if (sticky) sticky.style.background = `linear-gradient(rgba(var(--text-primary-rgb),0.02), rgba(var(--text-primary-rgb),0.02)), var(--surface-card)`
+                  }}
+                  onMouseLeave={e => {
+                    if (isSelected) return
+                    e.currentTarget.style.background = 'transparent'
+                    const sticky = e.currentTarget.querySelector('.valuation-sticky-col')
+                    if (sticky) sticky.style.background = 'var(--surface-card)'
+                  }}
                 >
                   {/* Rank */}
-                  <td style={{ padding:'12px 14px' }}>
-                    <div style={{
-                      width:22, height:22, fontSize:11, fontWeight:700,
-                      display:'flex', alignItems:'center', justifyContent:'center',
-                      background: i===0 ? 'var(--signal-positive)' : i===1 ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--text-primary-rgb),0.07)',
-                      color: i===0 ? 'var(--surface-canvas)' : 'var(--text-primary)',
-                    }}>{i+1}</div>
-                  </td>
+                  {!isCompactViewport && (
+                    <td style={{ padding:'12px 14px' }}>
+                      <div style={{
+                        width:22, height:22, fontSize:11, fontWeight:700,
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        background: i===0 ? 'var(--signal-positive)' : i===1 ? 'rgba(var(--signal-positive-rgb),0.3)' : 'rgba(var(--text-primary-rgb),0.07)',
+                        color: i===0 ? 'var(--surface-canvas)' : 'var(--text-primary)',
+                      }}>{i+1}</div>
+                    </td>
+                  )}
 
                   {/* Ticker + name */}
-                  <td style={{ padding:'12px 14px' }}>
+                  <td
+                    className={isCompactViewport ? 'valuation-sticky-col' : undefined}
+                    style={{
+                      padding:'12px 14px',
+                      ...(isCompactViewport ? STICKY_COL_STYLE(isSelected ? 'rgba(var(--signal-positive-rgb),0.07)' : null) : {}),
+                    }}
+                  >
                     <div>
                       <TickerLink ticker={stock.ticker} onClick={onTickerClick} />
                       {flagCount > 0 && (
@@ -298,9 +364,15 @@ export default function Valuation({ tickers, onTickerClick }) {
         </div>
       </div>
 
-      {/* Risk assessment panel */}
+      {/* Risk assessment panel. .valuation-risk-grid: gridTemplateColumns
+          lives in that CSS class, not inline, so the compact-viewport
+          override can reach it (the usual inline-always-wins reason every
+          other grid fix in this audit has hit). This is the source of the
+          tab's own 337px/17px-past-320 overflow — the metrics-breakdown
+          card and the flags/positives column squeezed into a fixed 1fr 1fr
+          row with no flex-wrap, confirmed by measurement before fixing. */}
       {selectedStock && !selectedStock.error && !selectedStock.is_fund && (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, flexShrink:0 }}>
+        <div className="valuation-risk-grid" style={{ display:'grid', gap:12, flexShrink:0 }}>
 
           {/* Metrics breakdown */}
           <div className="card" style={{ padding:'14px 16px' }}>
