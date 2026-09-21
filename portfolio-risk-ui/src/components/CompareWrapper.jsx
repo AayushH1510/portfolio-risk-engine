@@ -54,10 +54,14 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
 
-      {/* Why this tab matters — same compact InsightBox pattern as Monte Carlo / Frontier / Valuation */}
+      {/* Why this tab matters — same compact InsightBox pattern as Monte Carlo / Frontier / Valuation.
+          priority="primary": explains what this whole tab is for, so it's
+          the one that should default open — same reasoning as Monte
+          Carlo's "Why three scenarios" box. */}
       <InsightBox
         label="Why the comparison matters"
         compact
+        priority="primary"
         text="Two portfolios, one fair fight. Not two sets of numbers side by side, a single question answered: which allocation would actually have served you better? The same Sharpe, drawdown, and VaR math runs on both. See which one earned its risk, not just which one felt right."
       />
 
@@ -150,7 +154,14 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 12, alignItems: 'end' }}>
+          {/* .compareb-config-row: gridTemplateColumns lives in that CSS
+              class, not inline, so the compact-viewport override can reach
+              it. Stacks to tickers / period / value / Run at full width
+              below 768px, Run last and full-width as the commit action —
+              matching the sidebar's own Run Analysis placement — which
+              falls out of the stack for free since Run is already the last
+              DOM child and a grid item's default justify-self is stretch. */}
+          <div className="compareb-config-row" style={{ display: 'grid', gap: 12, alignItems: 'end' }}>
 
             {/* Tickers */}
             <div>
@@ -200,17 +211,31 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
             </button>
           </div>
 
-          {/* Weights */}
+          {/* Weights. .compareb-weight-row: gridTemplateColumns is driven
+              by tickers.length (3-5), which can't be a static class rule —
+              read from a --compareb-weight-cols custom property set inline
+              instead of setting gridTemplateColumns itself inline, so the
+              compact-viewport override below (a real, non-var value) still
+              wins the cascade instead of being permanently shadowed by an
+              inline literal (the usual inline-always-wins trap, same one
+              .ra-grid-2col's own comment documents). */}
           <div style={{ marginTop: 14 }}>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Weights</div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${tickers.length}, 1fr)`, gap: 8 }}>
+            <div className="compareb-weight-row" style={{ display: 'grid', '--compareb-weight-cols': tickers.length, gap: 8 }}>
               {tickers.map((ticker, i) => (
                 <div key={ticker}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{ticker}</span>
                     <span style={{ fontSize: 11, color: 'var(--signal-caution)', fontWeight: 600 }}>{weightPct[i]}%</span>
                   </div>
+                  {/* .compareb-weight-slider — the primary input on this
+                      panel, widened to a real 44px touch target at compact
+                      viewport only; see that class's own comment in
+                      index.css for why padding (not a taller track/thumb)
+                      is the actual mechanism and why it's scoped instead of
+                      widening the shared input[type=range] rule. */}
                   <input
+                    className="compareb-weight-slider"
                     type="range" min={0} max={100} value={weightPct[i]}
                     onChange={e => handleWeightChange(i, parseInt(e.target.value))}
                     style={{ width: '100%' }}

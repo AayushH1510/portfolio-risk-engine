@@ -706,6 +706,55 @@ aside.sidebar-shell.sidebar-open {
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* Comparison's A/B rows (Comparison.jsx) — shared by the nameA/VS/nameB
+   header and every one of the 9 head-to-head MetricRows: identical
+   1fr 80px 1fr three-column shape, one class for all 10 instances instead
+   of duplicating the grid rule. gridTemplateColumns/Areas live here, not
+   inline, same inline-always-wins reason as .ra-grid-2col above.
+   RESPONSIVE_AUDIT.md's own correctness-bug audit flagged this grid by name
+   before it was ever touched: MetricRow conveys which portfolio a value
+   belongs to purely by column position (A left, B right) plus one shared
+   header rendered once above all 9 rows — naively collapsing this to a
+   single column the way .ra-grid-2col does would orphan that header 9 times
+   over, with no per-cell text to fall back on (worse than the confidence-
+   header bug this file already fixed elsewhere: that one at least had a
+   plain label to fold the header's meaning into). A and B stay in two
+   side-by-side columns for exactly that reason — the compact override below
+   only moves the centre label out of its own track, never collapses to one
+   column. */
+.compare-ab-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  grid-template-areas: "a label b";
+}
+
+/* Comparison's metrics-table + growth-chart row (Comparison.jsx) — same
+   inline-always-wins reason as .ra-grid-2col above for why gridTemplateColumns
+   lives here, not on the inline style object alongside it. */
+.compare-summary-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* CompareWrapper's Portfolio B config row (CompareWrapper.jsx) — tickers,
+   period, portfolio value, Run button, same inline-always-wins reason as
+   .ra-grid-2col above. */
+.compareb-config-row {
+  grid-template-columns: 1fr 1fr 1fr auto;
+}
+
+/* CompareWrapper's Portfolio B weight-slider row (CompareWrapper.jsx) —
+   grid-template-columns depends on tickers.length (3-5), which can't be a
+   static class rule the way .ra-grid-2col's literal 1fr 1fr is. Read from a
+   --compareb-weight-cols custom property set inline instead of setting the
+   real property inline directly (CompareWrapper.jsx's own comment there) —
+   a custom property can be set inline without shadowing anything, since the
+   actual `grid-template-columns` declaration only ever exists here, in the
+   stylesheet, where the compact-viewport override below can out-cascade it
+   normally. */
+.compareb-weight-row {
+  grid-template-columns: repeat(var(--compareb-weight-cols, 1), 1fr);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    COMPACT VIEWPORT — every rule below, until the closing brace, is gated
    on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
@@ -887,6 +936,120 @@ aside.sidebar-shell.sidebar-open {
      width stacked; desktop (base rule, above) keeps the row unchanged. */
   .ra-grid-3col {
     grid-template-columns: 1fr;
+  }
+
+  /* ─── Compare A/B rows (Comparison.jsx) ───
+     A and B never collapse to one column — see .compare-ab-row's own base-
+     rule comment above for why (the correctness-bug audit that flagged this
+     grid by name before it was ever touched). Only the centre 80px label
+     track moves: it becomes a full-width line above the row instead, which
+     frees that space for the two value columns — label on top, A | B
+     beneath, each value column now roughly half the row's width instead of
+     sharing it with an 80px centre track (confirmed via getComputedStyle:
+     ~155px/column at 320px vs. ~120px before), enough for a value plus its
+     WIN badge. The header row (nameA/VS/nameB) reuses this exact class, so
+     its two names resolve to the same 'a'/'b' column tracks every
+     MetricRow's values do — "the header's two names still sit directly
+     above their columns" holds by construction, not by measuring two
+     independent rules to agree. */
+  .compare-ab-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "label label"
+      "a     b";
+    row-gap: 2px;
+  }
+
+  /* ─── Compare metrics-table + growth-chart row (Comparison.jsx) ───
+     Table first, chart second — already the DOM order, so collapsing the
+     column is the whole fix; no reorder needed. This is also what resolves
+     the Cumulative Returns tooltip clipping at phone width (the chart card
+     was ~105px wide sharing a 1fr 1fr row against ~120px of tooltip
+     content) — full column width once stacked, without touching the
+     tooltip itself. */
+  .compare-summary-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* ─── CompareWrapper Portfolio B config row (CompareWrapper.jsx) ───
+     Tickers, period, portfolio value, then Run full-width at the bottom as
+     the commit action — matching the sidebar's own Run Analysis placement.
+     Falls out of the single-column stack for free: Run is already the last
+     DOM child, and a grid item's default justify-self is stretch, so it
+     fills its own full-width row without an explicit width:100%. */
+  .compareb-config-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* ─── CompareWrapper weight sliders (CompareWrapper.jsx) ───
+     One slider per row regardless of ticker count (3-5), same reasoning as
+     every other flex/grid row this project stacks at phone width — a
+     shared column count sized for 3-5 tracks squeezes each one to
+     60-100px, and this is the primary input on this panel. */
+  .compareb-weight-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* CompareWrapper's weight-slider touch target (CompareWrapper.jsx) — the
+     shared input[type="range"] rule (above, outside this block) renders a
+     14px thumb on a 4px track with zero padding, under the 44px WCAG
+     minimum every other control in this pass has been held to. Scoped to
+     this one class rather than widening the shared rule, which would also
+     resize Sidebar's own weight/dollar sliders — out of scope here and not
+     requested.
+
+     An explicit height, not padding: padding alone was tried first (20px
+     top+bottom around the base rule's height:4px, expecting a 44px
+     border-box) and measured short — Chromium's used height for a
+     -webkit-appearance:none range input doesn't reliably add padding to an
+     explicit `height` the way box-sizing:border-box would for a plain
+     block box (confirmed via getComputedStyle: 40px measured, not 44,
+     across box-sizing:border-box — a native-control quirk, not a
+     miscalculation to route around with a slightly bigger padding number).
+     Setting `height` directly sidesteps the ambiguity: whatever the
+     control's internal track layout does, the element's own border-box is
+     exactly what's declared. The visible track/thumb are redrawn via the
+     track/thumb pseudo-elements at their original 4px/14px sizing so
+     the control doesn't visually balloon to 44px alongside the real hit
+     box — the range-input equivalent of the invisible ::before{inset}
+     trick used for buttons elsewhere in this file, since a pseudo-element
+     can't proxy drag events to a native slider the way it can a button's
+     click. Stays inside this compact-viewport block rather than applying
+     unconditionally: unlike a button's invisible inset, this is a real,
+     visible row-height change, and this pass's desktop-pixel-identical
+     guarantee depends on nothing outside this block touching a shared
+     rule. The compound selector (input[type="range"] + the class) is
+     required, not optional: the bare attribute selector above has higher
+     specificity than a single class alone and would otherwise keep winning
+     regardless of source order, the same trap .chart-fullscreen-
+     expanded.card's own comment documents. */
+  input[type="range"].compareb-weight-slider {
+    height: 44px;
+    background: none;
+  }
+  input[type="range"].compareb-weight-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--surface-elevated);
+  }
+  input[type="range"].compareb-weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    margin-top: -5px;
+    background: var(--signal-positive);
+    cursor: pointer;
+  }
+  input[type="range"].compareb-weight-slider::-moz-range-track {
+    height: 4px;
+    background: var(--surface-elevated);
+    border: none;
+  }
+  input[type="range"].compareb-weight-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: var(--signal-positive);
+    cursor: pointer;
   }
 
   /* ─── Backtest cumulative-return chart (Backtest.jsx) ───
@@ -1159,13 +1322,15 @@ aside.sidebar-shell.sidebar-open {
    (RiskAnalysis.jsx) since InsightBox has no fixed tone — it takes whatever
    signal colour the box itself is using. */
 .insight-toggle-btn {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
-  flex-shrink: 0;
   border: 1px solid var(--line-hairline);
   background: none;
   padding: 0;

@@ -45,17 +45,35 @@ export default function InsightBox({ label, text, tone = 'neutral', compact = fa
       padding: compact ? '8px 14px' : '12px 16px',
       marginTop: compact ? 6 : 8,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: compact ? 3 : 5 }}>
+      {/* position:'relative' — the toggle button below is positioned
+          against this row, not the outer card, so adding/removing it never
+          changes the row's own height. Without this, .insight-toggle-btn's
+          22px box (vs. the label's own ~14px line-height) would grow the
+          row by ~8px whenever `priority` goes from unset to set — a real,
+          measured desktop pixel shift with no data-driven cause, caught
+          verifying Comparison.jsx's own priority addition against a strict
+          0-diffPixels pixelmatch check (RESPONSIVE_AUDIT.md). Absolute
+          positioning here removes the button from the row's flex layout
+          entirely, so the row's height always tracks the label alone,
+          collapsible or not — a fix in the shared component rather than
+          something worth leaving as a standing wart on every tab that uses
+          `priority` (Backtest/Frontier/MonteCarlo/RiskAnalysis already had
+          this same small, previously-accepted shift; this removes it for
+          all of them too, not just Compare). */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: compact ? 3 : 5, position: 'relative' }}>
         <div style={{
           fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', letterSpacing: 'var(--tracking-caption)',
           textTransform: 'uppercase', color: c.label, fontFamily: 'var(--font-primary)',
+          paddingRight: collapsible ? 30 : 0,
         }}>
           {label}
         </div>
         {collapsible && (
           // Mono glyph in a hairline box, 44x44 tap target via the same
           // ::before{inset:-11px} pattern as Dashboard's .chart-expand-btn
-          // (index.css) — no new affordance vocabulary, just that one reused.
+          // (index.css) — no new affordance vocabulary, just that one
+          // reused. Absolutely positioned (index.css) — see this row's own
+          // position:'relative' comment above for why.
           <button
             type="button"
             className="insight-toggle-btn"
