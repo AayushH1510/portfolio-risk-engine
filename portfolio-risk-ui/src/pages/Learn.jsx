@@ -71,6 +71,7 @@ function TierToggle({ tier, onChange }) {
       {TIERS.map(t => (
         <button
           key={t.key}
+          className="tier-toggle-btn"
           onClick={() => onChange(t.key)}
           style={{
             padding: '8px 18px', fontSize: 12, fontWeight: 700,

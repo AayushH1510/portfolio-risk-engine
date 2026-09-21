@@ -1367,6 +1367,61 @@ aside.sidebar-shell.sidebar-open {
   border-color: var(--line-emphasis);
 }
 
+/* Learn's TierToggle buttons (Learn.jsx) — the tap-target gap
+   RESPONSIVE_AUDIT.md's Learn survey found and left open: at landscape
+   phone width (852x393, a genuine touch device by this project's own
+   dual-axis compact-viewport definition) the "Beginner/Retail/Expert
+   Investor" labels fit on one line, so the button's own rendered height
+   collapses to its natural ~31px — under the 44px WCAG minimum. Portrait
+   phone widths (320-393px) happen to already clear 44px (measured ~46px),
+   but only because the two-word labels wrap to two lines there — an
+   accident of content width, not a deliberate design, and not something
+   to rely on for the landscape case where they don't wrap.
+
+   Fixed with the same ::before{inset} zero-layout-footprint pattern as
+   .insight-toggle-btn above and landing's own tap-target.css, not
+   min-height: a min-height would change the button's own rendered box at
+   every width — including portrait's already-sufficient 46px and
+   desktop's 31px, both correct as drawn today — where the actual
+   requirement is only that the TAPPABLE area reaches 44px, not that the
+   visible pill grows or shrinks anywhere.
+
+   Vertical-only, not a uniform inset: TierToggle's own rendered WIDTH
+   already clears 44px at every measured viewport (86px is the narrowest
+   button, at 320px) — extending horizontally would add nothing toward
+   compliance while bringing each button's invisible zone closer to its
+   neighbour's, for no benefit. Only height is short, and only in the
+   1-line case (852x393 landscape, and desktop, both measured at 31px).
+   -6.5px top and bottom is exact, not rounded up: 31px + 6.5*2 = 44px
+   precisely, the same "reach exactly 44, not just approximately" standard
+   landing's own tap-target.css already set for NavLink/FooterLink. At the
+   2-line portrait case (46px) the identical rule simply overshoots to
+   59px, which costs nothing — the same reasoning that lets
+   .chart-expand-btn's own ::before apply unconditionally rather than
+   being viewport-gated.
+
+   Neighbours checked, not assumed clear, per landing's own precedent for
+   this pattern: horizontally, adjacent buttons are unaffected regardless
+   of the vertical extension, since left:0/right:0 never reaches past each
+   button's own visible edges — three separate vertical strips, never
+   touching, so no per-side halving (NavLink/FooterLink's own fix for a
+   real horizontal conflict) is needed here. Vertically, the extension
+   lands inside the TierToggle container's own 4px padding (Learn.jsx) plus
+   a few px into the sticky wrapper's own padding (2px top, 10px bottom) —
+   confirmed nothing interactive occupies that space at any viewport,
+   sticky-stuck state included (the only thing above is a plain
+   informational banner, the only thing below is a plain section label), so
+   there's no tap ambiguity even though the zone technically crosses the
+   wrapper's own edge by a px or two. */
+.tier-toggle-btn {
+  position: relative;
+}
+.tier-toggle-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6.5px 0;
+}
+
 /* Shared grain texture — one definition, reused via .grain-canvas (page
    background, ~7% opacity) and .grain-surface (sidebar/cards, ~4% opacity).
    Each is a ::before on the surface itself rather than one global layer,
