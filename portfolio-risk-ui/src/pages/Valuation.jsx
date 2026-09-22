@@ -188,7 +188,7 @@ export default function Valuation({ tickers, onTickerClick }) {
   const allFunds = data.length > 0 && data.every(d => !d.error && d.is_fund)
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:14, height:'100%', overflowY:'auto' }}>
+    <div className="tab-scroll-root" style={{ display:'flex', flexDirection:'column', gap:14, height:'100%', overflowY:'auto' }}>
 
       {/* Header */}
       <div>

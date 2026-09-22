@@ -236,7 +236,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
   const hasContrastingPair = corr.tickers.length >= 3 && (corrStats.maxVal - corrStats.minVal) >= 0.15
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
+    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto' }}>
 
       <InsightBox
         label="Why risk-adjusted metrics matter"

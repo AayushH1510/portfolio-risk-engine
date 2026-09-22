@@ -92,7 +92,7 @@ export default function Learn() {
   const [tier, setTier] = useState('individual')
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
+    <div className="tab-scroll-root" style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
 
       <div style={{
         marginBottom: 16,

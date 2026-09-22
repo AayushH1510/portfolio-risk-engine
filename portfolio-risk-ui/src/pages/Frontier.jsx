@@ -660,7 +660,7 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto' }}>
+    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto' }}>
 
       {/* Why the mix matters — the only InsightBox on this tab, so primary
           by default (same reasoning as Backtest's one box). */}

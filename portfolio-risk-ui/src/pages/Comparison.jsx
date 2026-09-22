@@ -245,7 +245,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
+    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
 
       {/* Header — portfolio labels. Reuses .compare-ab-row, the exact same
           grid class/area shape as every MetricRow below, so "the header's

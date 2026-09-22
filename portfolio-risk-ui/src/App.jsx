@@ -154,7 +154,14 @@ export default function App() {
     setDrawerWeight(null)
   }
 
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'PR'
+  // No fallback string here on purpose — this only ever renders inside
+  // `{user && (...)}` below now, so there's nothing for a fallback to
+  // paper over. The old `|| 'PR'` was the actual bug this pass fixed: the
+  // avatar rendered unconditionally (a sibling after the signed-in/
+  // signed-out ternary, not inside it), so a signed-out visitor saw both
+  // "Sign in" and a "PR" initials-avatar look-alike implying someone was
+  // already signed in.
+  const initials = user?.email?.slice(0, 2).toUpperCase()
 
   return (
     <div className="grain-canvas app-shell" style={{ overflow: 'hidden', background: 'var(--surface-canvas)', position: 'relative' }}>
@@ -197,6 +204,9 @@ export default function App() {
         onLoadPortfolio={handleLoadPortfolio}
         onDeletePortfolio={deletePortfolio}
         user={user}
+        authLoading={authLoading}
+        onSignOut={signOut}
+        onShowAuth={() => setShowAuth(true)}
         onTickerClick={openDrawer}
         drawerOpen={sidebarOpen}
         onCloseDrawer={closeSidebarDrawer}
@@ -271,50 +281,85 @@ export default function App() {
               </div>
             )}
 
-            {authLoading ? null : user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-secondary)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user.email?.split('@')[0]}
+            {/* Sign-in/account — hidden below the compact-viewport
+                threshold (.header-account-actions, index.css): moved into
+                the sidebar drawer there instead (Sidebar.jsx's own
+                sidebar-account-actions, alongside Export — §3 already
+                established the drawer as the action surface at phone
+                width, not the header). display/gap live in that class, not
+                here, for the usual inline-always-wins-over-a-media-query
+                reason every other responsive fix in this file relies on. */}
+            <div className="header-account-actions">
+              {authLoading ? null : user ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-secondary)', maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.email?.split('@')[0]}
+                  </div>
+                  <button
+                    onClick={signOut}
+                    style={{
+                      fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', padding: '4px 10px',
+                      border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+                      background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer',
+                    }}
+                  >
+                    Sign out
+                  </button>
                 </div>
+              ) : (
                 <button
-                  onClick={signOut}
+                  onClick={() => setShowAuth(true)}
                   style={{
-                    fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', padding: '4px 10px',
+                    fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '10px 20px',
                     border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
-                    background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer',
+                    background: 'transparent', color: 'var(--text-primary)',
+                    cursor: 'pointer', letterSpacing: '0.02em', textTransform: 'uppercase',
+                    transition: 'all var(--duration-fast) var(--ease-standard)',
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-elevated)'; e.currentTarget.style.borderColor = 'var(--line-emphasis)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--line-hairline)' }}
                 >
-                  Sign out
+                  Sign in
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuth(true)}
-                style={{
-                  fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '10px 20px',
-                  border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
-                  background: 'transparent', color: 'var(--text-primary)',
-                  cursor: 'pointer', letterSpacing: '0.02em', textTransform: 'uppercase',
-                  transition: 'all var(--duration-fast) var(--ease-standard)',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-elevated)'; e.currentTarget.style.borderColor = 'var(--line-emphasis)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--line-hairline)' }}
-              >
-                Sign in
-              </button>
-            )}
+              )}
 
-            <div style={{
-              width: 32, height: 32,
-              background: user ? 'var(--signal-positive)' : 'var(--surface-elevated)',
-              border: 'var(--border-default)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-semibold)',
-              fontFamily: 'var(--font-mono)',
-              color: user ? 'var(--surface-canvas)' : 'var(--text-muted)',
-            }}>
-              {initials}
+              {/* Only ever rendered for a signed-in user now — see this
+                  section's own comment above `initials` for the bug this
+                  fixes. */}
+              {user && (
+                <div style={{
+                  width: 32, height: 32,
+                  background: 'var(--signal-positive)',
+                  border: 'var(--border-default)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-semibold)',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--surface-canvas)',
+                }}>
+                  {initials}
+                </div>
+              )}
             </div>
+
+            {/* Compact-viewport-only counterpart to the block above: an
+                icon, not text, signalling signed-in/signed-out at a glance
+                without spending header width on it — the actual sign-in/
+                sign-out controls live in the drawer this opens. Hidden by
+                default, shown only inside the compact-viewport block
+                (.header-account-indicator, index.css) — the exact inverse
+                of .header-account-actions, so exactly one of the two is
+                ever visible at a given width. */}
+            <button
+              className="header-account-indicator"
+              onClick={() => setSidebarOpen(true)}
+              aria-label={user ? 'Signed in — open account menu' : 'Signed out — open account menu'}
+              title={user ? 'Signed in' : 'Signed out'}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="6.2" r="3.2" stroke={user ? 'var(--signal-positive)' : 'var(--text-muted)'} strokeWidth="1.6" />
+                <path d="M2.4 16c0-3.6 2.9-6.2 6.6-6.2s6.6 2.6 6.6 6.2" stroke={user ? 'var(--signal-positive)' : 'var(--text-muted)'} strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
         </header>
 
@@ -381,9 +426,16 @@ export default function App() {
           )}
         </main>
 
-        <div style={{
+        {/* .app-footer: padding lives in that class (index.css), not here —
+            the compact-viewport block adds extra padding-right there to
+            keep this row's own text clear of the fixed feedback bubble
+            (FeedbackButton.jsx, bottom-right); an inline padding shorthand
+            here would permanently shadow that override regardless of
+            media-query match, the same trap every other responsive fix in
+            this codebase has had to route around. */}
+        <div className="app-footer" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
-          padding: '6px 20px', fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
+          fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
           borderTop: 'var(--border-default)', background: 'transparent', flexShrink: 0,
         }}>
           <span>Varense - educational tool only. Not financial advice. Past performance does not guarantee future results.</span>

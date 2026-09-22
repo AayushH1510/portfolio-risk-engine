@@ -595,7 +595,30 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
     // content is reachable, which makes an unscoped role/name lookup
     // ambiguous (strict-mode violation) even though it never surfaced back
     // when forced clicks were silently failing to reach that content at all.
-    const signIn = page.getByRole('banner').getByRole('button', { name: 'Sign in', exact: true })
+    //
+    // Below the compact-viewport threshold the header's own copy is hidden
+    // by design (.header-account-actions, index.css — RESPONSIVE_AUDIT.md's
+    // header-account-controls pass) in favour of an icon-only indicator that
+    // opens the drawer; the real Sign in control lives in the sidebar there
+    // instead (.sidebar-account-actions). Checking window.matchMedia against
+    // the same dual-axis condition the app itself uses (rather than parsing
+    // viewportLabel) is what keeps this in sync with the app's own
+    // definition instead of drifting into a second, hand-maintained copy of
+    // "767" — see index.css's own "Compact viewport" banner comment for why
+    // that drift is exactly the bug class this project has hit before.
+    const isCompactViewport = await page.evaluate(() =>
+      window.matchMedia('(max-width: 767px), (max-height: 767px)').matches
+    )
+    if (isCompactViewport) {
+      const hamburger = page.locator('.sidebar-hamburger')
+      if (await hamburger.count() && (await hamburger.getAttribute('aria-expanded')) !== 'true') {
+        await robustClick(hamburger)
+        await page.waitForTimeout(300)
+      }
+    }
+    const signIn = isCompactViewport
+      ? page.locator('aside.sidebar-shell').getByRole('button', { name: 'Sign in', exact: true })
+      : page.getByRole('banner').getByRole('button', { name: 'Sign in', exact: true })
     if (await signIn.count()) {
       let forced = false, dispatched = false
       try {

@@ -38,6 +38,7 @@ export default function Sidebar({
   setPortfolioValue, setBenchmark, setRollingWindow,
   onRun, loading, onTickerClick,
   data, hasRun, drawerOpen, onCloseDrawer,
+  user, authLoading, onSignOut, onShowAuth,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
   const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
@@ -485,6 +486,48 @@ export default function Sidebar({
             <ExportCSV data={data} tickers={tickers} weights={weights} />
           </div>
         )}
+
+        {/* Account — drawer-width counterpart to the header's own sign-in/
+            sign-out controls (App.jsx's .header-account-actions, hidden
+            below the compact-viewport threshold). Alongside Export for the
+            same reason both move here: §3 already established the drawer
+            as the action surface at phone width, not the header. Hidden at
+            1024px+ and at any width above the compact-viewport threshold —
+            index.css's .sidebar-account-actions, same inline-always-wins
+            reason .sidebar-export-actions keeps its own display out of an
+            inline style. */}
+        <div className="sidebar-account-actions">
+          {authLoading ? null : user ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ fontSize: 'var(--text-body-sm)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.email}
+              </div>
+              <button
+                onClick={onSignOut}
+                style={{
+                  fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', padding: '6px 12px',
+                  border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+                  background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onShowAuth}
+              style={{
+                width: '100%',
+                fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '10px 20px',
+                border: 'var(--border-default)', fontFamily: 'var(--font-primary)',
+                background: 'transparent', color: 'var(--text-primary)',
+                cursor: 'pointer', letterSpacing: '0.02em', textTransform: 'uppercase',
+              }}
+            >
+              Sign in
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Resize handle — invisible until hover, drags --sidebar-width live.

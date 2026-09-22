@@ -273,7 +273,7 @@ export default function Backtest({ data, tickers, heavyError }) {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
+    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
 
       {/* Why this tab matters — same compact InsightBox pattern as the other tabs.
           Benchmark is named dynamically (getBenchmarkPhrase) so the copy stays

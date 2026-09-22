@@ -224,7 +224,7 @@ export default function MonteCarlo({ data, heavyError }) {
   )
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12, height:'100%', overflowY:'auto' }}>
+    <div className="tab-scroll-root" style={{ display:'flex', flexDirection:'column', gap:12, height:'100%', overflowY:'auto' }}>
 
       {/* Why three scenarios — primary: explains the Bear/Base/Bull control
           directly below it, so it's the one that should default open. */}

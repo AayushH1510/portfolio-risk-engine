@@ -421,7 +421,7 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   )
 
   return (
-    <div className="dashboard-grid" style={{ height: '100%', overflowY: 'auto' }}>
+    <div className="dashboard-grid tab-scroll-root" style={{ height: '100%', overflowY: 'auto' }}>
 
       <FirstResultCallout />
 
