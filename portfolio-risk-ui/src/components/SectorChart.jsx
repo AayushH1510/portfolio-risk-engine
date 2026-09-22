@@ -81,7 +81,18 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
   // than silently rendering nothing.
   if (sectorData == null) return null
 
-  if (!sectorData.length) {
+  // A ticker set to exactly 0% allocation (a valid Sidebar state — the user
+  // typed it in but zeroed its weight) still resolves to a sector in
+  // App.jsx's aggregation (weightBySector accumulates from 0, not skipped),
+  // so it can show up here as a real row with a real bar — just one that's
+  // 0px wide and reads "Media 0%", which looks like a rendering fault
+  // rather than an accurate zero. Filtered here, not in App.jsx's
+  // aggregation: this is the one place that decides what actually renders,
+  // and nothing else consumes sectorData that would need the zero entries
+  // kept.
+  const nonZeroSectorData = sectorData.filter(d => d.weight > 0)
+
+  if (!nonZeroSectorData.length) {
     return (
       <div className="card" style={{ padding: '10px 16px', flexShrink: 0 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 5 }}>
@@ -97,7 +108,7 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
     )
   }
 
-  const totalWeight = sectorData.reduce((sum, d) => sum + d.weight, 0)
+  const totalWeight = nonZeroSectorData.reduce((sum, d) => sum + d.weight, 0)
   const hasExcluded = totalWeight < 0.995
 
   // Recharts' category YAxis divides the plot height evenly per row and
@@ -107,7 +118,7 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
   // or more sectors (e.g. tech + financials + energy) routinely hits it.
   // Scale the card to the row count instead of a fixed height so every
   // sector always gets enough room to keep its label.
-  const chartHeight = Math.max(96, 34 + sectorData.length * 24)
+  const chartHeight = Math.max(96, 34 + nonZeroSectorData.length * 24)
 
   // Desktop's fixed 165px label column is a small fraction of a wide card
   // there, so it's never actually been a problem — but on a phone-width
@@ -119,7 +130,7 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
   // approach RiskAnalysis's correlation matrix already uses for its own
   // cell sizing) and left-align within it, so bars get the width back.
   // ~6.2px/char is Geist Mono's advance width at this 10px size.
-  const longestLabel = Math.max(...sectorData.map(d => truncate(d.sector).length))
+  const longestLabel = Math.max(...nonZeroSectorData.map(d => truncate(d.sector).length))
   const yAxisWidth = isPhone ? Math.max(60, Math.min(140, Math.round(longestLabel * 6.2) + 12)) : 165
 
   return (
@@ -137,7 +148,7 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
       <div style={{ flex: 1, minHeight: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={sectorData}
+            data={nonZeroSectorData}
             layout="vertical"
             style={{ background: 'transparent', fontSize: 11, fontFamily: 'var(--font-mono)' }}
             margin={{ top: 0, right: 36, bottom: 0, left: 4 }}
