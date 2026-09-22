@@ -72,7 +72,7 @@ export function useComparison() {
   return {
     tickers, weights, period, portfolioValue,
     data, loading, error, hasRun,
-    setTickers, setWeightsAll, setPeriod, setPortfolioValue,
+    setTickers, setWeightsAll, setPeriod, setPortfolioValue, setHasRun,
     runComparison,
   }
 }

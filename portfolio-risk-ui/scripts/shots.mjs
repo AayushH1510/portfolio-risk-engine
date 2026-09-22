@@ -426,6 +426,89 @@ async function checkTouchChartOverflow(page, outDir, viewportLabel, slug, result
   }
 }
 
+// Can the user actually reach the last real content on this tab by
+// scrolling? measureOverflow() and checkTouchChartOverflow() above both
+// measure clipping — whether something is currently cut off — but neither
+// says anything about whether the mechanism meant to reach it actually
+// works. Compare's config view shipped a real bug that fell exactly in
+// that gap: CompareWrapper.jsx's root had no bounded-height/overflow of
+// its own and nothing else picked up the slack, so main's own
+// overflow:hidden just clipped whatever didn't fit with literally no way
+// to reach it — not "reachable via a vertical scrollbar that doesn't
+// help" (measureOverflow's own verticalOnly bucket), not "a chart tooltip
+// escaped a container" (checkTouchChartOverflow) — just gone, with every
+// overflow number in the manifest reading zero because nothing was
+// clipped past the *document's* own edge, only past this one un-scrollable
+// box's. This scrolls the tab's own scroll root (.tab-scroll-root, the one
+// shared marker class this app's tabs use for their real scrolling box —
+// see index.css's own banner comment) to its maximum scrollTop and checks
+// whether the last real content element's bottom edge actually lands
+// inside the visible viewport afterward: the literal, concrete meaning of
+// "can this be reached." A tab short enough to need no scrolling passes
+// trivially (its last element was already visible). A tab with content
+// that overflows a scroll root but doesn't have one at all, or has one
+// that doesn't actually bring the end into view, fails.
+async function checkScrollReachesEnd(page, viewportLabel, slug, results) {
+  const info = await page.evaluate(() => {
+    const tabRoot = document.querySelector('main .fade-up > *')
+    if (!tabRoot) return { skip: true }
+    const candidates = Array.from(tabRoot.querySelectorAll('*')).filter(el => {
+      const r = el.getBoundingClientRect()
+      return r.width > 1 && r.height > 1
+    })
+    const last = candidates[candidates.length - 1]
+    if (!last) return { skip: true }
+
+    const scrollRoot = tabRoot.classList.contains('tab-scroll-root')
+      ? tabRoot
+      : tabRoot.querySelector('.tab-scroll-root')
+    const hasScrollRoot = !!scrollRoot
+    const neededScroll = hasScrollRoot && scrollRoot.scrollHeight > scrollRoot.clientHeight + 1
+    // Restored below — this scroll root is the same live DOM node the next
+    // capture() for this tab (or, for Compare, the results view right
+    // after this config-view check) will screenshot from. Leaving it
+    // scrolled to the bottom bled into the very next screenshot: Compare's
+    // results view rendered starting mid-metrics-table instead of at its
+    // own top, because CompareWrapper.jsx's root — scrolled to the end
+    // here while still showing the config view — is the exact same node
+    // still mounted (React only toggles hasRun, it doesn't remount the
+    // wrapper) once the results children swap in.
+    const originalScrollTop = scrollRoot ? scrollRoot.scrollTop : 0
+    if (scrollRoot) scrollRoot.scrollTop = scrollRoot.scrollHeight
+
+    const viewportH = document.documentElement.clientHeight
+    const r = last.getBoundingClientRect()
+    // With a scroll root: reachable only matters if there was something to
+    // scroll to in the first place. Without one: the only way this tab's
+    // real end can be off-viewport at all is if nothing ever gave the user
+    // a way to reach it — genuinely stuck, not merely "nothing to reach."
+    const endUnreachable = hasScrollRoot ? (neededScroll && r.bottom > viewportH + 1) : (r.bottom > viewportH + 1)
+
+    if (scrollRoot) scrollRoot.scrollTop = originalScrollTop
+
+    function selectorFor(el) {
+      const cls = typeof el.className === 'string' && el.className.trim()
+        ? '.' + el.className.trim().split(/\s+/).join('.') : ''
+      return el.tagName.toLowerCase() + cls
+    }
+
+    return {
+      skip: false, hasScrollRoot, neededScroll, endUnreachable,
+      lastSelector: selectorFor(last), lastBottom: Math.round(r.bottom), viewportH,
+    }
+  })
+
+  if (info.skip) return
+
+  results.push({ viewport: viewportLabel, view: `${slug}-scroll-end-check`, ok: true, ...info })
+
+  if (info.endUnreachable) {
+    console.log(`  FAIL  ${viewportLabel.padEnd(20)} ${(slug + '-scroll-end').padEnd(20)} -> last content (${info.lastSelector}) not reachable by scrolling (bottom=${info.lastBottom}, viewport=${info.viewportH}, hasScrollRoot=${info.hasScrollRoot})`)
+  } else {
+    console.log(`  ok    ${viewportLabel.padEnd(20)} ${(slug + '-scroll-end').padEnd(20)} -> last content reachable`)
+  }
+}
+
 async function captureStaticRoutes(page, routes, base, outDir, viewportLabel, results) {
   for (const route of routes) {
     try {
@@ -574,6 +657,24 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
       await page.waitForTimeout(['montecarlo', 'frontier', 'backtest'].includes(tab.id) ? 1100 : 700)
 
       if (tab.id === 'compare') {
+        // Compare's config view (!hasRun in CompareWrapper.jsx) used to
+        // never get captured at all — this loop clicked "Run comparison"
+        // immediately after switching tabs, before the first capture() call
+        // for 'compare' ever ran, so every prior sweep only ever saw the
+        // results view. That's exactly why a real, shipped bug in the
+        // config view (it had no scroll mechanism at all — see
+        // CompareWrapper.jsx's root comment) passed every previous run of
+        // this harness: the broken view was never actually screenshotted or
+        // measured. Captured here, before Run comparison is clicked, as its
+        // own view so both DOM states of this tab get the same overflow +
+        // scroll-reachability coverage every other tab's single view gets.
+        await settleNetwork(page)
+        await capture(page, outDir, 'app-compare-config', viewportLabel, results, {
+          tabClickForced: forced, tabClickDispatched: dispatched, tabSwitchVerified: verified,
+          navClientWidth, blockedBySidebar: navClientWidth === 0,
+        })
+        await checkScrollReachesEnd(page, viewportLabel, 'app-compare-config', results)
+
         const runCompare = page.getByRole('button', { name: 'Run comparison' })
         if (await runCompare.count()) {
           try { await robustClick(runCompare); await page.waitForTimeout(1000) } catch {}
@@ -587,6 +688,7 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
       })
 
       await checkTouchChartOverflow(page, outDir, viewportLabel, `app-${tab.id}`, results)
+      await checkScrollReachesEnd(page, viewportLabel, `app-${tab.id}`, results)
     }
 
     // Scoped to the header specifically: at least one app tab's own content
@@ -651,6 +753,140 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
   }
 }
 
+// Widths this check runs at — the required portrait set, not whatever
+// --widths the main sweep was invoked with. This is a targeted regression
+// guard, not part of the general screenshot sweep, so it stays fixed
+// regardless of what the caller is currently sweeping.
+const PRIMARY_ACTION_TAP_WIDTHS = [320, 360, 384, 393]
+
+// Real touch tap on Compare's two primary action buttons (Run comparison,
+// Reconfigure Portfolio B), asserting the DOM actually changed state
+// afterward — not just that the click "succeeded." This is the harness gap
+// that let Reconfigure Portfolio B ship completely inert: its onClick
+// handler called compB.setTickers(tickers) — the same tickers already
+// held, a pure no-op — and every check above measures overflow, never
+// behaviour, so a button that does nothing at all passed every one of
+// them. See CompareWrapper.jsx's own comment on the fix.
+//
+// Runs in a genuinely separate browser context (hasTouch:true), not folded
+// into the main sweep's shared per-viewport context: enabling hasTouch
+// flips matchMedia('(hover: hover)')/'(pointer: coarse)' for that entire
+// context (confirmed empirically — hover:true/pointer:fine flip to
+// false/coarse the moment hasTouch is set, independent of isMobile), which
+// would silently change which of this app's own hover-vs-touch code paths
+// render (lib/pointer.js's supportsHover, read by ReturnHistogram and
+// MetricTooltip) for every other screenshot and pixel-diff this file
+// produces — including the desktop ones RESPONSIVE_AUDIT.md's pixelmatch
+// checks depend on staying identical. Isolating this check to its own
+// context keeps the main sweep's hover-capable baseline completely
+// untouched.
+//
+// locator.tap() — not a synthetic TouchEvent dispatch (checkTouchChartOverflow's
+// approach above, chosen there specifically to reach Recharts' touchmove-only
+// activation without needing hasTouch at all) and not locator.click() — is
+// what makes this a REAL touch tap in the sense the request asked for:
+// Chromium synthesizes the click from actual touchstart/touchend input
+// through its real input pipeline, which does real hit-testing. An
+// invisible element covering the target (the "::before tap-target
+// extension overlapping a neighbour" failure mode this whole pass
+// diagnosed against) would make tap() fail exactly the way a real finger
+// would; a JS-level dispatchEvent/element.click() call bypasses hit-testing
+// entirely and would have "passed" even if something were actually
+// blocking the button.
+async function checkPrimaryActionTaps(browser, fixtures, base, results) {
+  for (const width of PRIMARY_ACTION_TAP_WIDTHS) {
+    await checkComparePrimaryActionsAt(browser, fixtures, base, { label: String(width), width, height: HEIGHT_FOR_WIDTH[width] ?? 900 }, results)
+  }
+  await checkComparePrimaryActionsAt(browser, fixtures, base, LANDSCAPE_VIEWPORTS[0], results)
+}
+
+async function checkComparePrimaryActionsAt(browser, fixtures, base, vp, results) {
+  const context = await browser.newContext({
+    viewport: { width: vp.width, height: vp.height },
+    reducedMotion: 'reduce',
+    hasTouch: true,
+  })
+  const page = await context.newPage()
+  const slug = 'app-compare-tap-check'
+  try {
+    await mockApiRoutes(page, fixtures)
+    await page.addInitScript(() => {
+      localStorage.setItem('varense_has_visited', 'true')
+      localStorage.setItem('varense_has_seen_first_result', 'true')
+    })
+    await page.goto(base + '/app', { waitUntil: 'networkidle', timeout: 30000 })
+    for (const rx of [/^skip/i, /got it/i]) {
+      const btn = page.getByRole('button', { name: rx })
+      if (await btn.count()) { try { await btn.first().click({ timeout: 800 }) } catch {} }
+    }
+    const hamburger = page.getByRole('button', { name: /open sidebar/i })
+    if (await hamburger.isVisible().catch(() => false)) {
+      await robustClick(hamburger)
+      await page.waitForTimeout(350)
+    }
+    const tickerInput = page.locator('input[placeholder="AAPL, MSFT, GOOGL"]')
+    if (await tickerInput.count()) {
+      await tickerInput.fill(fixtures.tickers.join(', '))
+      await tickerInput.blur()
+    }
+    await robustClick(page.getByRole('button', { name: /run analysis/i }).first())
+    await page.waitForTimeout(2000)
+
+    const { verified: onCompare } = await clickTab(page, { id: 'compare', label: 'Compare' })
+    await page.waitForTimeout(700)
+    if (!onCompare) {
+      results.push({ viewport: vp.label, view: slug, error: 'could not switch to Compare tab', ok: false })
+      console.error(`  FAIL  ${vp.label.padEnd(20)} ${slug.padEnd(20)} -> could not switch to Compare tab`)
+      return
+    }
+
+    const configVisible      = () => page.locator('.compareb-config-row').isVisible().catch(() => false)
+    const reconfigureVisible = () => page.getByRole('button', { name: /Reconfigure Portfolio B/i }).isVisible().catch(() => false)
+
+    // Config view should be showing (hasRun starts false). Real-tap "Run
+    // comparison" and assert the view actually flips to results.
+    let runTapOk = false, runError = null
+    const runBtn = page.getByRole('button', { name: 'Run comparison' })
+    if (await runBtn.count()) {
+      try {
+        await runBtn.tap({ timeout: 3000 })
+        await page.waitForTimeout(1200)
+        runTapOk = (await reconfigureVisible()) && !(await configVisible())
+      } catch (e) { runError = e.message }
+    } else {
+      runError = 'Run comparison button not found'
+    }
+    results.push({ viewport: vp.label, view: `${slug}-run`, ok: !runError, stateChanged: runTapOk, error: runError })
+    console.log(runTapOk
+      ? `  ok    ${vp.label.padEnd(20)} ${(slug + '-run').padEnd(20)} -> real tap on Run comparison switched config -> results`
+      : `  FAIL  ${vp.label.padEnd(20)} ${(slug + '-run').padEnd(20)} -> real tap on Run comparison did not switch to the results view${runError ? ' (' + runError + ')' : ''}`)
+
+    // Results view should now be showing. Real-tap "Reconfigure Portfolio
+    // B" and assert it actually returns to the config view — the literal
+    // button that shipped inert.
+    let reconfigTapOk = false, reconfigError = null
+    const reconfigBtn = page.getByRole('button', { name: /Reconfigure Portfolio B/i })
+    if (await reconfigBtn.count()) {
+      try {
+        await reconfigBtn.tap({ timeout: 3000 })
+        await page.waitForTimeout(500)
+        reconfigTapOk = await configVisible()
+      } catch (e) { reconfigError = e.message }
+    } else {
+      reconfigError = 'Reconfigure Portfolio B button not found'
+    }
+    results.push({ viewport: vp.label, view: `${slug}-reconfigure`, ok: !reconfigError, stateChanged: reconfigTapOk, error: reconfigError })
+    console.log(reconfigTapOk
+      ? `  ok    ${vp.label.padEnd(20)} ${(slug + '-reconfigure').padEnd(20)} -> real tap on Reconfigure Portfolio B returned to the config view`
+      : `  FAIL  ${vp.label.padEnd(20)} ${(slug + '-reconfigure').padEnd(20)} -> real tap on Reconfigure Portfolio B did not return to the config view${reconfigError ? ' (' + reconfigError + ')' : ''}`)
+  } catch (err) {
+    results.push({ viewport: vp.label, view: slug, error: err.message, ok: false })
+    console.error(`  FAIL  ${vp.label.padEnd(20)} ${slug.padEnd(20)} -> ${err.message}`)
+  } finally {
+    await context.close()
+  }
+}
+
 async function main() {
   const { routes, widths, base, out } = parseArgs(process.argv.slice(2))
   const viewports = viewportsFor(widths)
@@ -683,6 +919,15 @@ async function main() {
     await context.close()
   }
 
+  // Two targeted regression guards, run once each rather than per swept
+  // viewport — see their own comments for why: checkScrollReachesEnd is
+  // folded into the per-tab loop above (captureAppViews), so it already ran
+  // at every viewport just swept; checkPrimaryActionTaps needs its own
+  // hasTouch:true context (kept isolated from the sweep above for the
+  // hover/pointer-media reason its own comment explains) and has its own
+  // fixed width list, independent of whatever --widths this run used.
+  await checkPrimaryActionTaps(browser, fixtures, base, results)
+
   await browser.close()
 
   const failed     = results.filter(r => !r.ok)
@@ -692,6 +937,8 @@ async function main() {
   const sidebarBlocked = forcedClicks.filter(r => r.blockedBySidebar)
   const unexpectedForced = forcedClicks.filter(r => !r.blockedBySidebar)
   const unverifiedSwitches = results.filter(r => r.ok && r.tabSwitchVerified === false)
+  const scrollEndUnreachable = results.filter(r => r.ok && r.endUnreachable)
+  const primaryActionTapFailed = results.filter(r => r.view && r.view.startsWith('app-compare-tap-check') && (!r.ok || r.stateChanged === false))
   writeFileSync(path.join(ROOT, out, 'manifest.json'), JSON.stringify(results, null, 2))
 
   console.log(`\n${results.length - failed.length}/${results.length} screenshots written.`)
@@ -719,7 +966,15 @@ async function main() {
     console.log(`\n${unverifiedSwitches.length} view(s) may show the WRONG tab's content — click (even forced) never actually switched activeTab, verified via aria-current, even after a direct dispatchEvent('click'):`)
     for (const u of unverifiedSwitches) console.log(`  ${u.viewport.padEnd(20)} ${u.view}`)
   }
-  if (failed.length || unexpectedForced.length || unverifiedSwitches.length || touchOverflowing.length) process.exitCode = 1
+  if (scrollEndUnreachable.length) {
+    console.log(`\n${scrollEndUnreachable.length} view(s) have content that can't be reached by scrolling (see checkScrollReachesEnd in this file):`)
+    for (const s of scrollEndUnreachable) console.log(`  ${s.viewport.padEnd(20)} ${s.view.padEnd(28)} last=${s.lastSelector} bottom=${s.lastBottom} viewport=${s.viewportH} hasScrollRoot=${s.hasScrollRoot}`)
+  }
+  if (primaryActionTapFailed.length) {
+    console.log(`\n${primaryActionTapFailed.length} primary-action-button tap check(s) failed — a real touch tap didn't produce the expected state change (see checkPrimaryActionTaps in this file):`)
+    for (const p of primaryActionTapFailed) console.log(`  ${p.viewport.padEnd(20)} ${p.view.padEnd(28)} ${p.error || 'tapped, but state did not change as expected'}`)
+  }
+  if (failed.length || unexpectedForced.length || unverifiedSwitches.length || touchOverflowing.length || scrollEndUnreachable.length || primaryActionTapFailed.length) process.exitCode = 1
 }
 
 main()

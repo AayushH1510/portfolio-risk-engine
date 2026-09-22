@@ -1089,13 +1089,28 @@ aside.sidebar-shell.sidebar-open {
      its two names resolve to the same 'a'/'b' column tracks every
      MetricRow's values do — "the header's two names still sit directly
      above their columns" holds by construction, not by measuring two
-     independent rules to agree. */
+     independent rules to agree.
+
+     column-gap: the desktop base rule never needed one — the 80px "label"
+     track sat physically between "a" and "b" and was itself the separator.
+     Once that track moves out to its own row here, "a" and "b" become
+     directly adjacent with zero gap between them, and Comparison.jsx's own
+     right-/left-aligned value text (the desktop alignment, unchanged) then
+     renders flush against that shared boundary from both sides — the real
+     device symptom ("10.8%18.4%", no space at all between the two values).
+     Comparison.jsx separately switches each value's own alignment to
+     centred at this breakpoint (see MetricRow's comment — that has to
+     happen in JS, not CSS, since it's an inline style), which is the actual
+     fix; this column-gap is a second, independent safety margin so a wide
+     value (e.g. a 3-digit Sharpe) still can't reach its neighbour's column
+     even before accounting for centring. */
   .compare-ab-row {
     grid-template-columns: 1fr 1fr;
     grid-template-areas:
       "label label"
       "a     b";
     row-gap: 2px;
+    column-gap: 12px;
   }
 
   /* ─── Compare metrics-table + growth-chart row (Comparison.jsx) ───

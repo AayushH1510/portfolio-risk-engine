@@ -8,7 +8,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
   const {
     tickers, weights, period, portfolioValue,
     data: dataB, loading, error, hasRun,
-    setTickers, setWeightsAll, setPeriod, setPortfolioValue,
+    setTickers, setWeightsAll, setPeriod, setPortfolioValue, setHasRun,
     runComparison,
   } = compB
 
@@ -52,7 +52,19 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
+    // Single scroll root for the whole tab, matching every other tab's own
+    // .tab-scroll-root pattern — this used to be missing here, which is why
+    // Comparison.jsx (rendered below, in the results branch) carried its
+    // own independent overflowY:'auto' root instead: that made Comparison's
+    // inner content the only thing that scrolled, stranding this wrapper's
+    // own children (the "why this tab matters" box, the config panel, the
+    // Reconfigure/Re-run bar) fixed outside it — a nested scroll region, not
+    // a single one. It also meant the config view (below, when !hasRun) had
+    // no scroll mechanism at all: this div's old height:100%/no-overflow
+    // combination just let main's own overflow:hidden clip whatever didn't
+    // fit, with nothing to reach it. See Comparison.jsx's own root comment
+    // for the other half of this fix.
+    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', gap: 12 }}>
 
       {/* Why this tab matters — same compact InsightBox pattern as Monte Carlo / Frontier / Valuation.
           priority="primary": explains what this whole tab is for, so it's
@@ -76,7 +88,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
 
       {/* Portfolio B config panel */}
       {!hasRun && (
-        <div className="card" style={{ padding: '16px', flexShrink: 0 }}>
+        <div className="card" style={{ padding: '14px 16px', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
               Configure Portfolio B
@@ -247,11 +259,19 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
         </div>
       )}
 
-      {/* Re-configure button when results are showing */}
+      {/* Re-configure button when results are showing. onClick used to call
+          compB.setTickers(tickers) — setting tickers to the value they
+          already held, a no-op that also silently reset any custom weight
+          adjustment back to an even split (setTickers always recomputes
+          weights). hasRun was never touched by that handler, and nothing
+          else in useComparison.js exposed a way to flip it back — so the
+          config panel (gated on !hasRun below) could never reappear. The
+          actual fix is just flipping hasRun back to false, the one state
+          value that branch below is gated on. */}
       {hasRun && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0 }}>
           <button
-            onClick={() => compB.setTickers(tickers)}
+            onClick={() => setHasRun(false)}
             style={{
               fontSize: 11, fontWeight: 600, padding: '5px 14px',
               border: 'var(--border-default)', background: 'transparent',
@@ -266,7 +286,7 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
             className="btn-primary"
             onClick={() => runComparison()}
             disabled={loading}
-            style={{ marginLeft: 8, padding: '5px 14px', fontSize: 11 }}
+            style={{ padding: '5px 14px', fontSize: 11 }}
           >
             {loading ? 'Running...' : 'Re-run'}
           </button>
@@ -280,15 +300,18 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
         </div>
       )}
 
-      {/* Results */}
+      {/* Results — no longer wrapped in a flex:1/minHeight:0 box. That
+          sizing only made sense when Comparison.jsx's own root was a
+          bounded, independently-scrolling height:100% box (see its
+          comment); now that this wrapper is the single scroll root,
+          Comparison renders at its natural content height like any other
+          child here. */}
       {dataA && dataB && (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <Comparison
-            dataA={dataA} dataB={dataB}
-            nameA={nameA} nameB={nameB}
-            tickersA={tickersA} tickersB={tickers}
-          />
-        </div>
+        <Comparison
+          dataA={dataA} dataB={dataB}
+          nameA={nameA} nameB={nameB}
+          tickersA={tickersA} tickersB={tickers}
+        />
       )}
 
     </div>

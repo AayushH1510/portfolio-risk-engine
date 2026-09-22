@@ -7,6 +7,7 @@ import {
 import InsightBox from '../components/InsightBox'
 import useOverlay from '../hooks/useOverlay'
 import useCompactViewport from '../hooks/useCompactViewport'
+import { computeYDomain } from '../lib/chartDomain'
 
 const fmt    = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtD   = v => v != null ? `$${Math.abs(v).toFixed(0)}` : 'N/A'
@@ -22,12 +23,40 @@ function winner(aVal, bVal, lowerBetter = false) {
   return lowerBetter ? (aVal < bVal ? 'A' : 'B') : (aVal > bVal ? 'A' : 'B')
 }
 
-function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }) {
+function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false, isCompactViewport = false }) {
   const w = winner(
     typeof aVal === 'number' ? aVal : null,
     typeof bVal === 'number' ? bVal : null,
     lowerBetter
   )
+  // Compact viewport only — see .compare-ab-row's compact override
+  // (index.css) for why: below 768px the centre label track moves out from
+  // between A and B onto its own line, leaving the two value columns
+  // directly adjacent with no track between them. The desktop layout (right-
+  // aligned A / centred label / left-aligned B) relied on that centre track
+  // itself as the visual separator between the two values — remove the
+  // track without changing the alignment and the two numbers render flush
+  // against the shared column boundary with nothing between them ("10.8%
+  // 18.4%" with no gap, the reported bug). Centring each value in its own
+  // half-width column pulls it away from that boundary instead. Desktop is
+  // untouched — same right/left alignment and win-only colour it always
+  // had — because these are inline styles (an inline declaration always
+  // wins over a stylesheet media query, the same reason gridTemplateColumns
+  // itself lives in the CSS class and not here), so the only way to keep
+  // desktop byte-for-byte is to branch in JS on the same isCompactViewport
+  // signal the rest of this file already uses, not to try to express it in
+  // CSS.
+  const align = isCompactViewport ? 'center' : null
+  const justifyA = isCompactViewport ? 'center' : 'flex-end'
+  const justifyB = isCompactViewport ? 'center' : 'flex-start'
+  // Attribution color — at compact viewport, A/B always render in the
+  // header's own green/orange (not just the winner) so which value belongs
+  // to which portfolio never depends solely on left/right position, per the
+  // request. Desktop keeps its original win-only colouring (a muted value
+  // reads as "not the winner" there, which was never reported as a problem
+  // and isn't part of what broke on the device).
+  const colorA = isCompactViewport ? A_COLOR : (w === 'A' ? A_COLOR : 'var(--text-secondary)')
+  const colorB = isCompactViewport ? B_COLOR : (w === 'B' ? B_COLOR : 'var(--text-secondary)')
   return (
     // .compare-ab-row — shared with the nameA/VS/nameB header below, see
     // that class's own comment in index.css for why: A and B must stay in
@@ -46,10 +75,10 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }
       {/* A value */}
       <div style={{
         gridArea: 'a',
-        textAlign: 'right',
+        textAlign: align || 'right',
         fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)',
-        color: w === 'A' ? A_COLOR : 'var(--text-secondary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6,
+        color: colorA,
+        display: 'flex', alignItems: 'center', justifyContent: justifyA, gap: 6,
       }}>
         {w === 'A' && <span style={{ fontSize: 10, background: 'rgba(var(--signal-positive-rgb),0.15)', color: A_COLOR, padding: '1px 5px', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
         {fmtFn(aVal)}
@@ -63,10 +92,10 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false }
       {/* B value */}
       <div style={{
         gridArea: 'b',
-        textAlign: 'left',
+        textAlign: align || 'left',
         fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-mono)',
-        color: w === 'B' ? B_COLOR : 'var(--text-secondary)',
-        display: 'flex', alignItems: 'center', gap: 6,
+        color: colorB,
+        display: 'flex', alignItems: 'center', justifyContent: justifyB, gap: 6,
       }}>
         {fmtFn(bVal)}
         {w === 'B' && <span style={{ fontSize: 10, background: 'rgba(var(--signal-caution-rgb),0.15)', color: B_COLOR, padding: '1px 5px', fontFamily: 'var(--font-sans-generic)' }}>WIN</span>}
@@ -114,6 +143,25 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
     a:   v,
     b:   dataB.monte_carlo.percentile_50[i],
   }))
+  // Same computeYDomain Dashboard.jsx's growth/by-holding charts use (now
+  // shared via lib/chartDomain.js rather than duplicated) — Recharts' own
+  // default domain (no domain prop at all) can leave real data (e.g.
+  // $10k-$13k) crushed into a thin band in the middle of a short compact-
+  // viewport chart. Gated on isCompactViewport, and — unlike Dashboard's
+  // own charts — the domain prop is only spread onto <YAxis> at all when
+  // compact (see below), not passed as a literal ['auto', 'auto'] the rest
+  // of the time. Checked directly, not assumed from Dashboard's pattern:
+  // Recharts' true default (the prop omitted entirely) is NOT the same as
+  // explicitly passing domain={['auto', 'auto']} for this chart's data —
+  // the omitted-prop path renders $0k-$14k-ish (confirmed via a live
+  // getBoundingClientRect/tick-label check), the explicit-['auto','auto']
+  // path renders a visibly tighter $9k-$14k even at 1440px desktop width,
+  // a real, measured desktop pixel-diff (~1.6k-5.3k px depending on width)
+  // that a same-code control run confirmed was NOT just Recharts' usual
+  // sub-pixel SVG noise. Conditionally omitting the prop rather than
+  // passing a literal 'auto' array is what actually keeps desktop
+  // byte-for-byte — see the spread below.
+  const mcYDomain = isCompactViewport ? computeYDomain(mcData, ['a', 'b']) : null
 
   // Score — count wins per portfolio
   const metrics = [
@@ -233,7 +281,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={mcData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
             <XAxis dataKey="day" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} label={{ value:'Trading days', position:'insideBottom', offset:-2, fill:'var(--text-muted)', fontSize:10 }} />
-            <YAxis tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={48} />
+            <YAxis {...(mcYDomain ? { domain: mcYDomain } : {})} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={48} />
             <ReferenceLine y={dataA.monte_carlo.portfolio_value} stroke="rgba(var(--text-primary-rgb),0.08)" strokeDasharray="4 4" />
             <Tooltip contentStyle={TIP} formatter={v => [`$${Math.round(v).toLocaleString()}`, '']} labelFormatter={l => `Day ${l}`} />
             <Line type="monotone" dataKey="a" stroke={A_COLOR} strokeWidth={2} dot={false} name={nameA} />
@@ -245,16 +293,33 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
   )
 
   return (
-    <div className="tab-scroll-root" style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', overflowY: 'auto' }}>
+    // No longer its own scroll root (was className="tab-scroll-root",
+    // height:'100%', overflowY:'auto') — this component is only ever
+    // mounted inside CompareWrapper.jsx, never directly as a tab (App.jsx
+    // routes 'compare' to CompareWrapper, which imports this as an inner
+    // component). Giving it an independent height:100%/overflowY:auto root
+    // made it its own bounded, independently-scrolling box nested inside
+    // CompareWrapper's — CompareWrapper's own "why this tab matters" box
+    // and Reconfigure/Re-run bar sat outside that box as fixed siblings,
+    // so only this component's own content (the metrics table, both
+    // charts, the summary InsightBox) actually scrolled. CompareWrapper is
+    // now the single scroll root for the whole tab (its own root comment
+    // has the other half of this); this renders at its natural content
+    // height like any other plain child there.
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
       {/* Header — portfolio labels. Reuses .compare-ab-row, the exact same
           grid class/area shape as every MetricRow below, so "the header's
           two names still sit directly above their columns once the centre
           track is gone" is guaranteed by construction — both resolve the
           same 'a'/'b' areas to the same two column tracks, not just
-          measured to agree by coincidence. */}
+          measured to agree by coincidence. Chip alignment branches on
+          isCompactViewport for the same reason MetricRow's values do (see
+          that component's own comment): below 768px the chip needs to sit
+          centred over its now-centred column, not pinned to the inner edge
+          where the vanished label track used to be. */}
       <div className="compare-ab-row" style={{ alignItems: 'center', flexShrink: 0 }}>
-        <div style={{ gridArea: 'a', textAlign: 'right' }}>
+        <div style={{ gridArea: 'a', textAlign: isCompactViewport ? 'center' : 'right' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--signal-positive-rgb),0.1)', border: '1px solid rgba(var(--signal-positive-rgb),0.3)', padding: '8px 14px' }}>
             <div style={{ width: 10, height: 10, background: A_COLOR }} />
             <div>
@@ -264,7 +329,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           </div>
         </div>
         <div style={{ gridArea: 'label', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>VS</div>
-        <div style={{ gridArea: 'b' }}>
+        <div style={{ gridArea: 'b', textAlign: isCompactViewport ? 'center' : 'left' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(var(--signal-caution-rgb),0.1)', border: '1px solid rgba(var(--signal-caution-rgb),0.3)', padding: '8px 14px' }}>
             <div style={{ width: 10, height: 10, background: B_COLOR }} />
             <div>
@@ -304,17 +369,17 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Head to head
           </div>
-          <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  lowerBetter={false} />
-          <MetricRow label="Volatility" aVal={dataA.annualised_volatility}    bVal={dataB.annualised_volatility}    fmt={fmt}  lowerBetter={true}  />
-          <MetricRow label="Sharpe"    aVal={dataA.sharpe_ratio}              bVal={dataB.sharpe_ratio}              fmt={fmtN} lowerBetter={false} />
-          <MetricRow label="Sortino"   aVal={dataA.sortino_ratio}             bVal={dataB.sortino_ratio}             fmt={fmtN} lowerBetter={false} />
-          <MetricRow label="Drawdown"  aVal={dataA.max_drawdown}              bVal={dataB.max_drawdown}              fmt={v => fmt(v)} lowerBetter={true} />
-          <MetricRow label="VaR 95%"   aVal={dataA.var_cvar.var_pct}         bVal={dataB.var_cvar.var_pct}         fmt={v => fmt(v)} lowerBetter={true} />
-          <MetricRow label="CVaR 95%"  aVal={dataA.var_cvar.cvar_pct}        bVal={dataB.var_cvar.cvar_pct}        fmt={v => fmt(v)} lowerBetter={true} />
+          <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  lowerBetter={false} isCompactViewport={isCompactViewport} />
+          <MetricRow label="Volatility" aVal={dataA.annualised_volatility}    bVal={dataB.annualised_volatility}    fmt={fmt}  lowerBetter={true}  isCompactViewport={isCompactViewport} />
+          <MetricRow label="Sharpe"    aVal={dataA.sharpe_ratio}              bVal={dataB.sharpe_ratio}              fmt={fmtN} lowerBetter={false} isCompactViewport={isCompactViewport} />
+          <MetricRow label="Sortino"   aVal={dataA.sortino_ratio}             bVal={dataB.sortino_ratio}             fmt={fmtN} lowerBetter={false} isCompactViewport={isCompactViewport} />
+          <MetricRow label="Drawdown"  aVal={dataA.max_drawdown}              bVal={dataB.max_drawdown}              fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
+          <MetricRow label="VaR 95%"   aVal={dataA.var_cvar.var_pct}         bVal={dataB.var_cvar.var_pct}         fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
+          <MetricRow label="CVaR 95%"  aVal={dataA.var_cvar.cvar_pct}        bVal={dataB.var_cvar.cvar_pct}        fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
           {dataA.beta_alpha && dataB.beta_alpha && (
             <>
-              <MetricRow label="Beta"  aVal={dataA.beta_alpha.beta}          bVal={dataB.beta_alpha.beta}          fmt={fmtN} lowerBetter={true} />
-              <MetricRow label="Alpha" aVal={dataA.beta_alpha.alpha}         bVal={dataB.beta_alpha.alpha}         fmt={fmt}  lowerBetter={false} />
+              <MetricRow label="Beta"  aVal={dataA.beta_alpha.beta}          bVal={dataB.beta_alpha.beta}          fmt={fmtN} lowerBetter={true} isCompactViewport={isCompactViewport} />
+              <MetricRow label="Alpha" aVal={dataA.beta_alpha.alpha}         bVal={dataB.beta_alpha.alpha}         fmt={fmt}  lowerBetter={false} isCompactViewport={isCompactViewport} />
             </>
           )}
         </div>

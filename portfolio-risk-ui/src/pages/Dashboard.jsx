@@ -13,6 +13,7 @@ import MetricTooltip from '../components/MetricTooltip'
 import useOverlay from '../hooks/useOverlay'
 import useCompactViewport from '../hooks/useCompactViewport'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
+import { computeYDomain } from '../lib/chartDomain'
 
 // Distinct hues for the Portfolio Growth chart's "By Holding" mode — one
 // line per ticker, differentiated by hue rather than dash pattern (dashing
@@ -39,34 +40,6 @@ const CHART_STYLE = {
   background: 'transparent',
   fontSize: 11,
   fontFamily: 'var(--font-mono)',
-}
-
-// Recharts' default YAxis domain rounds OUT to "nice" tick values (e.g.
-// -10%/30% for data that actually runs -2% to 27%) — reasonable in
-// isolation, but on a chart this short (the inline card) or this tall (the
-// fullscreen expand) it leaves the line occupying a thin band in the
-// middle of a lot of dead vertical space, exactly backwards from what
-// either size actually needs. Computes the true min/max across every
-// series actually plotted (not just "portfolio" — by-holding mode plots
-// several tickers plus an optional benchmark, and the domain has to cover
-// whichever's most extreme) and pads by a fixed fraction of the range
-// rather than rounding to a "nice" number, so the line reliably fills most
-// of the available height without ever touching the plot edges. Falls
-// back to Recharts' own 'auto' when there's no finite range to measure
-// (e.g. an empty by-holding dataset before the toggle is shown).
-function computeYDomain(rows, keys, padFraction = 0.1) {
-  let min = Infinity, max = -Infinity
-  for (const row of rows) {
-    for (const key of keys) {
-      const v = row[key]
-      if (typeof v !== 'number' || !isFinite(v)) continue
-      if (v < min) min = v
-      if (v > max) max = v
-    }
-  }
-  if (!isFinite(min) || !isFinite(max)) return ['auto', 'auto']
-  const pad = (max - min) * padFraction || Math.abs(max || 1) * padFraction
-  return [min - pad, max + pad]
 }
 
 const AXIS_STYLE = { fill: 'var(--text-muted)', fontSize: 10 }
