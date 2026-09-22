@@ -286,7 +286,19 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
             className="btn-primary"
             onClick={() => runComparison()}
             disabled={loading}
-            style={{ padding: '5px 14px', fontSize: 11 }}
+            // width:'auto' overrides .btn-primary's own width:100% (index.css)
+            // — meant for the block contexts that class is normally used in
+            // (Sidebar's Run Analysis, this same panel's Run comparison
+            // button above, both alone in their own full-width row), not a
+            // flex row sibling. Without it this button stretched to fill
+            // almost the entire row (982px at 1440px, 720px at 1024px, 231px
+            // at 393px — measured, not estimated) next to a normally-sized
+            // Reconfigure Portfolio B, at every viewport, not just narrow
+            // ones — this was live at desktop too. Same override, same
+            // reasoning LandingLayout.jsx's own two .btn-primary links
+            // already use for the identical "content-width button, not a
+            // full-width one" need — not a new pattern.
+            style={{ padding: '5px 14px', fontSize: 11, width: 'auto' }}
           >
             {loading ? 'Running...' : 'Re-run'}
           </button>

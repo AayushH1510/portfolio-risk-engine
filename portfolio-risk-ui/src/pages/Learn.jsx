@@ -91,8 +91,15 @@ function TierToggle({ tier, onChange }) {
 export default function Learn() {
   const [tier, setTier] = useState('individual')
 
+  // paddingRight:8 used to live inline on this tab's root (presumably
+  // scrollbar-gutter breathing room) — removed because an inline
+  // declaration always wins over a stylesheet rule regardless of
+  // specificity, which silently shadowed .tab-scroll-root's own
+  // padding-right:84px (index.css, the feedback-bubble clearance every
+  // other tab already gets) down to 8px for this one tab only. 84px
+  // already exceeds whatever the original 8px was for.
   return (
-    <div className="tab-scroll-root" style={{ height: '100%', overflowY: 'auto', paddingRight: 8 }}>
+    <div className="tab-scroll-root" style={{ height: '100%', overflowY: 'auto' }}>
 
       <div style={{
         marginBottom: 16,

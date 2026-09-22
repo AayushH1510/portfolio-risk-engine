@@ -484,14 +484,61 @@ aside.sidebar-shell.sidebar-open {
    inline-always-wins reason as .sidebar-export-actions above. */
 .sidebar-account-actions { display: none; margin-top: 10px; }
 
-/* App footer (App.jsx) — padding lives here, not inline, so the compact-
-   viewport block below can add extra padding-right to keep this row's own
-   text clear of FeedbackButton.jsx's fixed bottom-right bubble; an inline
-   padding shorthand would permanently shadow that override (same
-   inline-always-wins reason as every class above). Reproduces the original
-   inline value exactly — desktop is untouched. */
+/* App footer (App.jsx) — padding lives here, not inline, for the usual
+   inline-always-wins reason (a padding shorthand set inline would
+   permanently shadow this).
+   padding-right:104px (FeedbackButton.jsx's bubble is position:fixed,
+   bottom:20/right:20, 48x48 — its own box spans x:[viewportWidth-68,
+   viewportWidth-20]: 48 width + 20 right offset, plus a 16px margin = 84,
+   added to the original 20px right padding = 104) was compact-viewport-
+   only at first — the request that added it was explicitly scoped to
+   phone width, and a real overlap already existed at 1280px+ on the
+   *original* code too but was flagged and deliberately left alone rather
+   than fixed. A later pass ("the feedback button crowds its surroundings
+   at both 384px and 1440px") found that exact desktop overlap still live
+   — confirmed via a fresh survey, not assumed from the old note: "Privacy"/
+   "Terms" sat under the bubble's box on every single app tab at 1440px.
+   Made universal here rather than re-adding a second compact-scoped
+   override, since the fix is the same at every width — see
+   .tab-scroll-root's own comment below for the matching right-side
+   reservation this pairs with. */
 .app-footer {
-  padding: 6px 20px;
+  padding: 6px 104px 6px 20px;
+}
+
+/* Every tab's own overflowY:'auto' scroll root (.tab-scroll-root, one
+   shared class so this lives in exactly one place rather than 9 near-
+   identical copies — 8 pages plus CompareWrapper.jsx) reserves clearance
+   from FeedbackButton.jsx's bubble on two axes, not one:
+   padding-bottom:84px (68px button footprint + 16px margin, same as
+   .app-footer's own math above) was compact-viewport-only at first —
+   it's what lets a tab's true last content clear the bubble once actually
+   scrolled to the end. Made universal for the same reason as .app-footer
+   above: a tall tab at desktop width can reach the bubble's row too, and
+   the mechanism doesn't stop being correct just because the viewport got
+   wider.
+   padding-right:84px is new, not a widened copy of the same fix — a
+   different failure mode padding-bottom can't reach at all. A survey
+   ("what does the bubble sit near or over, on every tab") found real
+   content — chart axis tick labels, table/metric-grid cells, InsightBox
+   text — sitting directly under the bubble on nearly every tab at both
+   384px and 1440px, and not only once scrolled to a tab's true end: for a
+   tab short enough to fit without scrolling (or simply not yet scrolled
+   that far), its content renders in normal top-down flow and trailing
+   bottom padding never moves anything that was already positioned above
+   it — there's nothing to "scroll past" if the page was never scrolled at
+   all. Only a permanent reservation in the content's own width, present
+   at every row and every scroll position, closes that gap: no tab's
+   content can ever lay out into the bubble's column in the first place.
+   Confirmed this is what real content was doing, not assumed: Monte
+   Carlo's trading-day axis ticks, Backtest's year-by-year table's last
+   cell, Valuation's Gross Margin column, Frontier's Optimal-weights value,
+   RiskAnalysis's Information Ratio card and (at 1440px) its InsightBox
+   toggle button — all measured landing inside the bubble's own box before
+   this fix, on the unmodified code. */
+.tab-scroll-root {
+  padding-bottom: 84px;
+  padding-right: 84px;
 }
 
 /* Sidebar resize handle (Sidebar.jsx) — mouse-only drag (no touch
@@ -888,46 +935,6 @@ aside.sidebar-shell.sidebar-open {
   }
   .sidebar-account-actions {
     display: flex;
-  }
-
-  /* ─── App footer clear of the feedback bubble (App.jsx) ───
-     FeedbackButton.jsx's bubble is position:fixed, bottom:20/right:20,
-     48x48 — its own box spans x:[viewportWidth-68, viewportWidth-20],
-     y:[viewportHeight-68, viewportHeight-20]. Measured before fixing, not
-     assumed: at portrait phone widths the footer's own flexWrap drops
-     Privacy/Terms to a second line (space-between with one item on that
-     line lands it at flex-start, clear of the button on its own), but the
-     first line — the disclaimer sentence — routinely reaches into the
-     button's own column (confirmed overlap: x=48px/y=30px at 320-393px).
-     At 852x393 landscape the footer doesn't wrap at all, so it's Privacy/
-     Terms instead that lands under the button (x=48px/y=1px overlap).
-     One fix covers both shapes: reserve horizontal clearance on the whole
-     row equal to the button's own footprint (48 width + 20 right offset)
-     plus a 16px margin = 84px, added to the existing 20px right padding =
-     104px total. flexWrap already recomputes its own wrap points against
-     whatever width is actually available, so narrowing that available
-     width is sufficient — no separate handling needed for the wrapped vs.
-     unwrapped shape. Desktop's own similar (pre-existing, unrelated)
-     overlap at 1280px+ is untouched — out of scope, the request's own
-     "on every app screen at phone width" framing. */
-  .app-footer {
-    padding-right: 104px;
-  }
-
-  /* ─── Tab content clears the feedback bubble on scroll (every tab) ───
-     Same button footprint as above (68px from the viewport's bottom edge,
-     +16px margin = 84px). Added as padding *inside* each tab's own
-     overflowY:'auto' scroll root (.tab-scroll-root, one shared class so
-     this lives in exactly one place rather than 8 near-identical copies) —
-     not a fixed gap below main, which would either shrink every tab's
-     visible viewport at every width (permanently, whether or not that
-     tab's content is ever tall enough to reach the bottom) or need touching
-     per-tab. As padding inside the scrolling box, it only ever costs
-     anything when a tab's content is already tall enough to need scrolling
-     that far — a short tab (nothing near its own bottom edge) is
-     unaffected either way. */
-  .tab-scroll-root {
-    padding-bottom: 84px;
   }
 
   /* ─── Dashboard grid reflow (Dashboard.jsx) ───
