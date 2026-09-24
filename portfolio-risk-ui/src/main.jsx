@@ -18,12 +18,10 @@ import Methodology from './pages/Methodology.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
 import StylePreview from './pages/StylePreview.jsx'
-import DebugViewportBadge from './components/DebugViewportBadge.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <DebugViewportBadge />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/pro" element={<LandingPro />} />
@@ -31,7 +29,13 @@ createRoot(document.getElementById('root')).render(
         <Route path="/app" element={<App />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
-        <Route path="/style-preview" element={<StylePreview />} />
+        {/* Internal design-system reference page — dev-only, not for
+            production. import.meta.env.DEV is a build-time constant Vite
+            replaces with a literal false in production builds, so this
+            whole conditional (route element included) is dead code Rollup
+            eliminates from the bundle, not just an unreachable path left
+            live in the shipped JS. */}
+        {import.meta.env.DEV && <Route path="/style-preview" element={<StylePreview />} />}
       </Routes>
     </BrowserRouter>
   </StrictMode>,

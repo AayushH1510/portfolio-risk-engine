@@ -20,10 +20,37 @@ Portfolio: **AAPL / MSFT / GOOGL / AMZN**, weights 30/25/25/20, benchmark **QQQ*
   `{"error": "Unable to load data for this ticker right now."}` — accurate to
   what the endpoint actually does without a key, but useless for screenshotting
   the Valuation tab's real layout. This file is hand-built instead, matching
-  the real endpoint's schema exactly (same fields as a genuine response,
-  reusing 3 entries already validated against the real shape earlier this
-  project, plus one added for AMZN). Recapture for real once
-  `FINNHUB_API_KEY` is set: `curl "http://localhost:8000/api/fundamentals?tickers=AAPL,MSFT,GOOGL,AMZN"`.
+  the real endpoint's schema exactly (same fields as a genuine response).
+  Recapture for real once `FINNHUB_API_KEY` is set:
+  `curl "http://localhost:8000/api/fundamentals?tickers=AAPL,MSFT,GOOGL,AMZN"`.
+
+  **`sector`/`industry` were rewritten to hold the same value per ticker,
+  not left as the two different GICS-style strings an earlier version of
+  this file used** (e.g. GOOGL previously read `"sector": "Communication
+  Services"` / `"industry": "Internet Content & Information"`). That was
+  never a shape the real endpoint can produce: Finnhub's `/stock/profile2`
+  only exposes one combined `finnhubIndustry` field, and `api.py`/
+  `stock_detail_route.py` both read that single field into *both* the
+  `sector` and `industry` response keys — the two are never actually
+  independent live data, only ever the same string under two labels. Every
+  screenshot this project had taken of the Valuation tab, before this fix,
+  showed a more differentiated (and more polished-looking) Sector/Industry
+  pairing than production ever renders. Fixed at the display layer too —
+  Valuation.jsx no longer has a separate Industry row at all — but the
+  fixture needed to stop lying about the shape independently of that, since
+  anyone screenshotting or reasoning from this file should see what the
+  real endpoint actually returns.
+
+  **The specific values (`"Technology"` for AAPL/MSFT, `"Media"` for
+  GOOGL, `"Retail"` for AMZN) are illustrative, not captured** — still no
+  `FINNHUB_API_KEY` available in this environment to confirm Finnhub's
+  actual current classification for any of these four tickers. What *is*
+  faithful is the shape (`sector === industry`, always, one value not two)
+  and the general style (Finnhub's own `finnhubIndustry` taxonomy runs
+  short, single-tier labels like these, not GICS's two-tier sector+industry
+  split) — not a verified live value. Recapture for real the same way as
+  above the moment a key is available, and replace these four values with
+  whatever actually comes back.
 
 - `stress-test.json` — **not genuine, same reason as `fundamentals.json` above,
   different key.** A real `POST /api/stress-test` call for this portfolio was

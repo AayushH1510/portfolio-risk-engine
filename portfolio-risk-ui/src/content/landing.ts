@@ -13,6 +13,8 @@
  * e.g. mirror them as a zod schema and parse at the fetch boundary.
  */
 
+import { APP_VERSION } from '../lib/version.js';
+
 /* ------------------------------------------------------------------ atoms */
 
 export type Tone = 'positive' | 'negative' | 'warning' | 'neutral';
@@ -195,7 +197,7 @@ export interface LandingPage {
 const APP_URL = import.meta.env?.VITE_APP_URL ?? '/app';
 
 export const landingPage: LandingPage = {
-  brand: { name: 'Varense', version: 'v1.2', appUrl: APP_URL },
+  brand: { name: 'Varense', version: APP_VERSION, appUrl: APP_URL },
 
   nav: [
     { label: 'What', href: '#what' },
@@ -212,7 +214,7 @@ export const landingPage: LandingPage = {
     {
       id: 'top',
       type: 'hero',
-      eyebrow: ['Portfolio risk engine', 'v1.2'],
+      eyebrow: ['Portfolio risk engine', APP_VERSION],
       headline: [
         { text: 'Know how your portfolio behaves' },
         { text: 'before', emphasis: true, break: true },

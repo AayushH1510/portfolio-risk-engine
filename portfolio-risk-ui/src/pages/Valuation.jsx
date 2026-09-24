@@ -451,18 +451,20 @@ export default function Valuation({ tickers, onTickerClick }) {
               </div>
             )}
 
-            {/* Sector / industry */}
+            {/* Sector — Industry used to render here too, in its own column
+                next to this one. Finnhub only exposes one combined
+                "finnhubIndustry" field (api.py/stock_detail_route.py both
+                read it into both sector and industry), so the two were
+                never actually different data — just the same string
+                rendered twice under two different labels. Frontend-only
+                fix, per the request: the API still returns both fields
+                unchanged (Valuation.jsx:314's own industry-as-name-fallback
+                elsewhere on this page is a different use of the field and
+                is untouched), this just stops displaying the redundant
+                second copy. */}
             <div className="card" style={{ padding:'12px 14px' }}>
-              <div style={{ display:'flex', gap:12 }}>
-                <div>
-                  <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Sector</div>
-                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '-'}</div>
-                </div>
-                <div style={{ borderLeft:'1px solid rgba(var(--text-primary-rgb),0.06)', paddingLeft:12 }}>
-                  <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Industry</div>
-                  <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.industry || '-'}</div>
-                </div>
-              </div>
+              <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:2 }}>Sector</div>
+              <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:500 }}>{selectedStock.sector || '-'}</div>
             </div>
 
           </div>

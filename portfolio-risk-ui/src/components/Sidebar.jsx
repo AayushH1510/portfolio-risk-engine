@@ -6,6 +6,7 @@ import ExportPDF from './ExportPDF'
 import ExportCSV from './ExportCSV'
 import useOverlay from '../hooks/useOverlay'
 import { BENCHMARKS } from '../lib/benchmarks'
+import { APP_VERSION } from '../lib/version'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 const WINDOWS = [
@@ -233,7 +234,7 @@ export default function Sidebar({
             size={28}
             ink={logoHovered ? 'var(--signal-positive)' : 'var(--text-primary)'}
           />
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em', marginTop: 4 }}>v1.2</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.04em', marginTop: 4 }}>{APP_VERSION}</div>
         </Link>
       </div>
 
