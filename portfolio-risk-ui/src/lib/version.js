@@ -7,4 +7,4 @@
 // source would mean either the displayed version changes to "v0.0.1" or
 // package.json gets bumped to agree — either way a real, separate decision
 // this file shouldn't make silently as a side effect of a refactor.
-export const APP_VERSION = 'v1.2'
+export const APP_VERSION = 'v1.3'

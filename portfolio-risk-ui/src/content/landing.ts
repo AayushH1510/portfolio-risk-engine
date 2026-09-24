@@ -220,7 +220,7 @@ export const landingPage: LandingPage = {
         { text: 'before', emphasis: true, break: true },
         { text: ' the market tells you.' },
       ],
-      lead: 'Varense runs correlated Monte Carlo, historical crisis replay, and full risk decomposition across your holdings - the arithmetic an institutional desk runs on a book of billions, applied to a portfolio of three tickers.',
+      lead: 'Varense runs correlated Monte Carlo, historical crisis replay, and full risk decomposition across your holdings - the arithmetic an institutional desk runs on a book of billions, applied to a portfolio of up to five tickers.',
       actions: [
         { label: 'Launch the app', href: APP_URL, variant: 'primary' },
         { label: 'Read the methodology', href: '#method', variant: 'secondary' },
@@ -239,7 +239,7 @@ export const landingPage: LandingPage = {
       type: 'productPlate',
       source: 'mock',
       fixture: 'aapl-msft-googl-equal',
-      tabs: ['Dashboard', 'Risk analysis', 'Monte Carlo', 'Efficient frontier', 'Backtest'],
+      tabs: ['Dashboard', 'Risk Analysis', 'Monte Carlo', 'Efficient Frontier', 'Valuation', 'Compare', 'Backtest', 'Learn'],
       activeTab: 'Dashboard',
     },
 
@@ -437,7 +437,7 @@ export const landingPage: LandingPage = {
     {
       type: 'cta',
       heading: 'Run your portfolio through it.',
-      lead: 'Three tickers, thirty seconds, and a distribution you can actually look at.',
+      lead: 'Up to five tickers, thirty seconds, and a distribution you can actually look at.',
       actions: [
         { label: 'Launch the app', href: APP_URL, variant: 'primary' },
         { label: 'See what it computes', href: '#features', variant: 'secondary' },
