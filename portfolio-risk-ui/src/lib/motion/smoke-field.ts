@@ -296,7 +296,24 @@ export function createSmokeField(
   // 75 because resize() only ever ran once, against the pre-font-swap
   // layout. A ResizeObserver fires for any of these, window resize
   // included, so it replaces that listener rather than supplementing it.
-  const ro = new ResizeObserver(() => resize());
+  //
+  // repaint after resize() when reducedMotion: resize() clears the canvas
+  // whenever H changes (a fresh createImageData, and setting canvas.height
+  // resets the bitmap per spec) but never repaints it itself — fine in the
+  // normal animated path, where the next rAF frame repaints regardless, but
+  // reducedMotion has no next frame, since paint() only ever runs once, at
+  // setup. Without this, a font swap arriving after that one paint() (a
+  // real, live race, not hypothetical — confirmed via two independent
+  // screenshots of identical code: one showed the plume, one showed a
+  // blank hero, differing only in whether the font had already swapped in
+  // when this effect first ran) leaves the canvas permanently blank for
+  // any reduced-motion visitor unlucky enough to hit it — a screenshot
+  // harness comparing two page loads is just the first thing that made an
+  // intermittent-in-production bug visible and reproducible.
+  const ro = new ResizeObserver(() => {
+    resize();
+    if (reducedMotion) paint();
+  });
   if (canvas.parentElement) ro.observe(canvas.parentElement);
 
   return {

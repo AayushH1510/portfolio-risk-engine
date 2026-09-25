@@ -18,19 +18,110 @@
 // hitting the real backend, so results.json/full/fundamentals never change
 // between two runs of this script.
 //
+// Desktop baseline regression: every 1280/1366/1440 capture of a fixed view
+// set (BASELINE_VIEWS below) is pixel-diffed against a committed screenshot
+// in scripts/baselines/desktop/ and FAILS THE RUN (nonzero exit) if it
+// drifts past a documented noise floor — see the BASELINE_* constants for
+// the full rationale and the empirical method behind the floor. This is
+// what makes it a required step rather than something run by hand: a plain
+// `npm run shots` already sweeps 1280/1366/1440 by default, so the check
+// runs every time, with no separate flag needed to opt in.
+//
 // Usage:
 //   npm run shots
 //   npm run shots -- --widths=393,1440
 //   npm run shots -- --routes=/,/app --base=http://localhost:5173
 //   npm run shots -- --out=screenshots-before
+//   npm run shots -- --update-baseline   # overwrite the local desktop
+//     baseline with this run's captures — an explicit, separate invocation
+//     only; never the default path, so a real desktop change can't get
+//     silently accepted as the new truth by a routine run. Baselines are
+//     gitignored (scripts/baselines/README.md), so review by eye before
+//     trusting them, not via `git diff`.
 import { chromium } from 'playwright'
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PNG } from 'pngjs'
+import pixelmatch from 'pixelmatch'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT      = path.resolve(__dirname, '..')
 const FIXTURES_DIR = path.join(__dirname, 'fixtures')
+
+// ─── Desktop baseline regression ───────────────────────────────────────────
+// Pixel-diffs every desktop capture of a fixed view set against a "known
+// good" screenshot and fails the run if it drifts past a documented noise
+// floor. Exists because two real regressions — a universal padding that
+// shrank every app tab, and an avatar that rendered when it shouldn't have
+// — both shipped clean through every check this harness already ran
+// (overflow measurement, scroll-reachability, tab-switch verification,
+// touch taps): nothing about either bug produced a *number* any existing
+// check was looking at, they only ever looked wrong. A baseline image is
+// the one check that catches "looks different" as its own category,
+// independent of whatever specific metric a future regression happens to
+// avoid moving.
+//
+// Baselines live at scripts/baselines/desktop/<width>/<slug>.png but are
+// gitignored — local-only, like screenshots/ and screenshots-*/ — see
+// scripts/baselines/README.md for the full reasoning (no CI runs this
+// repo, so nothing needs them in git, and 34MB of PNGs re-added in full on
+// every intentional desktop change would permanently bloat history) and
+// for how to generate them. A missing baseline is therefore the normal
+// state on a fresh clone, not an edge case — checkDesktopBaseline() below
+// FAILS the run when one is missing rather than skipping the check, so
+// "no baseline yet" can't quietly mean "not actually checked."
+const BASELINE_WIDTHS = [1280, 1366, 1440]
+// Every app tab (captureAppViews' own slugs) plus every landing/legal
+// route (captureStaticRoutes' slugs) — deliberately NOT '/style-preview'
+// (dev-only, import.meta.env.DEV-gated out of production, so a desktop
+// regression there never ships) or the bare '/app' static capture (the
+// pre-login gate screen — neither "a tab" nor "a landing route", and
+// already covered structurally by every app-tab view sharing its shell).
+const BASELINE_VIEWS = [
+  'home', 'pro', 'methodology', 'privacy', 'terms',
+  'app-dashboard', 'app-risk', 'app-montecarlo', 'app-frontier',
+  'app-valuation', 'app-compare', 'app-backtest', 'app-learn',
+]
+const BASELINE_DIR = path.join(ROOT, 'scripts', 'baselines', 'desktop')
+// The header/tab-bar row (48px tall, App.jsx; consistent across every
+// baselined view including the landing routes' own nav) renders with a
+// measurable amount of run-to-run subpixel antialiasing jitter purely from
+// two separate page loads swapping in the same web font slightly
+// differently — capture()'s own document.fonts.ready wait already exists
+// for a related font-swap timing issue but doesn't fully eliminate this;
+// confirmed empirically (two back-to-back captures of provably identical
+// code, zero source changes) that every pixel of drift in an otherwise
+// 0-pixel-diff view lived inside this band. Cropped out before comparing
+// rather than chasing a font-rendering determinism fix that has nothing to
+// do with layout, the thing this check actually exists to catch.
+const BASELINE_HEADER_CROP = 50
+// Noise floor — measured, not guessed (see the empirical method below),
+// then rounded up with real headroom. Two independent back-to-back capture
+// runs of identical code, cropped as above, diffed per view: 12 of 13
+// views landed at exactly 0px different at all three widths; a handful of
+// app tabs with recharts SVG paths (Compare, Backtest, Risk Analysis,
+// Monte Carlo) differed by up to 307px on a ~1366x1500px page — 0.031% —
+// traced to chart draw-on-mount finishing a frame apart between two page
+// loads even under reducedMotion:'reduce'. (A third, much larger outlier —
+// home at 1280, 0.6-0.9% — turned out not to be noise at all: a real,
+// separately-fixed bug in lib/motion/smoke-field.ts where a font-swap-
+// triggered resize cleared the hero's ambient canvas without repainting it
+// under reduced motion, visibly blanking the hero on an unlucky timing
+// race. Fixed at the source rather than absorbed into this floor — a
+// regression check with a floor wide enough to hide a blank hero isn't
+// protecting anything.) 0.15% clears the real worst-case noise (0.031%)
+// with ~5x headroom while staying under an order of magnitude below the
+// smallest genuine change measured in the same session (~0.18%, an icon
+// added to the header with nothing else touched).
+const BASELINE_NOISE_FLOOR_PCT = 0.15
+// Set once in main() from the parsed --update-baseline flag, read by
+// checkDesktopBaseline() below. A module-level flag rather than threading
+// a parameter through capture()/captureStaticRoutes()/captureAppViews()
+// (three signatures, every call site) for one run-wide setting that never
+// varies per view — matches how BASELINE_NOISE_FLOOR_PCT etc. above are
+// already read as shared config, not passed args.
+let UPDATE_BASELINE = false
 
 // ─── Static routes (client-side SPA paths reachable cold, no interaction) ──
 const DEFAULT_ROUTES = ['/', '/pro', '/methodology', '/app', '/privacy', '/terms', '/style-preview']
@@ -121,14 +212,21 @@ async function mockApiRoutes(page, fixtures) {
 function parseArgs(argv) {
   const opts = {}
   for (const arg of argv) {
-    const m = /^--([a-z]+)=(.*)$/.exec(arg)
-    if (m) opts[m[1]] = m[2]
+    // --key=value (original form) or a bare --key boolean flag (added for
+    // --update-baseline — a name-only switch has no natural value, and
+    // hyphens weren't allowed in the key at all before, so both the
+    // optional `=value` and `-` in `[a-z-]+` are new here).
+    const m = /^--([a-z-]+)(?:=(.*))?$/.exec(arg)
+    if (m) opts[m[1]] = m[2] !== undefined ? m[2] : true
   }
   return {
     routes: opts.routes ? opts.routes.split(',').map(r => r.trim()) : DEFAULT_ROUTES,
     widths: opts.widths ? opts.widths.split(',').map(Number) : DEFAULT_WIDTHS,
     base:   opts.base || process.env.SHOTS_BASE_URL || 'http://localhost:5173',
     out:    opts.out || 'screenshots',
+    // Explicit, separate invocation only — see BASELINE_DIR's own comment
+    // for why a plain `npm run shots` must never take this path.
+    updateBaseline: opts['update-baseline'] === true,
   }
 }
 
@@ -262,6 +360,84 @@ async function settleNetwork(page) {
   await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {})
 }
 
+// Compares one already-written screenshot against its committed baseline
+// (or writes/overwrites that baseline, in --update-baseline mode) — see the
+// BASELINE_* constants above for the full rationale. A no-op for any
+// (width, slug) pair outside BASELINE_WIDTHS x BASELINE_VIEWS, so calling
+// this unconditionally from capture() for every view is cheap and correct:
+// most calls return on the first line.
+async function checkDesktopBaseline(file, viewportLabel, slug, results) {
+  const width = Number(viewportLabel)
+  if (!BASELINE_WIDTHS.includes(width) || !BASELINE_VIEWS.includes(slug)) return
+
+  const baselineFile = path.join(BASELINE_DIR, String(width), `${slug}.png`)
+  const label = `${slug}-baseline`
+
+  if (UPDATE_BASELINE) {
+    mkdirSync(path.dirname(baselineFile), { recursive: true })
+    copyFileSync(file, baselineFile)
+    console.log(`  ok    ${viewportLabel.padEnd(20)} ${label.padEnd(20)} -> UPDATED ${path.relative(ROOT, baselineFile)}`)
+    results.push({ viewport: viewportLabel, view: label, baselineUpdated: true, ok: true })
+    return
+  }
+
+  if (!existsSync(baselineFile)) {
+    // A hard failure, not a skip: baselines are gitignored/local-only (see
+    // scripts/baselines/README.md — no CI runs this repo, so there's no
+    // consumer that needs them in git, and 34MB of PNGs re-added in full on
+    // every intentional desktop change would permanently bloat history).
+    // That means a fresh clone has none at all, which makes "missing" the
+    // normal first-run state, not an edge case — silently skipping the
+    // check here would silently skip it for every desktop view on every
+    // machine that hasn't generated baselines yet, which is exactly the
+    // "looks different and nothing catches it" gap this feature exists to
+    // close. Failing loudly is what forces a real baseline to exist before
+    // the check can pass at all.
+    console.error(`  FAIL  ${viewportLabel.padEnd(20)} ${label.padEnd(20)} no local baseline at ${path.relative(ROOT, baselineFile)} — baselines aren't committed (scripts/baselines/README.md). Generate them: check out a known-good commit, run \`npm run shots:update-baseline\`, then return to this branch.`)
+    results.push({ viewport: viewportLabel, view: label, baselineStatus: 'missing', baselineExceeded: true, ok: true })
+    return
+  }
+
+  const current  = PNG.sync.read(readFileSync(file))
+  const baseline = PNG.sync.read(readFileSync(baselineFile))
+
+  if (current.width !== baseline.width || current.height !== baseline.height) {
+    // A dimension change means the page got taller/shorter/narrower — real
+    // signal on its own, and pixelmatch can't compare mismatched buffers
+    // anyway, so this is its own failure mode rather than a 0-pixel no-op.
+    console.error(`  FAIL  ${viewportLabel.padEnd(20)} ${label.padEnd(20)} size changed: baseline ${baseline.width}x${baseline.height} -> current ${current.width}x${current.height} (review, then --update-baseline if intentional)`)
+    results.push({
+      viewport: viewportLabel, view: label, baselineExceeded: true, baselineDimensionMismatch: true,
+      baselineSize: `${baseline.width}x${baseline.height}`, currentSize: `${current.width}x${current.height}`,
+      ok: true,
+    })
+    return
+  }
+
+  const { width: w, height: h } = current
+  const cropH = h - BASELINE_HEADER_CROP
+  const cropRegion = (img) => {
+    const out = Buffer.alloc(w * cropH * 4)
+    img.data.copy(out, 0, w * BASELINE_HEADER_CROP * 4, w * h * 4)
+    return out
+  }
+
+  const diffPng = new PNG({ width: w, height: cropH })
+  const numDiff = pixelmatch(cropRegion(current), cropRegion(baseline), diffPng.data, w, cropH, { threshold: 0.1 })
+  const diffPct = (numDiff / (w * cropH)) * 100
+  const baselineExceeded = diffPct > BASELINE_NOISE_FLOOR_PCT
+
+  if (baselineExceeded) {
+    const diffFile = path.join(path.dirname(file), `${slug}-baseline-diff.png`)
+    writeFileSync(diffFile, PNG.sync.write(diffPng))
+    console.error(`  FAIL  ${viewportLabel.padEnd(20)} ${label.padEnd(20)} ${diffPct.toFixed(3)}% differs from baseline (floor ${BASELINE_NOISE_FLOOR_PCT}%) -> ${path.relative(ROOT, diffFile)}`)
+  } else {
+    console.log(`  ok    ${viewportLabel.padEnd(20)} ${label.padEnd(20)} -> ${diffPct.toFixed(4)}% (within ${BASELINE_NOISE_FLOOR_PCT}% floor)`)
+  }
+
+  results.push({ viewport: viewportLabel, view: label, baselineDiffPct: diffPct, baselineExceeded, ok: true })
+}
+
 async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
   // Web fonts (Geist Sans/Mono, index.html) load from a CDN — a screenshot
   // taken before they've swapped in uses a fallback font with different
@@ -288,6 +464,8 @@ async function capture(page, outDir, slug, viewportLabel, results, extra = {}) {
   const flags = [overflowsHorizontally && 'OVERFLOW', extra.tabClickForced && 'FORCED-CLICK'].filter(Boolean)
   const flagStr = flags.length ? `  [${flags.join(', ')}]` : ''
   console.log(`  ok    ${viewportLabel.padEnd(20)} ${slug.padEnd(20)} -> ${path.relative(ROOT, file)}${flagStr}`)
+
+  await checkDesktopBaseline(file, viewportLabel, slug, results)
 }
 
 // Real, REACHABLE horizontal scroll surfaces only — document.documentElement
@@ -888,14 +1066,16 @@ async function checkComparePrimaryActionsAt(browser, fixtures, base, vp, results
 }
 
 async function main() {
-  const { routes, widths, base, out } = parseArgs(process.argv.slice(2))
+  const { routes, widths, base, out, updateBaseline } = parseArgs(process.argv.slice(2))
   const viewports = viewportsFor(widths)
   const fixtures  = loadFixtures()
+  UPDATE_BASELINE = updateBaseline
 
   console.log(`Base: ${base}`)
   console.log(`Routes: ${routes.join(', ')}`)
   console.log(`Viewports: ${viewports.map(v => v.label).join(', ')}`)
   console.log(`Fixture tickers: ${fixtures.tickers.join(', ')}  benchmark: ${fixtures.benchmark}`)
+  if (UPDATE_BASELINE) console.log(`Desktop baseline: UPDATING (scripts/baselines/desktop) — captured screenshots will overwrite the committed baseline, not be checked against it`)
 
   const browser = await chromium.launch()
   const results = []
@@ -939,6 +1119,13 @@ async function main() {
   const unverifiedSwitches = results.filter(r => r.ok && r.tabSwitchVerified === false)
   const scrollEndUnreachable = results.filter(r => r.ok && r.endUnreachable)
   const primaryActionTapFailed = results.filter(r => r.view && r.view.startsWith('app-compare-tap-check') && (!r.ok || r.stateChanged === false))
+  // baselineMissing is its own bucket (clearer message: "generate one", not
+  // "differs by N%") even though it also sets baselineExceeded so the exit
+  // code still trips — baselineExceeded here is deliberately narrowed to
+  // excludes it so a missing baseline isn't reported in both sections.
+  const baselineMissing  = results.filter(r => r.ok && r.baselineStatus === 'missing')
+  const baselineExceeded = results.filter(r => r.ok && r.baselineExceeded && r.baselineStatus !== 'missing')
+  const baselineUpdated  = results.filter(r => r.ok && r.baselineUpdated)
   writeFileSync(path.join(ROOT, out, 'manifest.json'), JSON.stringify(results, null, 2))
 
   console.log(`\n${results.length - failed.length}/${results.length} screenshots written.`)
@@ -974,7 +1161,19 @@ async function main() {
     console.log(`\n${primaryActionTapFailed.length} primary-action-button tap check(s) failed — a real touch tap didn't produce the expected state change (see checkPrimaryActionTaps in this file):`)
     for (const p of primaryActionTapFailed) console.log(`  ${p.viewport.padEnd(20)} ${p.view.padEnd(28)} ${p.error || 'tapped, but state did not change as expected'}`)
   }
-  if (failed.length || unexpectedForced.length || unverifiedSwitches.length || touchOverflowing.length || scrollEndUnreachable.length || primaryActionTapFailed.length) process.exitCode = 1
+  if (baselineUpdated.length) {
+    console.log(`\n${baselineUpdated.length} local desktop baseline(s) updated (scripts/baselines/desktop, gitignored — not committed):`)
+    for (const b of baselineUpdated) console.log(`  ${b.viewport.padEnd(20)} ${b.view}`)
+  }
+  if (baselineMissing.length) {
+    console.log(`\n${baselineMissing.length} desktop baseline(s) missing (scripts/baselines/ is local-only, see its README) — check out a known-good commit, run \`npm run shots:update-baseline\`, then return to this branch:`)
+    for (const b of baselineMissing) console.log(`  ${b.viewport.padEnd(20)} ${b.view}`)
+  }
+  if (baselineExceeded.length) {
+    console.log(`\n${baselineExceeded.length} view(s) exceed the desktop baseline noise floor (${BASELINE_NOISE_FLOOR_PCT}%) — a real visual change against the local baseline, or an intentional one that needs --update-baseline:`)
+    for (const b of baselineExceeded) console.log(`  ${b.viewport.padEnd(20)} ${b.view.padEnd(28)} ${b.baselineDimensionMismatch ? `size ${b.baselineSize} -> ${b.currentSize}` : `${b.baselineDiffPct.toFixed(3)}% differs`}`)
+  }
+  if (failed.length || unexpectedForced.length || unverifiedSwitches.length || touchOverflowing.length || scrollEndUnreachable.length || primaryActionTapFailed.length || baselineExceeded.length || baselineMissing.length) process.exitCode = 1
 }
 
 main()

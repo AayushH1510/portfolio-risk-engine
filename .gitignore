@@ -9,5 +9,12 @@ portfolio-risk-ui/node_modules/
 portfolio-risk-ui/src/landing-theme.css
 portfolio-risk-ui/screenshots/
 portfolio-risk-ui/screenshots-*/
+# Desktop pixel-diff baselines (scripts/shots.mjs) — regenerated locally via
+# `npm run shots:update-baseline`, not committed: no CI runs this repo, so
+# there's no consumer that needs them in git, and 34MB of PNGs re-added in
+# full on every intentional desktop change would permanently bloat history.
+# scripts/baselines/README.md itself (how to (re)generate them) stays
+# tracked — only the generated images under desktop/ are ignored.
+portfolio-risk-ui/scripts/baselines/desktop/
 
 .vercel
