@@ -185,7 +185,6 @@ export default function App() {
       />
 
       <OnboardingTour onActiveChange={setTourActive} />
-      <FeedbackButton user={user} />
 
       {/* Backdrop — only visible/interactive below 1024px (.sidebar-backdrop,
           index.css); mounting it unconditionally on sidebarOpen is safe
@@ -274,6 +273,8 @@ export default function App() {
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
+            <FeedbackButton user={user} />
+
             {hasRun && (
               <div className="header-export-actions">
                 <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} />

@@ -385,6 +385,33 @@ body {
   inset: -11px;
 }
 
+/* Header feedback icon (FeedbackButton.jsx) — see that file's own comment
+   for why this replaced a position:fixed bottom-right bubble. Same visual
+   footprint as .header-account-indicator just above (22x22 glyph, 44x44
+   tap target via the identical ::before{inset:-11px} pattern), but visible
+   at every width rather than swapping with a text-label sibling — there's
+   no wider "expanded" form of this control to hide/show between, just the
+   one icon, so unlike .header-account-actions/-indicator it needs no
+   compact-viewport pairing at all. */
+.header-feedback-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.header-feedback-btn::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+}
+
 /* App shell root (App.jsx) — 100vh first as the universal fallback, then
    100dvh as a progressive-enhancement override: unsupported browsers keep
    the 100vh rule (the later, unrecognized declaration is simply ignored),
@@ -486,60 +513,32 @@ aside.sidebar-shell.sidebar-open {
 
 /* App footer (App.jsx) — padding lives here, not inline, for the usual
    inline-always-wins reason (a padding shorthand set inline would
-   permanently shadow this).
-   padding-right:104px (FeedbackButton.jsx's bubble is position:fixed,
-   bottom:20/right:20, 48x48 — its own box spans x:[viewportWidth-68,
-   viewportWidth-20]: 48 width + 20 right offset, plus a 16px margin = 84,
-   added to the original 20px right padding = 104) was compact-viewport-
-   only at first — the request that added it was explicitly scoped to
-   phone width, and a real overlap already existed at 1280px+ on the
-   *original* code too but was flagged and deliberately left alone rather
-   than fixed. A later pass ("the feedback button crowds its surroundings
-   at both 384px and 1440px") found that exact desktop overlap still live
-   — confirmed via a fresh survey, not assumed from the old note: "Privacy"/
-   "Terms" sat under the bubble's box on every single app tab at 1440px.
-   Made universal here rather than re-adding a second compact-scoped
-   override, since the fix is the same at every width — see
-   .tab-scroll-root's own comment below for the matching right-side
-   reservation this pairs with. */
+   permanently shadow this). Reproduces the original inline value exactly.
+
+   Previously carried a padding-right reservation (104px, then a universal
+   84px-over-20px) to keep this row's own text clear of FeedbackButton.jsx's
+   fixed bottom-right bubble. That bubble is gone — it's a header icon now
+   (FeedbackButton.jsx, .header-feedback-btn above) — so there's nothing
+   left at the bottom-right of the viewport for this footer to clear, and
+   no reason for the row to be any narrower than its own content needs. */
 .app-footer {
-  padding: 6px 104px 6px 20px;
+  padding: 6px 20px;
 }
 
-/* Every tab's own overflowY:'auto' scroll root (.tab-scroll-root, one
-   shared class so this lives in exactly one place rather than 9 near-
-   identical copies — 8 pages plus CompareWrapper.jsx) reserves clearance
-   from FeedbackButton.jsx's bubble on two axes, not one:
-   padding-bottom:84px (68px button footprint + 16px margin, same as
-   .app-footer's own math above) was compact-viewport-only at first —
-   it's what lets a tab's true last content clear the bubble once actually
-   scrolled to the end. Made universal for the same reason as .app-footer
-   above: a tall tab at desktop width can reach the bubble's row too, and
-   the mechanism doesn't stop being correct just because the viewport got
-   wider.
-   padding-right:84px is new, not a widened copy of the same fix — a
-   different failure mode padding-bottom can't reach at all. A survey
-   ("what does the bubble sit near or over, on every tab") found real
-   content — chart axis tick labels, table/metric-grid cells, InsightBox
-   text — sitting directly under the bubble on nearly every tab at both
-   384px and 1440px, and not only once scrolled to a tab's true end: for a
-   tab short enough to fit without scrolling (or simply not yet scrolled
-   that far), its content renders in normal top-down flow and trailing
-   bottom padding never moves anything that was already positioned above
-   it — there's nothing to "scroll past" if the page was never scrolled at
-   all. Only a permanent reservation in the content's own width, present
-   at every row and every scroll position, closes that gap: no tab's
-   content can ever lay out into the bubble's column in the first place.
-   Confirmed this is what real content was doing, not assumed: Monte
-   Carlo's trading-day axis ticks, Backtest's year-by-year table's last
-   cell, Valuation's Gross Margin column, Frontier's Optimal-weights value,
-   RiskAnalysis's Information Ratio card and (at 1440px) its InsightBox
-   toggle button — all measured landing inside the bubble's own box before
-   this fix, on the unmodified code. */
-.tab-scroll-root {
-  padding-bottom: 84px;
-  padding-right: 84px;
-}
+/* .tab-scroll-root (one shared class marking every tab's own
+   overflowY:'auto' scroll root — 8 pages plus CompareWrapper.jsx, each
+   setting overflowY inline, this class only ever existed as a CSS hook for
+   padding) used to reserve clearance from FeedbackButton.jsx's fixed
+   bottom-right bubble: padding-bottom so a tab's true last content could
+   scroll clear of it, then — for one commit (827b2c43), the regression
+   this reverts — a padding-right too, reserving an 84px-wide dead strip
+   down the full height of every tab, at every width, whether or not any
+   real content ever actually sat near the bubble's corner (it didn't, on
+   most tabs, most of the time). Both are gone along with the class: the
+   bubble itself moved into the header (FeedbackButton.jsx,
+   .header-feedback-btn above) and no longer floats over page content at
+   all, on any tab, at any scroll position — there is nothing left to
+   reserve space for. */
 
 /* Sidebar resize handle (Sidebar.jsx) — mouse-only drag (no touch
    equivalent), so hide it specifically on coarse-pointer devices rather

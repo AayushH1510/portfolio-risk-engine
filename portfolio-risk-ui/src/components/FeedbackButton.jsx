@@ -47,20 +47,24 @@ export default function FeedbackButton({ user }) {
 
   return (
     <>
+      {/* Header icon, not a floating bottom-right bubble — see index.css's
+          .header-feedback-btn for why: a position:fixed bubble sat on top
+          of whatever real content happened to render underneath its 48x48
+          corner, which varies by tab and by data (a chart line, a table
+          cell, an InsightBox toggle, ordinary paragraph text — measured
+          across every tab, not assumable as a fixed short list), so no
+          padding reservation sized to the bubble could ever be both correct
+          and cheap. A control that's part of the header's own layout flow
+          never overlaps page content in the first place, on any tab, at any
+          scroll position — the class it shares with .header-account-
+          indicator (22x22 visible glyph, 44x44 tap target via the same
+          ::before{inset} pattern) rather than inventing a new size. */}
       <button
+        className="header-feedback-btn"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
-        style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 500,
-          width: 48, height: 48,
-          background: 'var(--signal-positive)', border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', transition: 'transform 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
       >
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
         </svg>
       </button>
@@ -70,7 +74,7 @@ export default function FeedbackButton({ user }) {
           style={{
             position: 'fixed', inset: 0, zIndex: 1000,
             background: 'rgba(var(--black-rgb),0.6)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
             padding: 20,
           }}
           onClick={reset}
