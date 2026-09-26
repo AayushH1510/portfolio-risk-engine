@@ -1,6 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+// react, not /next — this is Vite, not Next.js. The Vercel dashboard's
+// setup instructions default to the Next.js import; that one silently
+// does nothing here (no Next.js router to hook into).
+import { Analytics } from '@vercel/analytics/react'
 import '@fontsource/newsreader/200.css'
 import '@fontsource/newsreader/200-italic.css'
 import '@fontsource/newsreader/300.css'
@@ -38,5 +42,11 @@ createRoot(document.getElementById('root')).render(
         {import.meta.env.DEV && <Route path="/style-preview" element={<StylePreview />} />}
       </Routes>
     </BrowserRouter>
+    {/* Mounted once here, not per-route — one script for every route this
+        app has, landing pages and /app alike. Tracks page views on actual
+        URL changes only (BrowserRouter navigations); switching tabs inside
+        /app is React state, not a route change, so it won't register as a
+        page view — that's expected, not a gap, per the request. */}
+    <Analytics />
   </StrictMode>,
 )

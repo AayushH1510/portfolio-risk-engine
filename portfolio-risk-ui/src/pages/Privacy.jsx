@@ -2,7 +2,7 @@ import { TrustPage, TrustSection } from '../components/LandingLayout'
 
 export default function Privacy() {
   return (
-    <TrustPage title="Privacy Policy" updated="September 3, 2026">
+    <TrustPage title="Privacy Policy" updated="September 25, 2026">
       <TrustSection heading="What we collect">
         <p style={{ marginBottom: 12 }}>
           If you sign in, we collect your <strong>email address</strong> through Supabase Authentication -
@@ -13,6 +13,12 @@ export default function Privacy() {
           along with the portfolio value and time period you configured. That's it - we don't collect
           your name, address, phone number, or anything else beyond what's needed to make "saved portfolios"
           work.
+        </p>
+        <p style={{ marginBottom: 12 }}>
+          We use <strong>Vercel Web Analytics</strong> to see how many people visit the site and which
+          pages they land on. It's anonymous and cookieless - it doesn't use tracking cookies, doesn't
+          build a profile of you across visits, and isn't linked to your account or email even if you're
+          signed in.
         </p>
         <p>
           We do not collect any payment information, because Varense does not currently process payments.
