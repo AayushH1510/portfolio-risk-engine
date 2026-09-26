@@ -885,19 +885,44 @@ aside.sidebar-shell.sidebar-open {
 
 /* ═══════════════════════════════════════════════════════════════════════
    COMPACT VIEWPORT — every rule below, until the closing brace, is gated
-   on the exact same condition: `(max-width: 767px), (max-height: 767px)`,
-   i.e. "this is a phone, in either orientation." Dual-axis, not
-   width-only: a landscape phone (A54: 852x393, iPhone 14/15/16: 852x393)
-   has a width well past 767px but is still a phone — min(width, height)
-   <= 767 is what actually identifies one, and that's equivalent to this
-   OR (if either axis is <=767, the smaller one is), while excluding a
-   landscape tablet (1024x768: neither axis qualifies) and real laptop
-   viewports (1366x768, 1280x800: same).
+   on the exact same condition: `(max-width: 767px), (max-height: 500px)
+   and (pointer: coarse)`, i.e. "this is a phone, in either orientation."
+
+   REGRESSION, fixed here: the height clause used to be a bare
+   `(max-height: 767px)`. That was meant to catch a landscape phone (A54:
+   852x393, iPhone 14/15/16: 852x393) — width well past 767px, but still a
+   phone — without also requiring width<=767. It also, unintentionally,
+   caught any ordinary laptop browser window under 768px tall, which is
+   common, not rare: a real 1920x1080 laptop at 125% Windows display
+   scaling reports a ~1536x864 logical viewport before browser chrome, and
+   chrome (tabs, address bar, bookmarks bar) alone routinely eats another
+   ~130px — landing well inside "max-height: 767px." Confirmed live, not
+   theoretical: a 1536x730 browser window rendered the full phone layout
+   (Dashboard and Risk Analysis fully stacked, Risk Analysis's folded "95%
+   VaR"-style labels) on a laptop, no phone involved. 767px was never a
+   real landscape-phone height (those are ~380-430px) — it was copied from
+   the width clause's own number, which happened to also bound every
+   laptop viewport this project had tested against, full-height and
+   chrome-free.
+
+   The fix narrows the height clause on two axes at once, both required
+   together (`and`, not another `,`-joined OR): max-height:500px — real
+   landscape phones (~380-430px) clear this with headroom, while even a
+   cramped laptop browser window rarely drops under it — AND
+   pointer:coarse, which a touchscreen reports and a mouse/trackpad-driven
+   laptop never does, independent of window height. A short desktop window
+   (resizing Chrome down for a screenshot, say) has pointer:fine and no
+   longer matches no matter how short it gets. The width clause
+   (max-width:767px) is untouched — phone *portrait* was never the buggy
+   half, only the height-alone OR was over-broad. Landscape tablet
+   (1024x768) and real laptop viewports (1366x650, 1280x800, 1536x730,
+   1920x970 — the last three specifically added to the harness because of
+   this regression) all correctly fail both clauses now.
 
    COMPACT_VIEWPORT_QUERY in lib/breakpoints.js is the JS-side twin of
    this condition (Dashboard.jsx's isCompactViewport, gating the
    growth-chart expand control) — that module is the one canonical
-   definition; this 767 is the CSS-side copy kept in sync with it by hand,
+   definition; this is the CSS-side copy kept in sync with it by hand,
    since plain media-query conditions can't read a custom property or
    import a JS value (see --breakpoint-phone's own comment above for the
    custom-property half of that limitation). This codebase doesn't run
@@ -919,7 +944,7 @@ aside.sidebar-shell.sidebar-open {
    inside this same block (see the RiskGauge subsection near the bottom)
    rather than opening a new @media.
    ═══════════════════════════════════════════════════════════════════════ */
-@media (max-width: 767px), (max-height: 767px) {
+@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
   /* ─── Header account controls -> drawer (App.jsx / Sidebar.jsx) ───
      The header's sign-in/account text controls hide, the icon-only
      indicator takes their place (opens the drawer), and the drawer's own

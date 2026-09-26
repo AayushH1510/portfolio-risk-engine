@@ -18,14 +18,18 @@
 // hitting the real backend, so results.json/full/fundamentals never change
 // between two runs of this script.
 //
-// Desktop baseline regression: every 1280/1366/1440 capture of a fixed view
-// set (BASELINE_VIEWS below) is pixel-diffed against a committed screenshot
-// in scripts/baselines/desktop/ and FAILS THE RUN (nonzero exit) if it
-// drifts past a documented noise floor — see the BASELINE_* constants for
-// the full rationale and the empirical method behind the floor. This is
+// Desktop baseline regression: every capture at a BASELINE_VIEWPORT_LABELS
+// viewport (full-height 1280/1366/1440 plus the chrome-realistic
+// 1366x650/1536x730/1920x970 added alongside DESKTOP_CHROME_VIEWPORTS) of a
+// fixed view set (BASELINE_VIEWS below) is pixel-diffed against a committed
+// screenshot in scripts/baselines/desktop/ and FAILS THE RUN (nonzero exit)
+// if it drifts past a documented noise floor — see the BASELINE_* constants
+// for the full rationale and the empirical method behind the floor. This is
 // what makes it a required step rather than something run by hand: a plain
-// `npm run shots` already sweeps 1280/1366/1440 by default, so the check
-// runs every time, with no separate flag needed to opt in.
+// `npm run shots` already sweeps every one of those viewports by default
+// (DESKTOP_CHROME_VIEWPORTS, like LANDSCAPE_VIEWPORTS, isn't gated behind
+// --widths), so the check runs every time, with no separate flag needed to
+// opt in.
 //
 // Usage:
 //   npm run shots
@@ -44,6 +48,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PNG } from 'pngjs'
 import pixelmatch from 'pixelmatch'
+import { COMPACT_VIEWPORT_QUERY } from '../src/lib/breakpoints.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT      = path.resolve(__dirname, '..')
@@ -71,7 +76,11 @@ const FIXTURES_DIR = path.join(__dirname, 'fixtures')
 // state on a fresh clone, not an edge case — checkDesktopBaseline() below
 // FAILS the run when one is missing rather than skipping the check, so
 // "no baseline yet" can't quietly mean "not actually checked."
-const BASELINE_WIDTHS = [1280, 1366, 1440]
+// Viewport LABELS (not raw widths — a plain width can't distinguish the
+// existing full-height "1366" from the chrome-realistic "1366x650" added
+// alongside DESKTOP_CHROME_VIEWPORTS above, and baselining only the latter
+// would leave the exact regression this harness gap caused unchecked).
+const BASELINE_VIEWPORT_LABELS = ['1280', '1366', '1440', '1366x650', '1536x730', '1920x970']
 // Every app tab (captureAppViews' own slugs) plus every landing/legal
 // route (captureStaticRoutes' slugs) — deliberately NOT '/style-preview'
 // (dev-only, import.meta.env.DEV-gated out of production, so a desktop
@@ -145,12 +154,51 @@ const DEFAULT_WIDTHS = [320, 360, 384, 393, 440, 768, 1024, 1280, 1366, 1440]
 // One explicit landscape viewport — the portrait/landscape pair of the same
 // physical phone (393x852 portrait above), since width-only sweeps never
 // catch a phone rotated sideways into a short, wide viewport.
-const LANDSCAPE_VIEWPORTS = [{ label: '852x393-landscape', width: 852, height: 393 }]
+//
+// touch:true — load-bearing since COMPACT_VIEWPORT_QUERY's height clause
+// started requiring `pointer: coarse` (lib/breakpoints.js's own postmortem):
+// this viewport's width (852) clears max-width:767px, so it only ever
+// qualifies as compact through the height+pointer clause, and Playwright
+// contexts default to pointer:fine (mouse-like) unless hasTouch is set.
+// Without this, main()'s sweep would capture 852x393 with the *desktop*
+// layout — silently un-testing the one real landscape-phone case this
+// harness exists to catch, the same class of gap the whole
+// DESKTOP_CHROME_VIEWPORTS addition below is closing from the other
+// direction. See checkComparePrimaryActionsAt's own context (below) for
+// the established, deliberately-isolated way this codebase already sets
+// hasTouch — main()'s loop reads this flag per-viewport rather than
+// setting hasTouch globally for the same reason that one stayed isolated:
+// it flips pointer/hover for the whole context, which would silently
+// change hover-vs-touch rendering (lib/pointer.js's supportsHover) on
+// every OTHER viewport sharing it if set broadly instead of per-viewport.
+const LANDSCAPE_VIEWPORTS = [{ label: '852x393-landscape', width: 852, height: 393, touch: true }]
+// Desktop viewports with realistic browser chrome subtracted, not the
+// full, chrome-free device heights HEIGHT_FOR_WIDTH uses above (can't just
+// add these to that map — it's one height per width, and 1366 already has
+// an entry at 768). Added directly because of a real regression: a
+// compact-viewport bug keyed to *window* height (see
+// lib/breakpoints.js's own postmortem on COMPACT_VIEWPORT_QUERY) passed
+// every check this harness ran, because every desktop viewport it swept
+// was a full device height with zero chrome — nothing here had ever
+// exercised "a real browser window, chrome included." These three
+// reproduce actual reported cases: 1366x650 (a common 1366-wide laptop
+// panel with ordinary browser chrome), 1536x730 (a 1920x1080 physical
+// laptop at 125% Windows display scaling — the exact viewport the
+// regression shipped on), and 1920x970 (a 1920x1080 panel at 100% scaling
+// with chrome). Always included, like LANDSCAPE_VIEWPORTS above — not
+// gated behind --widths — so this gap can't be silently re-opened by an
+// invocation that doesn't happen to ask for them.
+const DESKTOP_CHROME_VIEWPORTS = [
+  { label: '1366x650', width: 1366, height: 650 },
+  { label: '1536x730', width: 1536, height: 730 },
+  { label: '1920x970', width: 1920, height: 970 },
+]
 
 function viewportsFor(widths) {
   return [
     ...widths.map(w => ({ label: String(w), width: w, height: HEIGHT_FOR_WIDTH[w] ?? 900 })),
     ...LANDSCAPE_VIEWPORTS,
+    ...DESKTOP_CHROME_VIEWPORTS,
   ]
 }
 
@@ -363,14 +411,13 @@ async function settleNetwork(page) {
 // Compares one already-written screenshot against its committed baseline
 // (or writes/overwrites that baseline, in --update-baseline mode) — see the
 // BASELINE_* constants above for the full rationale. A no-op for any
-// (width, slug) pair outside BASELINE_WIDTHS x BASELINE_VIEWS, so calling
-// this unconditionally from capture() for every view is cheap and correct:
-// most calls return on the first line.
+// (viewportLabel, slug) pair outside BASELINE_VIEWPORT_LABELS x
+// BASELINE_VIEWS, so calling this unconditionally from capture() for every
+// view is cheap and correct: most calls return on the first line.
 async function checkDesktopBaseline(file, viewportLabel, slug, results) {
-  const width = Number(viewportLabel)
-  if (!BASELINE_WIDTHS.includes(width) || !BASELINE_VIEWS.includes(slug)) return
+  if (!BASELINE_VIEWPORT_LABELS.includes(viewportLabel) || !BASELINE_VIEWS.includes(slug)) return
 
-  const baselineFile = path.join(BASELINE_DIR, String(width), `${slug}.png`)
+  const baselineFile = path.join(BASELINE_DIR, viewportLabel, `${slug}.png`)
   const label = `${slug}-baseline`
 
   if (UPDATE_BASELINE) {
@@ -881,13 +928,23 @@ async function captureAppViews(page, fixtures, base, outDir, viewportLabel, resu
     // header-account-controls pass) in favour of an icon-only indicator that
     // opens the drawer; the real Sign in control lives in the sidebar there
     // instead (.sidebar-account-actions). Checking window.matchMedia against
-    // the same dual-axis condition the app itself uses (rather than parsing
-    // viewportLabel) is what keeps this in sync with the app's own
-    // definition instead of drifting into a second, hand-maintained copy of
-    // "767" — see index.css's own "Compact viewport" banner comment for why
-    // that drift is exactly the bug class this project has hit before.
-    const isCompactViewport = await page.evaluate(() =>
-      window.matchMedia('(max-width: 767px), (max-height: 767px)').matches
+    // COMPACT_VIEWPORT_QUERY — imported from lib/breakpoints.js, not
+    // hand-copied — is what keeps this in sync with the app's own
+    // definition. This WAS a hand-copied `'(max-width: 767px), (max-height:
+    // 767px)'` literal, and it drifted exactly as the surrounding comment
+    // warned it would: when COMPACT_VIEWPORT_QUERY was narrowed to fix a
+    // real regression (see lib/breakpoints.js's own postmortem), this copy
+    // didn't get updated, so this harness went on believing 1366x650 and
+    // 1536x730 were compact viewports after the app itself had stopped
+    // agreeing — surfaced as a hard failure (the hamburger it tried to
+    // click is display:none in the app's actual, corrected desktop layout
+    // at those sizes), not a silent pass, but only because this script
+    // happens to assert the click succeeded. Importing the query directly
+    // is what makes a second drift structurally impossible instead of just
+    // documented against.
+    const isCompactViewport = await page.evaluate(
+      (query) => window.matchMedia(query).matches,
+      COMPACT_VIEWPORT_QUERY
     )
     if (isCompactViewport) {
       const hamburger = page.locator('.sidebar-hamburger')
@@ -1087,9 +1144,13 @@ async function main() {
     // reducedMotion:'reduce' -> matchMedia('(prefers-reduced-motion: reduce)')
     // is true for every page in this context, so the Frontier "Optimal"
     // marker renders its resting frame instead of the rAF pulse.
+    // hasTouch only for viewports flagged touch:true (LANDSCAPE_VIEWPORTS —
+    // see its own comment) rather than context-wide, so every other
+    // viewport's hover-capable rendering stays exactly as it was.
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       reducedMotion: 'reduce',
+      ...(vp.touch ? { hasTouch: true } : {}),
     })
     const page = await context.newPage()
 

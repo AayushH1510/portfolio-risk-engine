@@ -6,29 +6,41 @@ separate flag needed — see `shots.mjs`'s own top comment and its
 derivation).
 
 ```
-desktop/<1280|1366|1440>/<view>.png
+desktop/<1280|1366|1440|1366x650|1536x730|1920x970>/<view>.png
 ```
 
-13 views × 3 widths = 39 files: every landing/legal route (`home`, `pro`,
+13 views × 6 viewports = 78 files: every landing/legal route (`home`, `pro`,
 `methodology`, `privacy`, `terms`) and every app tab (`app-dashboard`,
 `app-risk`, `app-montecarlo`, `app-frontier`, `app-valuation`,
-`app-compare`, `app-backtest`, `app-learn`).
+`app-compare`, `app-backtest`, `app-learn`). Three of the six viewports
+(`1280`, `1366`, `1440`) are full device heights with no browser chrome;
+the other three (`1366x650`, `1536x730`, `1920x970`) subtract realistic
+chrome — see `shots.mjs`'s `DESKTOP_CHROME_VIEWPORTS` for exactly why both
+kinds are needed, not just the chrome-free ones.
 
-**Why this exists:** two real regressions — a universal padding that
-shrank every app tab's content, and an avatar that rendered when it
-shouldn't have — both shipped clean through every other check this harness
-runs (overflow measurement, scroll-reachability, tab-switch verification,
-touch taps). Neither one moved a number any existing check was looking at;
-they only ever looked wrong. This is the check for "looks different,"
-independent of whatever metric a future regression happens to avoid moving.
+**Why this exists:** three real regressions shipped clean through every
+other check this harness runs (overflow measurement, scroll-reachability,
+tab-switch verification, touch taps) — a universal padding that shrank
+every app tab's content, an avatar that rendered when it shouldn't have,
+and a compact-viewport media query keyed to window *height* that fired on
+any laptop window under 768px tall (common, once real browser chrome and
+display scaling are in the picture — see `lib/breakpoints.js`'s own
+postmortem on `COMPACT_VIEWPORT_QUERY`). None of the three moved a number
+any existing check was looking at; they only ever looked wrong. This is
+the check for "looks different," independent of whatever metric a future
+regression happens to avoid moving — and the chrome-realistic viewports
+specifically exist because the first two regressions were caught by
+pixel-diffing, while the third slipped past pixel-diffing too, since every
+desktop viewport being diffed was a full, chrome-free device height no
+real browser window has.
 
 ## Local-only — not committed
 
 `desktop/` is gitignored (this README isn't — it's the one file in this
 directory git tracks). There's no CI running this repo, so nothing outside
 your own machine ever needs these images, and `npm run shots:update-baseline`
-re-writes every one of the 39 PNGs (~34MB) on every intentional desktop
-change — committed, that's the full 34MB added again, in full, each time,
+re-writes every one of the 78 PNGs (~71MB) on every intentional desktop
+change — committed, that's the full ~71MB added again, in full, each time,
 permanently bloating history for a benefit (a `git diff` you can eyeball)
 that has no one to serve here.
 
