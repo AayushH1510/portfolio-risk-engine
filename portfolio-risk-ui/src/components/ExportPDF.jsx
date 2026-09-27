@@ -235,9 +235,12 @@ function ReportTemplate({ data, tickers, weights }) {
   )
 }
 
-export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
-  if (!data) return null
-
+// Extracted from the button component below so ExportMenu.jsx (the combined
+// desktop "Export" trigger, RESPONSIVE_AUDIT's 1280px nav-fit fix) can fire
+// the identical PDF flow without a second copy of buildReportHTML/handlePrint
+// — ExportPDF itself keeps rendering its own full button for the sidebar
+// drawer's two-button layout, which was never the width-constrained case.
+export function runExportPDF({ data, tickers, weights }) {
   const buildReportHTML = () => {
     const d    = data
     const cum  = d.cumulative_returns
@@ -431,10 +434,9 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
     `
   }
 
-  const handlePrint = () => {
-    const win = window.open('', '_blank', 'width=1100,height=900')
-    const reportHTML = buildReportHTML()
-    win.document.write(`
+  const win = window.open('', '_blank', 'width=1100,height=900')
+  const reportHTML = buildReportHTML()
+  win.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -525,30 +527,31 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue }) {
       </html>
     `)
     win.document.close()
-  }
+}
+
+export default function ExportPDF({ data, tickers, weights }) {
+  if (!data) return null
 
   return (
-    <>
-      <button
-        onClick={handlePrint}
-        style={{
-          display:'flex', alignItems:'center', gap:6,
-          fontSize:'var(--text-body-sm)', fontWeight:'var(--weight-medium)', padding:'6px 14px',
-          border:'var(--border-default)', fontFamily:'var(--font-primary)',
-          background:'transparent',
-          color:'var(--text-primary)', cursor:'pointer',
-          transition:'all var(--duration-fast) var(--ease-standard)', letterSpacing:'0.02em',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background='var(--surface-elevated)'; e.currentTarget.style.borderColor='var(--line-emphasis)' }}
-        onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='var(--line-hairline)' }}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Export PDF
-      </button>
-    </>
+    <button
+      onClick={() => runExportPDF({ data, tickers, weights })}
+      style={{
+        display:'flex', alignItems:'center', gap:6,
+        fontSize:'var(--text-body-sm)', fontWeight:'var(--weight-medium)', padding:'6px 14px',
+        border:'var(--border-default)', fontFamily:'var(--font-primary)',
+        background:'transparent',
+        color:'var(--text-primary)', cursor:'pointer',
+        transition:'all var(--duration-fast) var(--ease-standard)', letterSpacing:'0.02em',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background='var(--surface-elevated)'; e.currentTarget.style.borderColor='var(--line-emphasis)' }}
+      onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='var(--line-hairline)' }}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export PDF
+    </button>
   )
 }

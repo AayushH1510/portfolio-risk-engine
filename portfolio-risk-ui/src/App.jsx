@@ -11,8 +11,7 @@ import Valuation from './pages/Valuation'
 import Backtest from './pages/Backtest'
 import Learn from './pages/Learn'
 import AuthModal from './components/AuthModal'
-import ExportPDF from './components/ExportPDF'
-import ExportCSV from './components/ExportCSV'
+import ExportMenu from './components/ExportMenu'
 import CompareWrapper from './components/CompareWrapper'
 import StockDrawer from './components/StockDrawer'
 import OnboardingTour from './components/OnboardingTour'
@@ -21,6 +20,7 @@ import { useComparison } from './hooks/useComparison'
 import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
 import { useAuth } from './hooks/useAuth'
+import { supportsFinePointer } from './lib/pointer'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -127,6 +127,34 @@ export default function App() {
     const activeEl  = tabRefs.current[activeTab]
     if (container && activeEl) container.scrollLeft = activeEl.offsetLeft
   }, [activeTab])
+
+  // Mouse-wheel reachability for the tab bar (RESPONSIVE_AUDIT.md's 1280px
+  // nav-fit fix, item 2). `overflowX:'auto'` already scrolls by touch-drag,
+  // but a plain vertical wheel gesture over it scrolls the *page*, not the
+  // nav — a mouse/trackpad user had no gesture at all that reached a tab
+  // past the visible edge. (pointer: fine) only, computed once at module
+  // load (lib/pointer.js — same convention as supportsHover): touch
+  // behaviour is completely untouched, this only adds a second input path
+  // for a pointer type that previously had none.
+  useEffect(() => {
+    if (!supportsFinePointer) return
+    const container = tabBarRef.current
+    if (!container) return
+
+    const handleWheel = (e) => {
+      if (container.scrollWidth <= container.clientWidth) return
+      // Only take over a predominantly-vertical gesture — a trackpad's own
+      // native horizontal scroll (deltaX already the larger component) is
+      // left alone, so this never fights an input that can already move
+      // the row by itself.
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      e.preventDefault()
+      container.scrollLeft += e.deltaY
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [])
 
   // Open the drawer the moment the tour starts. A no-op visually at
   // 1024px+ (CSS ignores sidebarOpen there), so this doesn't need its own
@@ -242,7 +270,7 @@ export default function App() {
             style={{
               display: 'flex', gap: 0, height: '100%', alignItems: 'stretch',
               overflowX: 'auto', flex: 1, minWidth: 0, position: 'relative',
-              scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x proximity',
+              WebkitOverflowScrolling: 'touch', scrollSnapType: 'x proximity',
             }}
           >
             {TABS.map(tab => {
@@ -278,8 +306,7 @@ export default function App() {
 
             {hasRun && (
               <div className="header-export-actions">
-                <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} />
-                <ExportCSV data={data} tickers={tickers} weights={weights} />
+                <ExportMenu data={data} tickers={tickers} weights={weights} />
               </div>
             )}
 

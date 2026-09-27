@@ -64,27 +64,31 @@ function buildCSV(data) {
   return lines.join('\n')
 }
 
+// Extracted so ExportMenu.jsx (the combined desktop "Export" trigger,
+// RESPONSIVE_AUDIT's 1280px nav-fit fix) can fire the identical CSV download
+// without a second copy of buildCSV/the download-link dance — ExportCSV
+// itself keeps rendering its own full button for the sidebar drawer.
+export function runExportCSV({ data, tickers, weights }) {
+  const csv  = buildCSV(data, tickers, weights)
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const date = new Date().toISOString().slice(0, 10)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `varense-portfolio-${date}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export default function ExportCSV({ data, tickers, weights }) {
   if (!data) return null
 
-  const handleExport = () => {
-    const csv  = buildCSV(data, tickers, weights)
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const date = new Date().toISOString().slice(0, 10)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `varense-portfolio-${date}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
   return (
     <button
-      onClick={handleExport}
+      onClick={() => runExportCSV({ data, tickers, weights })}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
         fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)', padding: '6px 14px',

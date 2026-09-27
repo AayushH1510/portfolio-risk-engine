@@ -71,6 +71,62 @@ this file's "If a check fails" section below always has — the point of
 today's recapture wasn't to lower the bar, it was to make sure the bar was
 actually measuring the right thing again.
 
+## Re-captured 2026-09-27, again — 1280px nav fit + mouse-wheel reachability
+
+A same-day follow-up to the recapture above, not a second regression —
+this one is a deliberate header change, not a fix for drift the baselines
+missed. The previous recapture closed the nav-overflow gap at 1366px
+exactly (742/742px) but explicitly left 1280px short (147px → 83px,
+flagged at the time as out of scope) and left mouse users with no way to
+reach an overflowed tab at all if the row ever did overflow (the nav's
+horizontal scroll only ever worked by touch-drag — a hidden scrollbar with
+no other affordance). Two changes:
+
+- **Export PDF and Export CSV combined into one "Export" menu**
+  (`ExportMenu.jsx`) — a single trigger that opens a small, keyboard-
+  accessible, zero-radius/hairline-border menu with both options, applied
+  at every desktop width (not gated behind its own breakpoint, so the
+  header reads the same way at 1280px as at 1920px). This alone recovers
+  enough header width that **1280px now fits all eight tabs with zero
+  nav overflow** — confirmed by direct measurement
+  (`scrollWidth === clientWidth`), not just visually. `ExportPDF.jsx` and
+  `ExportCSV.jsx` keep their original full-button exports for the sidebar
+  drawer (`.sidebar-export-actions`, phone/tablet) — that surface was
+  never the width-constrained one, so there was no reason to collapse it
+  there too. Both files now also export a plain `runExportPDF`/
+  `runExportCSV` function (the PDF-popup / CSV-download logic itself,
+  unchanged) so the menu and the standalone buttons share one
+  implementation instead of two.
+- **Mouse-wheel-to-horizontal-scroll on the tab bar, `(pointer: fine)`
+  only** — a vertical wheel gesture over `nav.tab-bar-scroll` now scrolls
+  the row itself instead of the page, and the row gets a real, thin,
+  visible scrollbar whenever it overflows (`::-webkit-scrollbar`/
+  `scrollbar-width: thin`, gated the same way) instead of the permanently
+  hidden one every other viewport still correctly keeps. This is the
+  reachability *guarantee* the fit fix above doesn't cover on its own —
+  verified by deliberately shrinking to a width that still overflows even
+  after the Export-menu fix (1024px) and confirming a wheel gesture moves
+  `scrollLeft`. Touch is completely untouched: `(pointer: fine)` doesn't
+  match a touchscreen, so phone and 852×393 landscape keep the exact same
+  hidden-scrollbar, drag-to-scroll behaviour they had before this change,
+  confirmed both by computed-style assertions and by screenshot.
+- Also verified at 1536×730 with the browser zoomed to 125% (an effective
+  ~1229×584 viewport — how a real 1536px laptop reports itself under
+  Windows display scaling): still zero nav overflow, no different from
+  the un-zoomed case.
+
+A real bug was caught and fixed *before* it ever reached this baseline
+set, not shipped and found later: the menu's initial "click outside to
+close" check only tested against the trigger button, so clicking either
+menu item was itself misclassified as an outside click and closed the
+menu on `mousedown`, before the item's own `onClick` (and therefore
+`runExportPDF`/`runExportCSV`) ever ran — worth naming here since it's
+exactly the shape of bug pixel-diffing can't catch (the menu still closed,
+which looked correct), only interaction testing did.
+
+Every PNG under `desktop/` reflects the combined-Export-button header as
+of this date.
+
 ## Local-only — not committed
 
 `desktop/` is gitignored (this README isn't — it's the one file in this

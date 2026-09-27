@@ -316,10 +316,54 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); }
 
-/* Header tab bar (App.jsx) — horizontally scrollable at any width, with the
-   scrollbar itself hidden (scrollbarWidth:'none' inline handles Firefox;
-   ::-webkit-scrollbar has no inline-style equivalent, hence this rule). */
+/* Header tab bar (App.jsx) — horizontally scrollable at any width. Base rule
+   hides the scrollbar entirely (touch already scrolls this by dragging the
+   row directly, so a visible track/thumb adds nothing there); the
+   (pointer: fine) override just below shows a thin one instead. Both halves
+   of this — Firefox's `scrollbar-width` and Webkit's `::-webkit-scrollbar` —
+   have to live in CSS rather than App.jsx's inline `style`, for the usual
+   inline-always-wins-over-a-media-query reason: an inline `scrollbarWidth`
+   would block the (pointer: fine) rule below from ever taking effect. */
+.tab-bar-scroll {
+  scrollbar-width: none;
+}
 .tab-bar-scroll::-webkit-scrollbar { display: none; }
+
+/* Mouse/trackpad reachability (App.jsx) — a mouse has no way to drag the tab
+   bar the way touch does, and a plain vertical wheel gesture over
+   `overflowX:'auto'` scrolls the page, not the nav (App.jsx's own wheel
+   handler, gated on the identical `supportsFinePointer` check, converts
+   vertical wheel delta into horizontal scroll on this element). Once that
+   handler can move the row, a mouse user also needs to *see* that it moved —
+   a hidden scrollbar with no other affordance was the original bug
+   (RESPONSIVE_AUDIT.md's 2026-09-27 baseline recapture: "no visible sign on
+   desktop that the row scrolled at all"). `(pointer: fine)` rather than a
+   width breakpoint: this is a mouse-vs-touch question, not a phone-vs-
+   desktop one, and stays correct if a future narrow-but-mouse-driven
+   viewport (a resized desktop window) ever needs it too. Touch is untouched
+   either way — `(pointer: fine)` doesn't match a touchscreen, so the base
+   rule above still applies there, hidden scrollbar included. A visible
+   scrollbar, not an edge-fade overlay, per DESIGN.md's own "no gradients"
+   core rule and "hairlines do the structural work" — the same 4px hairline-
+   grey thumb the rest of the app already uses for scrollable regions
+   (`::-webkit-scrollbar-thumb`, near the top of this file), not a new
+   affordance vocabulary. The browser only paints it when the nav actually
+   overflows — nothing to gate on screen width for that part. */
+@media (pointer: fine) {
+  .tab-bar-scroll {
+    scrollbar-width: thin;
+  }
+  .tab-bar-scroll::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+  .tab-bar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .tab-bar-scroll::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+  }
+}
 
 /* Header export actions (App.jsx) — hidden below --breakpoint-tablet (1024px):
    Phase A moves Export PDF/CSV into the sidebar drawer at those widths (see
@@ -327,10 +371,66 @@ body {
    at 1024px+ now, where the sidebar is a normal flex-item column again.
    display/alignItems/gap live here rather than inline on the element so the
    media query below can actually win — an inline style always beats a
-   stylesheet rule regardless of media-query match. */
+   stylesheet rule regardless of media-query match.
+
+   As of the 1280px nav-fit fix, this wraps a single ExportMenu.jsx
+   (combined "Export" trigger + PDF/CSV menu) rather than two separate
+   buttons — applied uniformly at every width this div is visible at, not
+   just the tightest one, so the header reads the same way at 1280px and at
+   1920px rather than the button count itself changing at some intermediate
+   breakpoint. The drawer copy (.sidebar-export-actions) keeps the original
+   two full-width buttons — phone/tablet were never the width-constrained
+   case, and a drawer has no crowding reason to combine them. */
 .header-export-actions { display: flex; align-items: center; gap: 8px; }
 @media (max-width: 1023px) {
   .header-export-actions { display: none; }
+}
+
+/* Export menu (ExportMenu.jsx) — the combined "Export" trigger this section's
+   own comment above describes. Trigger matches ExportPDF/ExportCSV's own
+   pre-existing button look exactly (same padding/border/hover), since it
+   used to just be one of those two buttons before item 3 in RESPONSIVE_AUDIT
+   collapsed them; the menu panel is new. Styled per DESIGN.md's
+   Tooltip/Popover spec — --surface-elevated background, --border-emphasis,
+   0 radius, no shadow, no arrow — the closest existing component category
+   to a small anchored menu, rather than inventing a new one.
+   .export-menu-panel is positioned via inline style (App.jsx computes
+   top/right from the trigger's own getBoundingClientRect() on open), not
+   here — the header this trigger lives in has overflow:'hidden' at only
+   48px tall, so the panel has to be position:fixed with real viewport
+   coordinates to render below it uncropped; a plain CSS anchor
+   (position:absolute inside a position:relative wrapper) would be clipped
+   by that overflow:hidden the moment it extended past the header's own box. */
+.export-menu { position: relative; display: flex; }
+.export-menu-trigger {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--text-body-sm); font-weight: var(--weight-medium); padding: 6px 14px;
+  border: var(--border-default); font-family: var(--font-primary);
+  background: transparent;
+  color: var(--text-primary); cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard); letter-spacing: 0.02em;
+}
+.export-menu-trigger:hover, .export-menu-trigger[aria-expanded="true"] {
+  background: var(--surface-elevated);
+  border-color: var(--line-emphasis);
+}
+.export-menu-panel {
+  min-width: 168px;
+  background: var(--surface-elevated);
+  border: var(--border-emphasis);
+  z-index: 500;
+}
+.export-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 10px 12px;
+  background: transparent; border: none; border-bottom: 1px solid var(--line-hairline);
+  font-size: var(--text-body-sm); font-family: var(--font-primary);
+  color: var(--text-primary); cursor: pointer; text-align: left; white-space: nowrap;
+}
+.export-menu-item:last-child { border-bottom: none; }
+.export-menu-item:hover, .export-menu-item:focus-visible {
+  background: var(--surface-card);
+  outline: none;
 }
 
 /* Header sign-in/account (App.jsx) — hidden below the compact-viewport
