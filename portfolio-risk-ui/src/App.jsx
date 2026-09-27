@@ -21,6 +21,13 @@ import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
 import { useAuth } from './hooks/useAuth'
 import { supportsFinePointer } from './lib/pointer'
+import { buildSectorRows, hasTransientFailure } from './lib/sectorExposure'
+
+// Matches api.py's FUNDAMENTALS_FAILURE_TTL exactly — that's how long the
+// backend caches a transient failure before it'll actually attempt Finnhub
+// again, so retrying any sooner from here would just re-read the same
+// cached failure. One retry only (see the effect below) — not a poll loop.
+const SECTOR_RETRY_DELAY_MS = 60_000
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -40,10 +47,13 @@ export default function App() {
   const [showAuth, setShowAuth]         = useState(false)
   const [drawerTicker, setDrawerTicker] = useState(null)
   const [drawerWeight, setDrawerWeight] = useState(null)
-  // null = not fetched yet (or the fetch itself failed) — render nothing.
-  // [] = fetched successfully but no ticker resolved to a usable sector
-  // (e.g. an all-ETF portfolio) — SectorChart shows an explanatory empty
-  // state for that case, distinct from "haven't checked".
+  // null = not fetched yet, or the whole request failed outright (a
+  // network error, not a per-ticker one) — render nothing. Once fetched,
+  // every portfolio ticker lands in some row (a real sector, or one of the
+  // two named exception rows — see lib/sectorExposure.js's buildSectorRows)
+  // so this is effectively never `[]` for a non-empty portfolio anymore;
+  // SectorChart.jsx's own "this portfolio is all funds/ETFs" explanatory
+  // state now checks the rows' own `kind` instead of an empty array.
   const [sectorData, setSectorData]     = useState(null)
   const [sectorLoading, setSectorLoading] = useState(false)
   // Sector composition only depends on which tickers (and at what weights)
@@ -53,6 +63,18 @@ export default function App() {
   // below re-fires — a second /api/fundamentals round-trip and a "Loading
   // sector exposure…" flicker — for the exact same portfolio composition.
   const sectorFetchKeyRef = useRef(null)
+  // Both refs, not effect-local state — the effect below intentionally
+  // no-ops (via the fetchKey guard above) when `data`'s heavy-tier update
+  // lands for the *same* composition, and React still tears down and
+  // re-runs the effect's own cleanup on every one of those no-ops. A
+  // pending retry timeout stored in an effect-local variable would get
+  // silently cancelled by that teardown before it ever fired; a ref
+  // survives it, the same reason sectorFetchKeyRef itself is a ref.
+  const sectorRetryTimeoutRef = useRef(null)
+  // Has this specific composition already used its one retry? Reset only
+  // when the composition actually changes (below), not on the harmless
+  // same-composition re-runs above.
+  const sectorRetriedRef = useRef(false)
   const tabBarRef = useRef(null)
   const tabRefs   = useRef({})
   // Below --breakpoint-tablet the sidebar is a closed-by-default off-canvas
@@ -77,10 +99,25 @@ export default function App() {
       setSectorData(null)
       setSectorLoading(false)
       sectorFetchKeyRef.current = null
+      if (sectorRetryTimeoutRef.current) {
+        clearTimeout(sectorRetryTimeoutRef.current)
+        sectorRetryTimeoutRef.current = null
+      }
+      sectorRetriedRef.current = false
       return
     }
     const fetchKey = `${tickers.join(',')}|${weights.join(',')}`
     if (fetchKey === sectorFetchKeyRef.current) return   // heavy tier just replaced `data` for the same run — nothing to refetch
+
+    // A genuinely new composition (not just the heavy tier landing) — any
+    // retry still pending for the *previous* composition is now chasing a
+    // portfolio that no longer exists, and this new one gets its own fresh
+    // chance at the one retry below.
+    if (sectorRetryTimeoutRef.current) {
+      clearTimeout(sectorRetryTimeoutRef.current)
+      sectorRetryTimeoutRef.current = null
+    }
+    sectorRetriedRef.current = false
     sectorFetchKeyRef.current = fetchKey
 
     // Staleness is judged against the ref at resolution time, not an
@@ -92,30 +129,31 @@ export default function App() {
     // sectorLoading, leaving the spinner stuck forever even though nothing
     // is actually wrong. Comparing against the ref only treats a request as
     // stale when a *different* portfolio has genuinely superseded it.
-    setSectorLoading(true)
-    axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
-      .then(res => {
-        if (sectorFetchKeyRef.current !== fetchKey) return
-        const sectorByTicker = {}
-        res.data.tickers.forEach(t => { sectorByTicker[t.ticker] = t.sector })
+    const fetchSectorData = (isRetry) => {
+      if (!isRetry) setSectorLoading(true)
+      axios.get(`${API}/api/fundamentals?tickers=${tickers.join(',')}`)
+        .then(res => {
+          if (sectorFetchKeyRef.current !== fetchKey) return
+          setSectorData(buildSectorRows(res.data.tickers, tickers, weights))
 
-        const weightBySector  = {}
-        const tickersBySector = {}
-        tickers.forEach((tk, i) => {
-          const sector = sectorByTicker[tk.toUpperCase()]
-          if (!sector || sector === 'Unknown') return
-          weightBySector[sector]  = (weightBySector[sector] || 0) + (weights[i] ?? 0)
-          tickersBySector[sector] = [...(tickersBySector[sector] || []), tk]
+          // One retry only: schedule it the first time a response for this
+          // composition comes back with a transient failure, never again
+          // after that (whether the retry itself succeeds or not) — see
+          // sectorRetriedRef's own comment.
+          if (!sectorRetriedRef.current && hasTransientFailure(res.data.tickers)) {
+            sectorRetriedRef.current = true
+            sectorRetryTimeoutRef.current = setTimeout(() => {
+              sectorRetryTimeoutRef.current = null
+              if (sectorFetchKeyRef.current !== fetchKey) return
+              fetchSectorData(true)
+            }, SECTOR_RETRY_DELAY_MS)
+          }
         })
+        .catch(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorData(null) })
+        .finally(() => { if (sectorFetchKeyRef.current === fetchKey && !isRetry) setSectorLoading(false) })
+    }
 
-        setSectorData(
-          Object.entries(weightBySector)
-            .map(([sector, weight]) => ({ sector, weight, tickers: tickersBySector[sector] }))
-            .sort((a, b) => b.weight - a.weight)
-        )
-      })
-      .catch(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorData(null) })
-      .finally(() => { if (sectorFetchKeyRef.current === fetchKey) setSectorLoading(false) })
+    fetchSectorData(false)
   }, [data])
 
   // Keep the active tab in view when the header bar overflows (narrow

@@ -388,6 +388,61 @@ class FundamentalsCachingTests(unittest.TestCase):
         self.assertIn("error", results["MSFT"])
 
 
+class FundamentalsTransientFieldTests(unittest.TestCase):
+    """The distinction the frontend request depends on: a transient failure
+    (timeout/429/auth) must be tagged `transient: True` so Sector Exposure
+    knows it's worth auto-retrying and shows "Data unavailable", while a
+    genuinely invalid ticker is `transient: False` so it's never retried and
+    reads as permanently unclassified instead."""
+
+    def setUp(self):
+        self.fake_redis = FakeRedis()
+        self._client_patch = patch.object(cache, "_client", self.fake_redis)
+        self._client_patch.start()
+        self.client = TestClient(api.app)
+
+    def tearDown(self):
+        self._client_patch.stop()
+
+    @patch("requests.get")
+    def test_timeout_is_tagged_transient_true(self, mock_get):
+        mock_get.side_effect = requests.exceptions.ReadTimeout("Read timed out.")
+        r = self.client.get("/api/fundamentals", params={"tickers": "MU"})
+        row = r.json()["tickers"][0]
+        self.assertEqual(row["ticker"], "MU")
+        self.assertIn("error", row)
+        self.assertIs(row["transient"], True)
+
+    @patch("requests.get")
+    def test_rate_limit_is_tagged_transient_true(self, mock_get):
+        mock_get.return_value = make_response(429)
+        r = self.client.get("/api/fundamentals", params={"tickers": "MU"})
+        row = r.json()["tickers"][0]
+        self.assertIs(row["transient"], True)
+
+    @patch("requests.get")
+    def test_not_found_is_tagged_transient_false(self, mock_get):
+        mock_get.return_value = make_response(200, QUOTE_ZERO)
+        r = self.client.get("/api/fundamentals", params={"tickers": "NOTATICKER"})
+        row = r.json()["tickers"][0]
+        self.assertIs(row["transient"], False)
+
+    @patch("requests.get")
+    def test_successful_fetch_and_etf_have_no_transient_field_at_all(self, mock_get):
+        """A success (real stock or an ETF, both no `error` key) shouldn't
+        carry a `transient` field either — it's meaningless outside the
+        error case, and its *absence* is itself part of how the frontend
+        tells "this worked" apart from "this failed permanently"."""
+        etf_profile = {"name": "SPDR S&P 500", "finnhubIndustry": None, "marketCapitalization": 400_000}
+        mock_get.side_effect = [make_response(200, QUOTE_OK), make_response(200, etf_profile), make_response(200, METRIC_OK)]
+        r = self.client.get("/api/fundamentals", params={"tickers": "SPY"})
+        row = r.json()["tickers"][0]
+        self.assertNotIn("error", row)
+        self.assertNotIn("transient", row)
+        self.assertTrue(row["is_fund"])
+        self.assertEqual(row["sector"], "Unknown")
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # 5. Shared Finnhub throttle (item 7)
 # ─────────────────────────────────────────────────────────────────────────

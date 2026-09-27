@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, Cell } from 'recharts'
 import InsightBox from './InsightBox'
 import MetricTooltip from './MetricTooltip'
 
@@ -74,25 +74,36 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
     )
   }
 
-  // null: haven't fetched yet, or the fetch itself failed — say nothing.
-  // []: fetch succeeded but no ticker resolved to a usable sector, most
-  // commonly an all-ETF/fund portfolio — that's a real, expected outcome,
-  // not a loading gap, so it gets its own explanatory state below rather
-  // than silently rendering nothing.
+  // null: haven't fetched yet, or the whole request failed outright — say
+  // nothing. Once fetched, every row (App.jsx's buildSectorRows) accounts
+  // for some slice of the portfolio, whether a real sector or one of the
+  // two named exception buckets below — genuinely empty is now only a
+  // fetch-level failure, not "no ticker resolved to a sector".
   if (sectorData == null) return null
 
   // A ticker set to exactly 0% allocation (a valid Sidebar state — the user
-  // typed it in but zeroed its weight) still resolves to a sector in
-  // App.jsx's aggregation (weightBySector accumulates from 0, not skipped),
-  // so it can show up here as a real row with a real bar — just one that's
-  // 0px wide and reads "Media 0%", which looks like a rendering fault
-  // rather than an accurate zero. Filtered here, not in App.jsx's
+  // typed it in but zeroed its weight) still resolves to a row in
+  // App.jsx's aggregation (buildSectorRows accumulates from 0, not
+  // skipped), so it can show up here as a real row with a real bar — just
+  // one that's 0px wide and reads "Media 0%", which looks like a rendering
+  // fault rather than an accurate zero. Filtered here, not in App.jsx's
   // aggregation: this is the one place that decides what actually renders,
   // and nothing else consumes sectorData that would need the zero entries
   // kept.
   const nonZeroSectorData = sectorData.filter(d => d.weight > 0)
 
-  if (!nonZeroSectorData.length) {
+  // Only the fully-permanent case — every remaining ticker is an ETF/fund
+  // or one Finnhub has confirmed doesn't exist, nothing transiently
+  // unavailable — gets the plain "this is a funds/ETF portfolio"
+  // explanation instead of a chart. A transient failure (kind:
+  // 'unavailable') always renders as its own named, retriable row instead
+  // (per the request this addresses) — showing this explanation for that
+  // case would misattribute a temporary Finnhub hiccup to a permanent,
+  // structural limitation it isn't.
+  const allPermanentlyUnclassified = nonZeroSectorData.length > 0
+    && nonZeroSectorData.every(d => d.kind === 'unclassified')
+
+  if (!nonZeroSectorData.length || allPermanentlyUnclassified) {
     return (
       <div className="card" style={{ padding: '10px 16px', flexShrink: 0 }}>
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 5 }}>
@@ -107,10 +118,6 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
       </div>
     )
   }
-
-  const totalWeight = nonZeroSectorData.reduce((sum, d) => sum + d.weight, 0)
-  const hasExcluded = totalWeight < 0.995
-
   // Recharts' category YAxis divides the plot height evenly per row and
   // silently drops a tick label (though not its bar) once rows get packed
   // too tight to fit — invisible with the 1-2 sectors a 3-ticker tech
@@ -135,15 +142,8 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
 
   return (
     <div className="card" style={{ padding: '10px 16px', height: chartHeight, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
-        <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-          <MetricTooltip metricKey="sector_exposure">Sector exposure</MetricTooltip>
-        </div>
-        {hasExcluded && (
-          <div style={{ fontSize: 'var(--text-micro)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
-            ETFs & unrecognized tickers excluded
-          </div>
-        )}
+      <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 5 }}>
+        <MetricTooltip metricKey="sector_exposure">Sector exposure</MetricTooltip>
       </div>
       <div style={{ flex: 1, minHeight: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -163,7 +163,27 @@ export default function SectorChart({ sectorData, loading, isPhone }) {
               width={yAxisWidth}
             />
             <Tooltip content={<SectorTooltip />} cursor={{ fill: 'rgba(var(--text-primary-rgb),0.03)' }} />
-            <Bar dataKey="weight" fill="var(--signal-positive)" radius={[0, 0, 0, 0]} barSize={8}>
+            {/* Per-row fill via <Cell>, not a single <Bar fill=...> — a
+                transiently-unavailable row (kind: 'unavailable') reads as a
+                caution-toned bar (this data might still show up on the
+                pending retry), and a permanent ETF/unclassified row (kind:
+                'unclassified') reads as a plain muted bar (there's nothing
+                wrong here, it's an expected non-classification, not a
+                warning — DESIGN.md's "restrict signal colours to elements
+                where direction or risk has actual meaning" is why this
+                isn't also a signal colour). Real sector rows are
+                unchanged. */}
+            <Bar dataKey="weight" radius={[0, 0, 0, 0]} barSize={8}>
+              {nonZeroSectorData.map((d, i) => (
+                <Cell
+                  key={`${d.sector}-${i}`}
+                  fill={
+                    d.kind === 'unavailable'   ? 'var(--signal-caution)' :
+                    d.kind === 'unclassified'  ? 'var(--text-faint)' :
+                    'var(--signal-positive)'
+                  }
+                />
+              ))}
               <LabelList
                 dataKey="weight"
                 position="right"

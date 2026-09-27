@@ -396,21 +396,37 @@ def fundamentals(request: Request, tickers: str):
         for ticker in ticker_list:
             try:
                 results.append(_fetch_ticker_fundamentals(ticker))
+            except ValueError:
+                # Finnhub responded and the ticker genuinely doesn't exist —
+                # `transient: False` is what tells the frontend (App.jsx's
+                # Sector Exposure aggregation, per the request this
+                # addresses) not to bother auto-retrying this one: a typo'd
+                # or delisted symbol isn't going to start existing in 60
+                # seconds the way a rate-limited/timed-out one might.
+                results.append({ "ticker": ticker, "error": "Ticker not found.", "transient": False })
             except FinnhubRateLimitError:
                 results.append({ "ticker": ticker, "error":
-                    "Finnhub rate limit reached (60 calls/minute). Please try again in a minute." })
+                    "Finnhub rate limit reached (60 calls/minute). Please try again in a minute.",
+                    "transient": True })
             except FinnhubAuthError:
                 # Every remaining ticker in this batch will fail the exact
                 # same way — this is Finnhub rejecting the API key, not a
                 # per-ticker data problem — so log it loudly once per
                 # occurrence rather than let it look like N unrelated
-                # "ticker not found"-style failures.
+                # "ticker not found"-style failures. Still `transient: True`
+                # — the *key* isn't going to fix itself, but caching this
+                # for only 60s (see _fetch_ticker_fundamentals) means a
+                # fix takes effect within a minute instead of being stuck
+                # behind a day-long cache, and the frontend's one retry
+                # gets a real chance to succeed if someone's mid-fix.
                 logger.error("Finnhub rejected the API key (401) fetching fundamentals for %s — "
                               "check FINNHUB_API_KEY in the environment", ticker)
-                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now." })
+                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now.",
+                    "transient": True })
             except Exception as e:
                 logger.exception("Error fetching fundamentals for %s: %s", ticker, e)
-                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now." })
+                results.append({ "ticker": ticker, "error": "Unable to load data for this ticker right now.",
+                    "transient": True })
 
         results.sort(key=lambda r: (r.get("vg_score") is None, r.get("vg_score") or 999))
         return { "tickers": results }
