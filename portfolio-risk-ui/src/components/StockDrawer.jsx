@@ -69,11 +69,17 @@ function Sparkline({ data }) {
   )
 }
 
+const FETCH_TIMEOUT_MS = 15000
+
 export default function StockDrawer({ ticker, weight, onClose }) {
-  const [stock, setStock]     = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(null)
-  const [visible, setVisible] = useState(false)
+  const [stock, setStock]         = useState(null)
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(null)
+  const [visible, setVisible]     = useState(false)
+  // Bumped by the retry button below to force the fetch effect to re-run
+  // for the same ticker — its value never means anything beyond "changed
+  // since last time".
+  const [retryCount, setRetryCount] = useState(0)
   const drawerRef = useRef(null)
 
   // Animate in
@@ -84,23 +90,52 @@ export default function StockDrawer({ ticker, weight, onClose }) {
     }
   }, [ticker])
 
-  // Fetch data
+  // Fetch data — AbortController-backed with a client-side timeout. Before
+  // this, a slow/queued backend response left `loading` true forever: the
+  // only two places it was ever cleared were this fetch's own .then/.catch,
+  // and neither fires if the fetch itself never settles. `cancelled` guards
+  // against a still-in-flight request from a *previous* ticker (or from
+  // before the drawer closed) landing after the effect has already moved
+  // on — the drawer closing sets `ticker` to null (App.jsx's closeDrawer),
+  // which re-runs this effect and fires the cleanup below, aborting
+  // whatever was in flight; a fresh ticker does the same before starting
+  // its own fetch.
   useEffect(() => {
     if (!ticker) return
+    let cancelled = false
     setLoading(true)
     setError(null)
     setStock(null)
-    fetch(`${API}/stock-detail/${ticker}`)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+    fetch(`${API}/stock-detail/${ticker}`, { signal: controller.signal })
       .then(async r => {
         const d = await r.json()
         if (!r.ok) {
           throw new Error(d.detail || 'Could not load data')
         }
+        if (cancelled) return
         setStock(d)
         setLoading(false)
       })
-      .catch(e => { setError(e.message || 'Could not load data'); setLoading(false) })
-  }, [ticker])
+      .catch(e => {
+        if (cancelled) return
+        const message = e.name === 'AbortError'
+          ? 'Taking too long to respond. Please try again.'
+          : (e.message || 'Could not load data')
+        setError(message)
+        setLoading(false)
+      })
+      .finally(() => clearTimeout(timeoutId))
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
+  }, [ticker, retryCount])
 
   // Close on Escape
   useEffect(() => {
@@ -189,8 +224,21 @@ export default function StockDrawer({ ticker, weight, onClose }) {
           )}
 
           {error && (
-            <div style={{ fontSize: 12, color: 'var(--signal-negative)', textAlign: 'center', padding: '20px 0' }}>
-              {error}
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ fontSize: 12, color: 'var(--signal-negative)', marginBottom: 12 }}>
+                {error}
+              </div>
+              <button
+                onClick={() => setRetryCount(c => c + 1)}
+                style={{
+                  fontSize: 11, fontWeight: 600, padding: '6px 16px',
+                  border: '1px solid var(--signal-negative)', background: 'transparent',
+                  color: 'var(--signal-negative)', cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)', letterSpacing: '0.03em',
+                }}
+              >
+                Retry
+              </button>
             </div>
           )}
 

@@ -24,7 +24,7 @@ from data_fetcher import (
 )
 from stats_engine import compute_all_metrics, compute_stress_scenario, compute_monte_carlo
 from stock_detail_route import router as stock_router, _finnhub_get, FinnhubRateLimitError, FinnhubAuthError
-from cache import cached
+from cache import cache_get, cache_set, is_available as redis_is_available
 from twelvedata_utils import TwelveDataRateLimitError, TwelveDataAuthError, TickerNotFoundError
 from rate_limit import limiter
 
@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 GENERIC_ERROR_DETAIL = "Something went wrong processing your request. Please try again."
 
 HOUR = 60 * 60
+DAY = 24 * HOUR
 
 STRESS_SCENARIOS = [
     {"name": "2008 Financial Crisis", "start": "2008-09-01", "end": "2009-03-31"},
@@ -104,20 +105,36 @@ class StressTestRequest(BaseModel):
 
 
 @app.get("/api/health")
-async def health():
-    return {"status": "ok"}
+def health():
+    # Plain `def` (not `async def`) now that this does a real, blocking
+    # Redis round-trip (redis-py's ping() isn't async) — see redis_is_
+    # available's own comment. Previously this endpoint did nothing that
+    # blocked, so async cost nothing either way; that's no longer true.
+    #
+    # Reports Redis reachability rather than gating "status" on it — Redis
+    # is a soft dependency by design (cache.py fails open), so the app is
+    # genuinely still "ok" with it down, just slower and hitting Finnhub
+    # more. This is what makes that distinguishable from the outside: a
+    # dead Redis and heavy upstream load previously looked identical
+    # (everything slow, nothing in the logs to tell them apart).
+    return {"status": "ok", "redis": redis_is_available()}
 
 
 @app.post("/api/validate")
-async def validate(req: ValidateRequest):
+def validate(req: ValidateRequest):
     valid, invalid = validate_tickers(req.tickers)
     return {"valid": valid, "invalid": invalid}
 
 
-@cached(ttl=HOUR, prefix="fundamentals")
-def _fetch_ticker_fundamentals(ticker: str) -> dict:
+def _fetch_ticker_fundamentals_raw(ticker: str) -> dict:
     """Fetch + derive one ticker's fundamentals via Finnhub. Raises on failure
-    — callers handle the error so a bad fetch never gets cached.
+    — split out from _fetch_ticker_fundamentals below (which is what
+    everything else in this file calls) purely so that wrapper can cache
+    this function's outcome at a TTL that depends on *why* it raised — a
+    genuine "not found" vs. a timeout/429 need very different treatment
+    (see that function's own comment), which a plain @cached(ttl=...)
+    can't express: one fixed TTL for whatever the wrapped function
+    returns, and it never caches an exception at all.
 
     Finnhub's /stock/metric doesn't cover everything yfinance did:
       - insider ownership % and short interest % aren't available at all on
@@ -283,9 +300,95 @@ def _fetch_ticker_fundamentals(ticker: str) -> dict:
     }
 
 
+# 24h — sector, market cap, and valuation ratios barely move within a day,
+# and every hour this was shorter is an hour of extra load on a provider
+# that's currently unreliable. Was 1h.
+FUNDAMENTALS_TTL = DAY
+# 60s — deliberately much shorter than FUNDAMENTALS_TTL. See
+# _fetch_ticker_fundamentals's own comment for why a failure needs a
+# different, much briefer TTL than a real result.
+FUNDAMENTALS_FAILURE_TTL = 60
+
+
+def _fetch_ticker_fundamentals(ticker: str) -> dict:
+    """
+    Cache-aware wrapper around _fetch_ticker_fundamentals_raw. Manual
+    caching here, not the @cached decorator every other cached fetch in
+    this codebase uses, because the right TTL depends on *why* the raw
+    fetch didn't return real data:
+
+      - A genuine, permanent condition — Finnhub responded and the ticker
+        just doesn't exist — is cached for the same 24h as a real success
+        (FUNDAMENTALS_TTL): retrying sooner can't possibly produce a
+        different answer.
+      - A transient or service-level failure — a timeout, a 429, a
+        connection error, or even the API key itself being rejected — is
+        cached for only 60s (FUNDAMENTALS_FAILURE_TTL): long enough that
+        the very next request for this ticker doesn't immediately re-hit
+        Finnhub, short enough that once the underlying problem clears (or
+        someone fixes the key), the next request after that window picks
+        it up within a minute rather than being stuck behind a day-old
+        cached failure.
+
+    Previously *neither* case was cached at all — the plain @cached
+    decorator this replaced only ever calls cache_set after a successful
+    return, so any failure, for any reason, was retried against Finnhub on
+    literally every subsequent request. That's the actual structural cause
+    of "MSFT and GOOGL keep dropping out of Sector Exposure as unrecognised
+    while AAPL keeps working": AAPL's one successful fetch got cached and
+    stopped costing anything, while MSFT/GOOGL's one bad timeout never did,
+    so every request kept re-spending part of the shared 60-calls/minute
+    Finnhub budget on tickers that were never going to succeed within that
+    same request anyway.
+    """
+    key = f"varense:fundamentals:{ticker}"
+    cached_value = cache_get(key)
+    if cached_value is not None:
+        failure = cached_value.get("_cached_failure")
+        if failure == "not_found":
+            raise ValueError(f"Ticker '{ticker}' not found")
+        if failure == "auth":
+            raise FinnhubAuthError()
+        if failure == "rate_limit":
+            raise FinnhubRateLimitError()
+        if failure == "transient":
+            raise RuntimeError(cached_value.get("_message", "Cached transient Finnhub failure"))
+        return cached_value
+
+    try:
+        result = _fetch_ticker_fundamentals_raw(ticker)
+    except ValueError:
+        cache_set(key, {"_cached_failure": "not_found"}, FUNDAMENTALS_TTL)
+        raise
+    except FinnhubAuthError:
+        cache_set(key, {"_cached_failure": "auth"}, FUNDAMENTALS_FAILURE_TTL)
+        raise
+    except FinnhubRateLimitError:
+        cache_set(key, {"_cached_failure": "rate_limit"}, FUNDAMENTALS_FAILURE_TTL)
+        raise
+    except Exception as e:
+        cache_set(key, {"_cached_failure": "transient", "_message": str(e)}, FUNDAMENTALS_FAILURE_TTL)
+        raise
+    else:
+        cache_set(key, result, FUNDAMENTALS_TTL)
+        return result
+
+
 @app.get("/api/fundamentals")
 @limiter.limit("30/minute")
-async def fundamentals(request: Request, tickers: str):
+# Plain `def`, not `async def` — this calls _fetch_ticker_fundamentals in a
+# loop, which makes blocking `requests.get` calls to Finnhub (via
+# _finnhub_get). An `async def` route running blocking I/O directly on the
+# event loop stalls every other in-flight request on this worker for as
+# long as Finnhub takes to respond — confirmed as the live production
+# mechanism (Render's logs showed Finnhub responding in 10-30s under load,
+# not erroring), not a theoretical concern. FastAPI runs a sync route in
+# its own thread pool automatically, so this is the only change needed.
+# Every other route below with the same shape (a blocking Twelve Data or
+# Finnhub call, or heavy synchronous computation) gets the same fix, for
+# the same reason — see stock_detail's identical comment in
+# stock_detail_route.py for the fuller version of this reasoning.
+def fundamentals(request: Request, tickers: str):
     try:
         ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
         results = []
@@ -319,7 +422,9 @@ async def fundamentals(request: Request, tickers: str):
 
 @app.post("/api/stress-test")
 @limiter.limit("20/minute")
-async def stress_test(request: Request, req: StressTestRequest):
+# Plain `def` — see /api/fundamentals's comment above. This one calls
+# fetch_closing_prices (data_fetcher.py), a blocking Twelve Data fetch.
+def stress_test(request: Request, req: StressTestRequest):
     try:
         tickers = [t.strip().upper() for t in req.tickers]
         scenarios = []
@@ -664,7 +769,12 @@ def _handle_analyse_errors(fn, *args):
 
 @app.post("/api/analyse")
 @limiter.limit("20/minute")
-async def analyse(request: Request, req: AnalyseRequest):
+# Plain `def` — see /api/fundamentals's comment above. These three all
+# funnel through _fetch_and_check -> fetch_with_benchmark (data_fetcher.py),
+# a blocking Twelve Data fetch, plus genuinely CPU-heavy synchronous work
+# (compute_all_metrics' Monte Carlo/frontier simulation) that would also
+# monopolize the event loop even if the network call weren't there.
+def analyse(request: Request, req: AnalyseRequest):
     # Unchanged behaviour, still the full response — kept so nothing already
     # calling this directly (useComparison.js's Compare tab) breaks. New
     # callers should use /api/analyse-summary + /api/analyse-full instead.
@@ -673,11 +783,11 @@ async def analyse(request: Request, req: AnalyseRequest):
 
 @app.post("/api/analyse-summary")
 @limiter.limit("20/minute")
-async def analyse_summary(request: Request, req: AnalyseRequest):
+def analyse_summary(request: Request, req: AnalyseRequest):
     return _handle_analyse_errors(_compute_summary_analysis, req)
 
 
 @app.post("/api/analyse-full")
 @limiter.limit("20/minute")
-async def analyse_full(request: Request, req: AnalyseRequest):
+def analyse_full(request: Request, req: AnalyseRequest):
     return _handle_analyse_errors(_compute_full_analysis, req)

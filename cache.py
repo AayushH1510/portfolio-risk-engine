@@ -13,33 +13,81 @@ Key pattern: varense:{prefix}:{args_hash}
 
 import functools
 import hashlib
+import logging
 import os
 import pickle
+from urllib.parse import urlparse
 
 try:
     import redis
 except ImportError:
     redis = None
 
+logger = logging.getLogger(__name__)
+
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 _client = None
 
 
+def _redact(url: str) -> str:
+    """Host:port only, for logging — REDIS_URL embeds a password (Upstash
+    always does), so the full URL must never reach the logs."""
+    try:
+        parsed = urlparse(url)
+        return f"{parsed.hostname}:{parsed.port}" if parsed.hostname else "unknown-host"
+    except Exception:
+        return "unknown-host"
+
+
 def _connect():
-    """Try once to reach Redis. Any failure just leaves the client as None."""
+    """Try once to reach Redis. Any failure just leaves the client as None.
+
+    Logs the outcome either way — previously this was silent, so a dead
+    Redis at startup looked identical to a healthy one right up until every
+    cache_get() started quietly missing forever (see cache_get's own
+    comment for why misses are otherwise indistinguishable from heavy load
+    on nothing but request latency).
+    """
     global _client
     if redis is None:
+        logger.warning("redis package not installed — caching disabled")
+        _client = None
         return
     try:
         client = redis.from_url(REDIS_URL, socket_connect_timeout=1, socket_timeout=1)
         client.ping()
         _client = client
-    except Exception:
+        logger.info("Redis connected (%s)", _redact(REDIS_URL))
+    except Exception as e:
+        logger.warning("Redis connection failed (%s): %s", _redact(REDIS_URL), e)
         _client = None
 
 
 _connect()
+
+
+def is_available() -> bool:
+    """
+    Live reachability check for /api/health — pings Redis right now rather
+    than trusting the result of the startup connection attempt above, so a
+    mid-session Redis outage (or recovery) is visible immediately instead
+    of only after a restart. Self-healing: if the client is currently None
+    (never connected, or a previous ping killed it below), this retries the
+    connection rather than reporting "down" forever.
+    """
+    global _client
+    if _client is None:
+        _connect()
+        if _client is None:
+            return False
+    try:
+        _client.ping()
+        return True
+    except Exception as e:
+        logger.warning("Redis ping failed, marking connection dead: %s", e)
+        _client = None
+        return False
 
 
 def _make_key(prefix: str, args: tuple, kwargs: dict) -> str:
@@ -49,12 +97,25 @@ def _make_key(prefix: str, args: tuple, kwargs: dict) -> str:
 
 
 def cache_get(key: str):
+    # INFO, not DEBUG — the whole point of this logging (see cache.py's
+    # module docstring / the request this addresses) is that a dead Redis
+    # previously looked *identical* to heavy upstream load: same symptom
+    # (everything slow), nothing in the logs to tell them apart. That only
+    # works as a diagnostic if it shows up at whatever level Render's
+    # logs actually display by default, not behind a DEBUG flag nobody
+    # will think to flip mid-incident.
     if _client is None:
+        logger.info("cache miss (no connection): %s", key)
         return None
     try:
         raw = _client.get(key)
-        return pickle.loads(raw) if raw is not None else None
-    except Exception:
+        if raw is None:
+            logger.info("cache miss: %s", key)
+            return None
+        logger.info("cache hit: %s", key)
+        return pickle.loads(raw)
+    except Exception as e:
+        logger.warning("Redis get failed for %s: %s", key, e)
         return None
 
 
@@ -63,8 +124,8 @@ def cache_set(key: str, value, ttl: int) -> None:
         return
     try:
         _client.setex(key, ttl, pickle.dumps(value))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Redis set failed for %s: %s", key, e)
 
 
 def cache_incr(key: str, ttl: int, by: int = 1) -> int | None:
