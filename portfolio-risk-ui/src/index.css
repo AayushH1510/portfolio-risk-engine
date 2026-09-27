@@ -385,17 +385,47 @@ body {
   inset: -11px;
 }
 
+/* App header tab buttons (App.jsx) — padding lives here, not inline, for
+   the usual inline-always-wins-over-a-media-query reason. Base rule
+   reproduces the original inline value (10px each side) exactly, so phone
+   and landscape — the compact-viewport block below explicitly restores
+   this same 10px — see no change at all.
+
+   Desktop-only reduction: at 1366px, all 8 tabs plus Export PDF/CSV plus
+   Sign in need 803px against a 742px-wide nav — a real 61px shortfall,
+   confirmed by measurement, that moving the feedback icon out of the
+   header (see .header-feedback-btn below) closed most but not all of.
+   6px reclaims 64px (8 tabs x 4px x 2 sides), the minimum needed to clear
+   1366px with a few px to spare; 1536px and 1920px already fit at either
+   value and are unaffected. */
+.app-tab-btn {
+  padding: 0 6px;
+}
+
 /* Header feedback icon (FeedbackButton.jsx) — see that file's own comment
    for why this replaced a position:fixed bottom-right bubble. Same visual
    footprint as .header-account-indicator just above (22x22 glyph, 44x44
-   tap target via the identical ::before{inset:-11px} pattern), but visible
-   at every width rather than swapping with a text-label sibling — there's
-   no wider "expanded" form of this control to hide/show between, just the
-   one icon, so unlike .header-account-actions/-indicator it needs no
-   compact-viewport pairing at all. */
+   tap target via the identical ::before{inset:-11px} pattern).
+
+   REGRESSION, fixed here: this used to be visible at every width, on the
+   theory that a single small icon couldn't meaningfully crowd anything.
+   That held right up until the header tab bar's own room got tight: eight
+   tabs plus this icon plus Export PDF/CSV plus Sign in is more than a
+   1280-1440px header can hold without the nav's own overflowX:'auto'
+   kicking in — "Compare" and every tab after it became reachable only by
+   touch-scrolling the nav (a hidden-scrollbar, touch-only affordance; a
+   mouse wheel over it scrolls the page vertically, not the nav
+   horizontally), with no visible sign the row scrolls at all. Desktop
+   never needed this icon in the header to begin with — there's a footer
+   now (.footer-feedback-link below, App.jsx) with room to spare and no
+   competing content. Hidden by default; shown only inside the
+   compact-viewport block below, where the footer link's own inverse rule
+   hides instead — exactly the .header-account-actions/-indicator pairing
+   already established for the identical "one affordance, two homes
+   depending on viewport" shape. */
 .header-feedback-btn {
+  display: none;
   position: relative;
-  display: flex;
   align-items: center;
   justify-content: center;
   width: 22px;
@@ -410,6 +440,23 @@ body {
   content: '';
   position: absolute;
   inset: -11px;
+}
+
+/* Footer feedback link (FeedbackButton.jsx, portaled into App.jsx's footer
+   via #footer-feedback-slot) — the desktop home for the same trigger
+   .header-feedback-btn is the phone home for, per that class's own
+   comment. Styled to match its Privacy/Terms neighbours exactly (App.jsx
+   inlines their color/textDecoration; this mirrors it in CSS since the
+   class needs to carry the compact-viewport hide too). Visible by default;
+   hidden only inside the compact-viewport block below — the exact inverse
+   of .header-feedback-btn, so precisely one of the two ever renders. */
+.footer-feedback-link {
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 /* App shell root (App.jsx) — 100vh first as the universal fallback, then
@@ -806,7 +853,33 @@ aside.sidebar-shell.sidebar-open {
   min-height: 0;
 }
 .dashboard-right-col__gauge    { order: 1; }
-.dashboard-right-col__drawdown { order: 2; flex: 1; min-height: 0; }
+/* min-height:190px, not 0 — a real gap, not a restoration: this column's
+   `1fr` grid row (.dashboard-grid) was always sized off whatever height a
+   real device or a full-height test viewport happened to leave, and
+   nobody had checked what happens once that space genuinely runs out.
+   It does at a realistic laptop *window* height, chrome included (see
+   DESKTOP_CHROME_VIEWPORTS, scripts/shots.mjs, and lib/breakpoints.js's
+   own compact-viewport postmortem for the matching bug this project just
+   fixed on the same underlying gap): at 1366x650 this card's own box
+   measured 30px tall, and at 1536x730 it measured 49px — both well under
+   the ~78.5px this card's own label + padding + "Worst drop" line need
+   *before* the chart gets a single pixel, so no version of the chart ever
+   rendered, not just a cramped one. Confirmed present identically on the
+   pre-Phase-B reference commit (db3b8f7e) at these two viewports — this
+   was never something Phase B regressed, only something nobody had a
+   viewport short enough to expose until now. 190px = the measured 78.5px
+   chrome (14px x2 padding, 15px label + 10px margin, 17.5px footer + 8px
+   margin, at 1920x970 where nothing constrains it) plus ~110px of plot —
+   a real, if compact, chart, using this project's own established
+   "target a legible plot, not the full natural size" convention
+   (Backtest/MonteCarlo/Frontier's own phone floors all target ~190px of
+   plot for the same reason) rather than a round number picked by eye. At
+   a genuinely short window this can push the right column past its 1fr
+   row's own height — the grid's existing overflowY:'auto' makes that a
+   scroll, not a silent collapse, which is the explicit trade-off asked
+   for: the chart must not disappear, even if that costs a short scroll on
+   an unusually short window. */
+.dashboard-right-col__drawdown { order: 2; flex: 1; min-height: 190px; }
 
 /* RiskAnalysis's six 2-column rows (RiskAnalysis.jsx:223,297,318,327,343,359)
    — rolling-metric charts, Treynor/Info-ratio pair, VaR/CVaR + correlation
@@ -959,6 +1032,32 @@ aside.sidebar-shell.sidebar-open {
   }
   .sidebar-account-actions {
     display: flex;
+  }
+
+  /* ─── Feedback trigger -> header icon (FeedbackButton.jsx) ───
+     The exact inverse of the pairing below (App.jsx's footer link this
+     header icon takes over from on a phone): the icon wasn't crowding a
+     384px header the way it does an 1280px+ one — one small icon has
+     room to spare next to a two-item nav-plus-account-indicator row at
+     phone width — so the phone side of this trade never needed to change,
+     only the desktop side did. */
+  .header-feedback-btn {
+    display: flex;
+  }
+  .footer-feedback-link {
+    display: none;
+  }
+
+  /* ─── Tab button padding, restored (App.jsx) ───
+     .app-tab-btn's own base rule shrinks this to 6px a side specifically
+     to fit 8 tabs in a crowded ~1280-1366px desktop header — a phone's
+     nav was never the tight one (it already scrolls by design, touch-
+     only, per the header's own overflowX:'auto'), so there's nothing to
+     reclaim room for here. Reproduces the original 10px exactly, the same
+     "restore what compact viewport never needed changed" shape as the
+     pairing just above. */
+  .app-tab-btn {
+    padding: 0 10px;
   }
 
   /* ─── Dashboard grid reflow (Dashboard.jsx) ───

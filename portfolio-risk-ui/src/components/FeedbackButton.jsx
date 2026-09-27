@@ -1,7 +1,8 @@
 // Requires the `feedback` table — run supabase-feedback-table.sql (project
 // root) once in the Supabase SQL editor before this will work.
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../lib/supabase'
 
 const TYPES = ['Bug', 'Confusing', 'Suggestion', 'Other']
@@ -13,6 +14,15 @@ export default function FeedbackButton({ user }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [error, setError]       = useState(null)
+
+  // The footer slot (App.jsx, #footer-feedback-slot) is rendered by a
+  // sibling tree, not a child of this component, so its node isn't known
+  // until after mount — same reason Dashboard's own portal target is read
+  // via a ref rather than assumed to exist during the first render.
+  const [footerSlot, setFooterSlot] = useState(null)
+  useEffect(() => {
+    setFooterSlot(document.getElementById('footer-feedback-slot'))
+  }, [])
 
   const reset = () => {
     setOpen(false)
@@ -68,6 +78,21 @@ export default function FeedbackButton({ user }) {
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
         </svg>
       </button>
+
+      {/* Desktop's home for the same trigger — a plain text link beside
+          Privacy/Terms (.footer-feedback-link, index.css), portaled into
+          App.jsx's footer since this component itself mounts in the
+          header. CSS shows exactly one of the two triggers at a time;
+          this one only renders once the slot exists (post-mount), so
+          there's nothing to portal into on the very first paint — the
+          header icon (or, at desktop widths, nothing yet) is what's
+          visible for that one frame, never a broken portal. */}
+      {footerSlot && createPortal(
+        <button className="footer-feedback-link" onClick={() => setOpen(true)}>
+          Feedback
+        </button>,
+        footerSlot
+      )}
 
       {open && (
         <div

@@ -34,6 +34,43 @@ pixel-diffing, while the third slipped past pixel-diffing too, since every
 desktop viewport being diffed was a full, chrome-free device height no
 real browser window has.
 
+## Re-captured 2026-09-27 — the previous set had locked in a regression
+
+The baseline set was fully regenerated on this date because the *previous*
+one wasn't actually "known good" — it was captured after desktop had
+already drifted from its intended layout, so the check was comparing new
+renders against an already-wrong reference and passing. Three concrete
+desktop bugs shipped underneath a clean `npm run shots`:
+
+- Metric-card-style content aside, the **feedback icon crowded the header
+  tab bar** enough that "Compare" and every tab after it were reachable
+  only by touch-scrolling `nav.tab-bar-scroll` (a hidden-scrollbar,
+  touch-only affordance — a mouse wheel over it scrolls the page, not the
+  nav) — no visible sign on desktop that the row scrolled at all. Fixed by
+  moving the trigger to a footer link on desktop (`.footer-feedback-link`)
+  and, since that alone didn't fully close the gap at 1366px, a modest
+  tab-button padding reduction (`.app-tab-btn`, 10px → 6px a side,
+  desktop-only — phone and landscape keep the original 10px).
+- The **Drawdown chart could render at zero height** on a real laptop
+  *window* (chrome included) short enough to starve `.dashboard-grid`'s
+  `1fr` final row — confirmed present identically on the pre-Phase-B
+  reference commit (`db3b8f7e`) at the same viewports, so this was never a
+  Phase B regression, just a gap nobody had a short-enough test viewport
+  to expose before. Fixed with a real `min-height` on
+  `.dashboard-right-col__drawdown` (see that rule's own comment for the
+  190px derivation).
+- Restored the desktop tab-content layout to match `db3b8f7e` (the last
+  commit before any tab-layout work) wherever it had drifted, while
+  keeping every deliberate improvement made since (chart fullscreen-expand
+  buttons, InsightBox collapse toggles, the signed-in-only avatar fix,
+  hidden zero-weight sectors, Compare's `btn-primary` width fix).
+
+Every PNG under `desktop/` reflects the corrected layout as of this date.
+If `npm run shots` starts failing against this set, treat it the same way
+this file's "If a check fails" section below always has — the point of
+today's recapture wasn't to lower the bar, it was to make sure the bar was
+actually measuring the right thing again.
+
 ## Local-only — not committed
 
 `desktop/` is gitignored (this README isn't — it's the one file in this

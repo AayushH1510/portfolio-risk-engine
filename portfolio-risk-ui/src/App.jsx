@@ -254,8 +254,9 @@ export default function App() {
                   ref={el => { tabRefs.current[tab.id] = el }}
                   onClick={() => unlocked && setActiveTab(tab.id)}
                   aria-current={active ? 'page' : undefined}
+                  className="app-tab-btn"
                   style={{
-                    padding: '0 10px', fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)',
+                    fontSize: 'var(--text-body-sm)', fontWeight: 'var(--weight-medium)',
                     letterSpacing: 'var(--tracking-tab)', textTransform: 'uppercase',
                     fontFamily: 'var(--font-primary)',
                     background: 'transparent', border: 'none',
@@ -427,13 +428,9 @@ export default function App() {
           )}
         </main>
 
-        {/* .app-footer: padding lives in that class (index.css), not here —
-            the compact-viewport block adds extra padding-right there to
-            keep this row's own text clear of the fixed feedback bubble
-            (FeedbackButton.jsx, bottom-right); an inline padding shorthand
-            here would permanently shadow that override regardless of
-            media-query match, the same trap every other responsive fix in
-            this codebase has had to route around. */}
+        {/* .app-footer: padding lives in that class (index.css), not here,
+            for the usual inline-always-wins-over-a-media-query reason every
+            other responsive fix in this codebase has had to route around. */}
         <div className="app-footer" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap',
           fontSize: 'var(--text-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)',
@@ -441,6 +438,11 @@ export default function App() {
         }}>
           <span>Varense - educational tool only. Not financial advice. Past performance does not guarantee future results.</span>
           <span style={{ display: 'flex', gap: 12, marginLeft: 12 }}>
+            {/* Feedback's own trigger portals in here on desktop — see
+                .footer-feedback-link (index.css) and FeedbackButton.jsx's
+                own comment for why this is its desktop home while phone
+                keeps the header icon. */}
+            <span id="footer-feedback-slot" />
             <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
             <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>
           </span>
