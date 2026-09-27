@@ -127,6 +127,77 @@ which looked correct), only interaction testing did.
 Every PNG under `desktop/` reflects the combined-Export-button header as
 of this date.
 
+## Re-captured 2026-09-27, a third time — chart fullscreen-expand enabled on desktop
+
+Another same-day deliberate header change, not a regression fix. The
+chart-expand-to-fullscreen control (`useOverlay`, `.chart-expand-btn`,
+`.chart-fullscreen-expanded`, portalled to `document.body`) previously
+rendered only on a compact viewport — phone or landscape-phone — gated by
+`isCompactViewport` in each of its six consumers (Dashboard's Portfolio
+Growth, Backtest's cumulative-return chart, Monte Carlo's simulated-futures
+chart, Efficient Frontier's scatter, and both of Compare's charts). It's now
+shown at every width: the `isCompactViewport &&` gate around the button
+itself is gone (`.chart-expand-btn`'s own hairline border was already
+visible at rest, not hover-only, so nothing new was needed there), and each
+`isXExpanded` state is now a plain `expandRequested` boolean instead of
+`expandRequested && isCompactViewport` — desktop can now genuinely reach
+the expanded state, not just render a button that could never do anything.
+No new mechanism: same `useOverlay`, same CSS classes, same portal, reused
+exactly as they already worked on phone.
+
+One behavioural addition alongside it: the four Recharts line/area charts
+among the six (Dashboard, Backtest, Monte Carlo, Compare's two) now apply
+`computeYDomain`'s tight Y-axis domain whenever `isXExpanded` is true,
+regardless of viewport — previously that tight domain only applied at
+compact viewport (Dashboard, Compare's Monte Carlo chart) or not at all
+(Backtest, Compare's Monte Carlo... Compare's own Cumulative Returns chart
+never had one). Without this, a chart expanded to fill a 1920×970 viewport
+would still use Recharts' auto-scaled "nice number" domain, sized for a
+~65-200px inline plot — the line would sit in a thin band in the middle of
+a much taller box instead of filling it, the same legibility problem this
+project already fixed for the inline compact-viewport case. The *inline*
+chart's domain is untouched at every width, desktop and phone alike — the
+domain prop is only added or its condition widened for the *expanded*
+state; verified directly (Y-axis tick labels read identically inline before
+and after this change, and visibly tighter only once expanded). Efficient
+Frontier's scatter is canvas-based with its own axis-drawing logic, not
+Recharts — no domain change applies there, only the button.
+
+Every affected chart's header row grew slightly once the button became
+unconditional there (previously absent from desktop's layout entirely) —
+this is what the baseline diff below actually is, not a broken chart: a
+solid-color button appearing in five headers pushes each header row a few
+pixels taller, which shifts the chart plot area beneath it by that same
+few pixels, and pixel-diffing correctly (if noisily) flags nearly every
+pixel along a shifted line or scatter cloud as "different" even though the
+underlying data and geometry are identical. Confirmed by inspecting the
+diff images directly, not just trusting the percentage: `app-dashboard`,
+`app-backtest`, `app-montecarlo`, `app-compare`, and `app-frontier` all
+diffed in the 0.5%-3.9% range at every desktop baseline width — `app-risk`,
+`app-valuation`, `app-learn`, and every landing route stayed at 0% (or
+within the existing floor), confirming the change is isolated to exactly
+the five card headers this pass touched and nothing else. Efficient
+Frontier's own diff was the largest (~3.3-3.9%) because its canvas's
+Y-axis gridlines are computed from the canvas's own measured height
+(`useCanvasSize`, scaled padding — see that file's own comments); a few
+fewer pixels of height from the taller header nudged its "nice round
+number" gridline search to a different top tick (confirmed by comparing
+the two screenshots directly: same cloud shape, same marker positions,
+different axis label) — a real, deterministic, and expected consequence of
+the header change, not noise or a bug.
+
+Verified at 1280×720, 1366×650, 1536×730, and 1920×970: all six expand
+buttons visible and clickable, each expands to fill the exact viewport
+(`0,0,width,height`), a real chart (SVG or canvas) renders inside every
+one, and Escape closes all six back to the inline card. Phone (384×854)
+and 852×393 landscape with touch emulation confirmed unchanged — the
+button still works by tap exactly as before, and the inline chart's own
+Y-axis ticks are byte-identical to what they were before this pass (still
+gated on `isCompactViewport`, now just also true when expanded).
+
+Every PNG under `desktop/` reflects the six always-visible expand buttons
+as of this date.
+
 ## Local-only — not committed
 
 `desktop/` is gitignored (this README isn't — it's the one file in this

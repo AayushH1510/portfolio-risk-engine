@@ -9,7 +9,7 @@ import InsightBox from '../components/InsightBox'
 import HeavyTierPending from '../components/HeavyTierPending'
 import MetricTooltip from '../components/MetricTooltip'
 import useOverlay from '../hooks/useOverlay'
-import useCompactViewport from '../hooks/useCompactViewport'
+import { computeYDomain } from '../lib/chartDomain'
 
 const fmtD = v => `$${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 
@@ -82,15 +82,15 @@ function SimulatedPaths({ allPaths, xAxisMap, yAxisMap }) {
 
 export default function MonteCarlo({ data, heavyError }) {
   const [scenario, setScenario] = useState('base')
-  // Same dual-axis signal, same hooks-before-early-return placement, as
-  // Backtest.jsx's and RiskAnalysis.jsx's identical reasoning: `data` (and
-  // `data.monte_carlo`, gated just below) genuinely toggles within one
-  // mounted instance of this component, so the hooks that drive the
-  // fullscreen expand control have to run every render regardless of which
-  // return path fires.
-  const isCompactViewport = useCompactViewport()
+  // Same hooks-before-early-return placement as Backtest.jsx's/
+  // RiskAnalysis.jsx's identical reasoning: `data` (and `data.monte_carlo`,
+  // gated just below) genuinely toggles within one mounted instance of this
+  // component, so the hooks that drive the fullscreen expand control have
+  // to run every render regardless of which return path fires. Expand/
+  // collapse is a plain request, not gated on viewport — the button is
+  // shown at every width now (previously compact-viewport only).
   const [expandRequested, setExpandRequested] = useState(false)
-  const isChartExpanded = expandRequested && isCompactViewport
+  const isChartExpanded = expandRequested
   const chartCardRef = useRef(null)
   useOverlay(isChartExpanded, chartCardRef, () => setExpandRequested(false))
 
@@ -117,6 +117,20 @@ export default function MonteCarlo({ data, heavyError }) {
     day: i, p5: p5[i], p50: val, p95: p95[i],
   }))
 
+  // This chart never had a Y-axis domain at all before (plain Recharts
+  // default at every width) — only applied now, in the fullscreen-expanded
+  // state, for the same reason Backtest's cumulative-return chart just
+  // gained one: three lines in a thin auto-scaled band in the middle of a
+  // much taller box is a real legibility problem the inline card never had
+  // to deal with. Prop omitted entirely (not a literal ['auto','auto'])
+  // when not expanded, so the inline chart — desktop or phone — stays on
+  // Recharts' true default, unchanged; see Comparison.jsx's mcYDomain
+  // comment for why an explicit 'auto' literal is a measurably different
+  // thing to pass instead.
+  const chartYDomain = isChartExpanded
+    ? computeYDomain(chartData, ['p5', 'p50', 'p95'])
+    : null
+
   const gain    = p50_final - portfolio_value
   const gainPct = ((p50_final / portfolio_value) - 1) * 100
   const tone    = prob_profit > 0.75 ? 'good' : prob_profit > 0.5 ? 'warning' : 'bad'
@@ -140,21 +154,17 @@ export default function MonteCarlo({ data, heavyError }) {
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             {n_simulations.toLocaleString()} simulated futures - next 12 months
           </div>
-          {/* Rendered only on a compact viewport — desktop and tablet never
-              see it, so isChartExpanded can never become true there
-              regardless of expandRequested. Same control, reused from
-              Dashboard/Backtest (.chart-expand-btn, index.css), not
-              reimplemented. */}
-          {isCompactViewport && (
-            <button
-              onClick={() => setExpandRequested(v => !v)}
-              className="chart-expand-btn"
-              aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-              title={isChartExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isChartExpanded ? '✕' : '⤢'}
-            </button>
-          )}
+          {/* Shown at every width now, not just compact viewport. Same
+              control, reused from Dashboard/Backtest (.chart-expand-btn,
+              index.css), not reimplemented. */}
+          <button
+            onClick={() => setExpandRequested(v => !v)}
+            className="chart-expand-btn"
+            aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+            title={isChartExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isChartExpanded ? '✕' : '⤢'}
+          </button>
         </div>
         <div style={{ display: 'flex', gap: 14, fontSize: 10, flexWrap: 'wrap' }}>
           {[
@@ -188,6 +198,7 @@ export default function MonteCarlo({ data, heavyError }) {
               label={{ value: 'Trading days (252 = 1 year)', position: 'insideBottom', offset: 4, fill: 'var(--text-muted)', fontSize: 10 }}
             />
             <YAxis
+              {...(chartYDomain ? { domain: chartYDomain } : {})}
               tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
               tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
               tickLine={false} axisLine={false}

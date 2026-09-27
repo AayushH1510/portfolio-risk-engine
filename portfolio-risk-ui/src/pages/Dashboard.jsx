@@ -147,13 +147,13 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // shape this project keeps tripping on elsewhere.
   const isCompactViewport = useCompactViewport()
 
-  // Mirrors Sidebar's isDrawerActive pattern: `expanded` is a plain request,
-  // not the source of truth — deriving it from isCompactViewport means
-  // resizing/rotating back past the breakpoint while expanded auto-releases
-  // the overlay instead of stranding the chart fullscreen on a desktop-size
-  // viewport with no way to have triggered it in the first place.
+  // Expand/collapse is a plain request, not gated on viewport — the button
+  // is now shown at every width (previously phone/landscape-phone only, via
+  // isCompactViewport), so there's no longer a "no way to have triggered
+  // this on desktop" case to guard against by deriving it from viewport
+  // size.
   const [expandRequested, setExpandRequested] = useState(false)
-  const isGrowthExpanded = expandRequested && isCompactViewport
+  const isGrowthExpanded = expandRequested
   const growthCardRef = useRef(null)
   useOverlay(isGrowthExpanded, growthCardRef, () => setExpandRequested(false))
 
@@ -200,14 +200,17 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
   // for the inline and expanded growth chart (both render from this exact
   // JSX, see growthCardEl below) — a thin band in the middle of empty
   // space is a legibility problem at the inline card's ~65px plot height
-  // too, not just the fullscreen view. Gated on isCompactViewport, not
-  // applied universally: this whole pass was scoped to phone width, and
-  // desktop's own domain behavior (Recharts' default 'auto') stays
-  // byte-for-byte untouched rather than "probably fine, close enough."
-  const growthYDomain = isCompactViewport
+  // too, not just the fullscreen view. Gated on isCompactViewport OR
+  // isGrowthExpanded, not applied universally: the inline desktop chart
+  // keeps its original 'auto' domain byte-for-byte (isCompactViewport still
+  // false there), but the fullscreen-expanded view now needs the tight
+  // domain at every width, desktop included, once desktop could reach it
+  // too — without this, the expanded chart's line would sit in a thin band
+  // in the middle of a much taller box instead of filling it.
+  const growthYDomain = (isCompactViewport || isGrowthExpanded)
     ? computeYDomain(growthData, bench ? ['portfolio', 'benchmark'] : ['portfolio'])
     : ['auto', 'auto']
-  const holdingYDomain = isCompactViewport
+  const holdingYDomain = (isCompactViewport || isGrowthExpanded)
     ? computeYDomain(holdingData, bench ? [...tickers, 'benchmark'] : tickers)
     : ['auto', 'auto']
 
@@ -298,20 +301,20 @@ export default function Dashboard({ data, tickers, weights, portfolioValue, onTi
               {/* Growth only — not drawdown, not the gauge. This is the one
                   chart that gains from more room, especially By Holding
                   mode where several series compress into an unreadable band
-                  at the card's normal height. Rendered only on a compact
-                  viewport (phone width or phone-landscape height) — desktop
-                  and tablet never see it, so isGrowthExpanded can never
-                  become true there regardless of expandRequested. */}
-              {isCompactViewport && (
-                <button
-                  onClick={() => setExpandRequested(v => !v)}
-                  className="chart-expand-btn"
-                  aria-label={isGrowthExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-                  title={isGrowthExpanded ? 'Collapse' : 'Expand'}
-                >
-                  {isGrowthExpanded ? '✕' : '⤢'}
-                </button>
-              )}
+                  at the card's normal height. Shown at every width now, not
+                  just compact viewport — .chart-expand-btn's own hairline
+                  border is already visible at rest, not hover-only (see that
+                  class's comment: a touch device has no hover state, so
+                  desktop just gets the same always-discoverable affordance
+                  phone already had, not a new one). */}
+              <button
+                onClick={() => setExpandRequested(v => !v)}
+                className="chart-expand-btn"
+                aria-label={isGrowthExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+                title={isGrowthExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isGrowthExpanded ? '✕' : '⤢'}
+              </button>
             </div>
             <div style={{ display: 'flex', gap: 10, fontSize: 10, flexWrap: 'wrap' }}>
               {growthMode === 'combined' ? (

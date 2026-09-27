@@ -5,7 +5,6 @@ import HeavyTierPending from '../components/HeavyTierPending'
 import InsightBox from '../components/InsightBox'
 import useCanvasSize from '../hooks/useCanvasSize'
 import useOverlay from '../hooks/useOverlay'
-import useCompactViewport from '../hooks/useCompactViewport'
 import { supportsHover } from '../lib/pointer'
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -468,9 +467,10 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
   // holds for handleTap, and the rAF loop's cancel-on-unmount (the effect
   // just above) all fall out of ordinary mount/unmount semantics instead of
   // needing special-cased transition logic here.
-  const isCompactViewport = useCompactViewport()
+  // Expand/collapse is a plain request, not gated on viewport — the button
+  // is shown at every width now (previously compact-viewport only).
   const [expandRequested, setExpandRequested] = useState(false)
-  const isChartExpanded = expandRequested && isCompactViewport
+  const isChartExpanded = expandRequested
   const chartCardRef = useRef(null)
   useOverlay(isChartExpanded, chartCardRef, () => setExpandRequested(false))
 
@@ -571,21 +571,17 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
             Efficient Frontier
             <span style={{ fontWeight: 'var(--weight-regular)', marginLeft: 8, opacity: 0.6 }}>5,000 simulated portfolios</span>
           </div>
-          {/* Rendered only on a compact viewport — desktop and tablet never
-              see it, so isChartExpanded can never become true there
-              regardless of expandRequested. Same control, same 44x44
-              ::before tap target, as the other three (.chart-expand-btn,
-              index.css) — reused, not reimplemented. */}
-          {isCompactViewport && (
-            <button
-              onClick={() => setExpandRequested(v => !v)}
-              className="chart-expand-btn"
-              aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-              title={isChartExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isChartExpanded ? '✕' : '⤢'}
-            </button>
-          )}
+          {/* Shown at every width now, not just compact viewport. Same
+              control, same 44x44 ::before tap target, as the other three
+              (.chart-expand-btn, index.css) — reused, not reimplemented. */}
+          <button
+            onClick={() => setExpandRequested(v => !v)}
+            className="chart-expand-btn"
+            aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+            title={isChartExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isChartExpanded ? '✕' : '⤢'}
+          </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 10, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

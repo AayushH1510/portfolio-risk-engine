@@ -105,24 +105,29 @@ function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false, 
 }
 
 export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, tickersB }) {
-  // Same dual-axis signal, same hooks-before-early-return placement, as
-  // MonteCarlo.jsx's/Backtest.jsx's identical reasoning: dataA/dataB
-  // genuinely toggle within one mounted instance of this component (a
-  // Portfolio B re-run), so the hooks driving the fullscreen expand
-  // controls have to run every render regardless of which return path
-  // fires. Two independent expand states — Cumulative Returns and Monte
-  // Carlo are two separate charts, the fifth and sixth consumers of this
-  // mechanism (after Dashboard/Backtest/MonteCarlo/Frontier), each needing
-  // its own toggle rather than sharing one.
+  // Same hooks-before-early-return placement as MonteCarlo.jsx's/
+  // Backtest.jsx's identical reasoning: dataA/dataB genuinely toggle within
+  // one mounted instance of this component (a Portfolio B re-run), so the
+  // hooks driving the fullscreen expand controls have to run every render
+  // regardless of which return path fires. Two independent expand states —
+  // Cumulative Returns and Monte Carlo are two separate charts, the fifth
+  // and sixth consumers of this mechanism (after Dashboard/Backtest/
+  // MonteCarlo/Frontier), each needing its own toggle rather than sharing
+  // one. isCompactViewport itself is still needed below (MetricRow
+  // alignment, the header chip layout), just no longer for the expand
+  // buttons themselves.
   const isCompactViewport = useCompactViewport()
 
+  // Expand/collapse is a plain request, not gated on viewport — both
+  // buttons are shown at every width now (previously compact-viewport
+  // only).
   const [growthExpandRequested, setGrowthExpandRequested] = useState(false)
-  const isGrowthExpanded = growthExpandRequested && isCompactViewport
+  const isGrowthExpanded = growthExpandRequested
   const growthCardRef = useRef(null)
   useOverlay(isGrowthExpanded, growthCardRef, () => setGrowthExpandRequested(false))
 
   const [mcExpandRequested, setMcExpandRequested] = useState(false)
-  const isMcExpanded = mcExpandRequested && isCompactViewport
+  const isMcExpanded = mcExpandRequested
   const mcCardRef = useRef(null)
   useOverlay(isMcExpanded, mcCardRef, () => setMcExpandRequested(false))
 
@@ -147,21 +152,33 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
   // shared via lib/chartDomain.js rather than duplicated) — Recharts' own
   // default domain (no domain prop at all) can leave real data (e.g.
   // $10k-$13k) crushed into a thin band in the middle of a short compact-
-  // viewport chart. Gated on isCompactViewport, and — unlike Dashboard's
-  // own charts — the domain prop is only spread onto <YAxis> at all when
-  // compact (see below), not passed as a literal ['auto', 'auto'] the rest
-  // of the time. Checked directly, not assumed from Dashboard's pattern:
-  // Recharts' true default (the prop omitted entirely) is NOT the same as
-  // explicitly passing domain={['auto', 'auto']} for this chart's data —
-  // the omitted-prop path renders $0k-$14k-ish (confirmed via a live
-  // getBoundingClientRect/tick-label check), the explicit-['auto','auto']
-  // path renders a visibly tighter $9k-$14k even at 1440px desktop width,
-  // a real, measured desktop pixel-diff (~1.6k-5.3k px depending on width)
-  // that a same-code control run confirmed was NOT just Recharts' usual
-  // sub-pixel SVG noise. Conditionally omitting the prop rather than
-  // passing a literal 'auto' array is what actually keeps desktop
-  // byte-for-byte — see the spread below.
-  const mcYDomain = isCompactViewport ? computeYDomain(mcData, ['a', 'b']) : null
+  // viewport chart. Gated on isCompactViewport OR isMcExpanded now — the
+  // fullscreen-expanded view needs the same tight domain at every width,
+  // desktop included, once desktop could reach it too — and, unlike
+  // Dashboard's own charts, the domain prop is only spread onto <YAxis> at
+  // all in either of those two cases (see below), not passed as a literal
+  // ['auto', 'auto'] the rest of the time. Checked directly, not assumed
+  // from Dashboard's pattern: Recharts' true default (the prop omitted
+  // entirely) is NOT the same as explicitly passing domain={['auto',
+  // 'auto']} for this chart's data — the omitted-prop path renders
+  // $0k-$14k-ish (confirmed via a live getBoundingClientRect/tick-label
+  // check), the explicit-['auto','auto'] path renders a visibly tighter
+  // $9k-$14k even at 1440px desktop width, a real, measured desktop
+  // pixel-diff (~1.6k-5.3k px depending on width) that a same-code control
+  // run confirmed was NOT just Recharts' usual sub-pixel SVG noise.
+  // Conditionally omitting the prop rather than passing a literal 'auto'
+  // array is what actually keeps the inline chart byte-for-byte — see the
+  // spread below.
+  const mcYDomain = (isCompactViewport || isMcExpanded) ? computeYDomain(mcData, ['a', 'b']) : null
+
+  // The Cumulative Returns chart never had a domain at all before (plain
+  // Recharts default at every width, unlike the Monte Carlo chart just
+  // above) — only applied now, in the fullscreen-expanded state, for the
+  // same reason. Not gated on isCompactViewport at all: this chart's inline
+  // rendering has always been the same at every width, so there's no
+  // existing compact-viewport behaviour to preserve here, only a new
+  // expanded one to add.
+  const growthYDomain = isGrowthExpanded ? computeYDomain(growthData, ['a', 'b']) : null
 
   // Score — count wins per portfolio
   const metrics = [
@@ -202,21 +219,17 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
         <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
           Cumulative returns
         </div>
-        {/* Rendered only on a compact viewport — desktop/tablet never see
-            it, so isGrowthExpanded can never become true there regardless
-            of growthExpandRequested. Same control, reused from
-            Dashboard/Backtest/MonteCarlo/Frontier (.chart-expand-btn,
-            index.css), not reimplemented. */}
-        {isCompactViewport && (
-          <button
-            onClick={() => setGrowthExpandRequested(v => !v)}
-            className="chart-expand-btn"
-            aria-label={isGrowthExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-            title={isGrowthExpanded ? 'Collapse' : 'Expand'}
-          >
-            {isGrowthExpanded ? '✕' : '⤢'}
-          </button>
-        )}
+        {/* Shown at every width now, not just compact viewport. Same
+            control, reused from Dashboard/Backtest/MonteCarlo/Frontier
+            (.chart-expand-btn, index.css), not reimplemented. */}
+        <button
+          onClick={() => setGrowthExpandRequested(v => !v)}
+          className="chart-expand-btn"
+          aria-label={isGrowthExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+          title={isGrowthExpanded ? 'Collapse' : 'Expand'}
+        >
+          {isGrowthExpanded ? '✕' : '⤢'}
+        </button>
       </div>
       {/* overflow:'hidden' — containment backstop for Recharts'
           tooltip-position clamp, which isn't an absolute safety net
@@ -228,7 +241,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={growthData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <XAxis dataKey="date" tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-            <YAxis tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={42} />
+            <YAxis {...(growthYDomain ? { domain: growthYDomain } : {})} tickFormatter={v => `${(v*100).toFixed(0)}%`} tick={{ fill:'var(--text-muted)', fontSize:10 }} tickLine={false} axisLine={false} width={42} />
             <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.08)" strokeDasharray="4 4" />
             <Tooltip contentStyle={TIP} formatter={v => fmt(v)} />
             <Area type="monotone" dataKey="a" stroke={A_COLOR} strokeWidth={1.5} fill={A_COLOR} fillOpacity={0.08} dot={false} name={nameA} />
@@ -255,16 +268,15 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             Monte Carlo - median outcomes
           </div>
-          {isCompactViewport && (
-            <button
-              onClick={() => setMcExpandRequested(v => !v)}
-              className="chart-expand-btn"
-              aria-label={isMcExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-              title={isMcExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isMcExpanded ? '✕' : '⤢'}
-            </button>
-          )}
+          {/* Shown at every width now, not just compact viewport. */}
+          <button
+            onClick={() => setMcExpandRequested(v => !v)}
+            className="chart-expand-btn"
+            aria-label={isMcExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+            title={isMcExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isMcExpanded ? '✕' : '⤢'}
+          </button>
         </div>
         <div style={{ display: 'flex', gap: 14, fontSize: 10, flexWrap: 'wrap' }}>
           {[[A_COLOR, nameA, dataA.monte_carlo.p50_final], [B_COLOR, nameB, dataB.monte_carlo.p50_final]].map(([c, n, v]) => (

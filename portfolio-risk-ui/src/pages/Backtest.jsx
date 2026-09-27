@@ -6,8 +6,8 @@ import {
 import HeavyTierPending from '../components/HeavyTierPending'
 import InsightBox from '../components/InsightBox'
 import useOverlay from '../hooks/useOverlay'
-import useCompactViewport from '../hooks/useCompactViewport'
 import { getBenchmarkLabel, getBenchmarkPhrase } from '../lib/benchmarks'
+import { computeYDomain } from '../lib/chartDomain'
 
 const fmtPct = v => `${(v * 100).toFixed(1)}%`
 
@@ -136,16 +136,16 @@ function ReturnsTable({ backtest, strategies }) {
 }
 
 export default function Backtest({ data, tickers, heavyError }) {
-  // Same dual-axis "phone, either orientation" signal Dashboard's growth-
-  // chart expand and RiskAnalysis's confidence-header fold both use.
   // Hooks placed before either early return below (both `data` and
   // `backtest` genuinely toggle null -> non-null within one mounted
   // instance of this component, before/after Run Analysis and while the
   // heavy tier is still loading) so they always run the same number of
-  // times regardless of which return path fires.
-  const isCompactViewport = useCompactViewport()
+  // times regardless of which return path fires. Expand/collapse is a plain
+  // request, not gated on viewport — the expand button is shown at every
+  // width (previously compact-viewport only), so there's no separate
+  // isCompactViewport signal needed here at all anymore.
   const [expandRequested, setExpandRequested] = useState(false)
-  const isChartExpanded = expandRequested && isCompactViewport
+  const isChartExpanded = expandRequested
   const chartCardRef = useRef(null)
   useOverlay(isChartExpanded, chartCardRef, () => setExpandRequested(false))
 
@@ -188,6 +188,19 @@ export default function Backtest({ data, tickers, heavyError }) {
     sp500:          backtest.sp500.cumulative_returns.values[i],
   }))
 
+  // This chart never had a Y-axis domain at all before (plain Recharts
+  // default at every width) — only applied now, in the fullscreen-expanded
+  // state, where three lines sitting in a thin auto-scaled band in the
+  // middle of a much taller box is a real legibility problem the inline
+  // card's own ~65-ish px plot height never had. Prop omitted entirely
+  // (not a literal ['auto','auto']) when not expanded, so the inline chart
+  // — desktop or phone — stays on Recharts' true default, unchanged; see
+  // Comparison.jsx's mcYDomain comment for why an explicit 'auto' literal
+  // is a measurably different (and wrong here) thing to pass instead.
+  const chartYDomain = isChartExpanded
+    ? computeYDomain(chartData, strategies.map(s => s.key))
+    : null
+
   // Built once here, referenced twice below (normal flex slot vs.
   // portalled fullscreen) — see the render call's own comment for why a
   // portal is required, not just a CSS class swap in place.
@@ -211,21 +224,18 @@ export default function Backtest({ data, tickers, heavyError }) {
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)' }}>
             Cumulative return - {backtest.period.start} to {backtest.period.end}
           </div>
-          {/* Rendered only on a compact viewport — desktop and tablet never
-              see it, so isChartExpanded can never become true there
-              regardless of expandRequested. Same control, same 44x44
-              ::before tap target, as Dashboard's growth chart
-              (.chart-expand-btn, index.css) — reused, not reimplemented. */}
-          {isCompactViewport && (
-            <button
-              onClick={() => setExpandRequested(v => !v)}
-              className="chart-expand-btn"
-              aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
-              title={isChartExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isChartExpanded ? '✕' : '⤢'}
-            </button>
-          )}
+          {/* Shown at every width now, not just compact viewport. Same
+              control, same 44x44 ::before tap target, as Dashboard's growth
+              chart (.chart-expand-btn, index.css) — reused, not
+              reimplemented. */}
+          <button
+            onClick={() => setExpandRequested(v => !v)}
+            className="chart-expand-btn"
+            aria-label={isChartExpanded ? 'Collapse chart' : 'Expand chart to full screen'}
+            title={isChartExpanded ? 'Collapse' : 'Expand'}
+          >
+            {isChartExpanded ? '✕' : '⤢'}
+          </button>
         </div>
         {/* flexWrap — same as Dashboard's identical growth-chart legend row
             (Dashboard.jsx); without it this was the one remaining clipped
@@ -251,7 +261,7 @@ export default function Backtest({ data, tickers, heavyError }) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} style={CHART_STYLE} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <XAxis dataKey="date" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-            <YAxis tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
+            <YAxis {...(chartYDomain ? { domain: chartYDomain } : {})} tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={AXIS_STYLE} tickLine={false} axisLine={false} width={48} />
             <ReferenceLine y={0} stroke="rgba(var(--text-primary-rgb),0.1)" strokeDasharray="4 4" />
             <Tooltip content={<CustomTooltip />} />
             {strategies.map(s => (
