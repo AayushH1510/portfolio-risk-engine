@@ -8,6 +8,7 @@ import InsightBox from '../components/InsightBox'
 import useOverlay from '../hooks/useOverlay'
 import useCompactViewport from '../hooks/useCompactViewport'
 import { computeYDomain } from '../lib/chartDomain'
+import { winner } from '../lib/compareMetrics'
 
 const fmt    = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtD   = v => v != null ? `$${Math.abs(v).toFixed(0)}` : 'N/A'
@@ -18,16 +19,11 @@ const TIP    = { background:'var(--surface-elevated)', border:'var(--border-emph
 const A_COLOR = 'var(--signal-positive)'
 const B_COLOR = 'var(--signal-caution)'
 
-function winner(aVal, bVal, lowerBetter = false) {
-  if (aVal == null || bVal == null) return null
-  return lowerBetter ? (aVal < bVal ? 'A' : 'B') : (aVal > bVal ? 'A' : 'B')
-}
-
-function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, lowerBetter = false, isCompactViewport = false }) {
+function MetricRow({ label, aVal, bVal, fmt: fmtFn = fmtN, metricKey, isCompactViewport = false }) {
   const w = winner(
     typeof aVal === 'number' ? aVal : null,
     typeof bVal === 'number' ? bVal : null,
-    lowerBetter
+    metricKey
   )
   // Compact viewport only — see .compare-ab-row's compact override
   // (index.css) for why: below 768px the centre label track moves out from
@@ -180,17 +176,28 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
   // expanded one to add.
   const growthYDomain = isGrowthExpanded ? computeYDomain(growthData, ['a', 'b']) : null
 
-  // Score — count wins per portfolio
+  // Score — count wins per portfolio. This is the exact same metric set and
+  // the exact same winner() call the MetricRow table below renders from
+  // (metricKey drives both), so the "wins X of Y" count can never drift out
+  // of sync with what the per-row WIN badges actually show — previously
+  // this list used its own separate Math.abs()-patched logic and omitted
+  // CVaR entirely, a second, silently-divergent source of truth for the
+  // same question.
   const metrics = [
-    { aV: dataA.annualised_return,          bV: dataB.annualised_return,          lb: false },
-    { aV: dataA.annualised_volatility,       bV: dataB.annualised_volatility,       lb: true  },
-    { aV: dataA.sharpe_ratio,                bV: dataB.sharpe_ratio,                lb: false },
-    { aV: dataA.sortino_ratio,               bV: dataB.sortino_ratio,               lb: false },
-    { aV: Math.abs(dataA.max_drawdown),      bV: Math.abs(dataB.max_drawdown),      lb: true  },
-    { aV: Math.abs(dataA.var_cvar.var_pct),  bV: Math.abs(dataB.var_cvar.var_pct),  lb: true  },
+    { key: 'return',     aV: dataA.annualised_return,        bV: dataB.annualised_return },
+    { key: 'volatility', aV: dataA.annualised_volatility,    bV: dataB.annualised_volatility },
+    { key: 'sharpe',     aV: dataA.sharpe_ratio,              bV: dataB.sharpe_ratio },
+    { key: 'sortino',    aV: dataA.sortino_ratio,             bV: dataB.sortino_ratio },
+    { key: 'drawdown',   aV: dataA.max_drawdown,              bV: dataB.max_drawdown },
+    { key: 'var95',      aV: dataA.var_cvar.var_pct,         bV: dataB.var_cvar.var_pct },
+    { key: 'cvar95',     aV: dataA.var_cvar.cvar_pct,        bV: dataB.var_cvar.cvar_pct },
+    ...(dataA.beta_alpha && dataB.beta_alpha ? [
+      { key: 'beta',  aV: dataA.beta_alpha.beta,  bV: dataB.beta_alpha.beta },
+      { key: 'alpha', aV: dataA.beta_alpha.alpha, bV: dataB.beta_alpha.alpha },
+    ] : []),
   ]
-  const winsA = metrics.filter(m => winner(m.aV, m.bV, m.lb) === 'A').length
-  const winsB = metrics.filter(m => winner(m.aV, m.bV, m.lb) === 'B').length
+  const winsA = metrics.filter(m => winner(m.aV, m.bV, m.key) === 'A').length
+  const winsB = metrics.filter(m => winner(m.aV, m.bV, m.key) === 'B').length
   const overallWinner = winsA > winsB ? 'A' : winsB > winsA ? 'B' : null
   const overallColor  = overallWinner === 'A' ? A_COLOR : B_COLOR
 
@@ -381,17 +388,17 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Head to head
           </div>
-          <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  lowerBetter={false} isCompactViewport={isCompactViewport} />
-          <MetricRow label="Volatility" aVal={dataA.annualised_volatility}    bVal={dataB.annualised_volatility}    fmt={fmt}  lowerBetter={true}  isCompactViewport={isCompactViewport} />
-          <MetricRow label="Sharpe"    aVal={dataA.sharpe_ratio}              bVal={dataB.sharpe_ratio}              fmt={fmtN} lowerBetter={false} isCompactViewport={isCompactViewport} />
-          <MetricRow label="Sortino"   aVal={dataA.sortino_ratio}             bVal={dataB.sortino_ratio}             fmt={fmtN} lowerBetter={false} isCompactViewport={isCompactViewport} />
-          <MetricRow label="Drawdown"  aVal={dataA.max_drawdown}              bVal={dataB.max_drawdown}              fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
-          <MetricRow label="VaR 95%"   aVal={dataA.var_cvar.var_pct}         bVal={dataB.var_cvar.var_pct}         fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
-          <MetricRow label="CVaR 95%"  aVal={dataA.var_cvar.cvar_pct}        bVal={dataB.var_cvar.cvar_pct}        fmt={v => fmt(v)} lowerBetter={true} isCompactViewport={isCompactViewport} />
+          <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  metricKey="return"     isCompactViewport={isCompactViewport} />
+          <MetricRow label="Volatility" aVal={dataA.annualised_volatility}    bVal={dataB.annualised_volatility}    fmt={fmt}  metricKey="volatility" isCompactViewport={isCompactViewport} />
+          <MetricRow label="Sharpe"    aVal={dataA.sharpe_ratio}              bVal={dataB.sharpe_ratio}              fmt={fmtN} metricKey="sharpe"     isCompactViewport={isCompactViewport} />
+          <MetricRow label="Sortino"   aVal={dataA.sortino_ratio}             bVal={dataB.sortino_ratio}             fmt={fmtN} metricKey="sortino"    isCompactViewport={isCompactViewport} />
+          <MetricRow label="Drawdown"  aVal={dataA.max_drawdown}              bVal={dataB.max_drawdown}              fmt={v => fmt(v)} metricKey="drawdown" isCompactViewport={isCompactViewport} />
+          <MetricRow label="VaR 95%"   aVal={dataA.var_cvar.var_pct}         bVal={dataB.var_cvar.var_pct}         fmt={v => fmt(v)} metricKey="var95"    isCompactViewport={isCompactViewport} />
+          <MetricRow label="CVaR 95%"  aVal={dataA.var_cvar.cvar_pct}        bVal={dataB.var_cvar.cvar_pct}        fmt={v => fmt(v)} metricKey="cvar95"   isCompactViewport={isCompactViewport} />
           {dataA.beta_alpha && dataB.beta_alpha && (
             <>
-              <MetricRow label="Beta"  aVal={dataA.beta_alpha.beta}          bVal={dataB.beta_alpha.beta}          fmt={fmtN} lowerBetter={true} isCompactViewport={isCompactViewport} />
-              <MetricRow label="Alpha" aVal={dataA.beta_alpha.alpha}         bVal={dataB.beta_alpha.alpha}         fmt={fmt}  lowerBetter={false} isCompactViewport={isCompactViewport} />
+              <MetricRow label="Beta"  aVal={dataA.beta_alpha.beta}          bVal={dataB.beta_alpha.beta}          fmt={fmtN} metricKey="beta"  isCompactViewport={isCompactViewport} />
+              <MetricRow label="Alpha" aVal={dataA.beta_alpha.alpha}         bVal={dataB.beta_alpha.alpha}         fmt={fmt}  metricKey="alpha" isCompactViewport={isCompactViewport} />
             </>
           )}
         </div>

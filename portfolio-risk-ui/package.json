@@ -4,9 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/tokens-to-css.mjs > src/landing-theme.css",
+    "predev": "node scripts/tokens-to-css.mjs > src/landing-theme.css && node scripts/fix-font-display.mjs > src/landing-fonts.css",
     "dev": "vite",
-    "prebuild": "node scripts/tokens-to-css.mjs > src/landing-theme.css",
+    "prebuild": "node scripts/tokens-to-css.mjs > src/landing-theme.css && node scripts/fix-font-display.mjs > src/landing-fonts.css",
     "build": "npx vite build",
     "preview": "vite preview",
     "shots": "node scripts/shots.mjs",

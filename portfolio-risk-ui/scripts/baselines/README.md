@@ -198,6 +198,108 @@ gated on `isCompactViewport`, now just also true when expanded).
 Every PNG under `desktop/` reflects the six always-visible expand buttons
 as of this date.
 
+## Re-captured 2026-09-27, a fourth time — font-display fix changed landing-page text layout
+
+A fourth same-day recapture, and — like the previous three — a deliberate
+frontend change, not a regression: two pre-launch landing-page performance
+fixes (code-splitting `/app` out of the bundle `/` no longer needs to
+download, and fixing the font-swap-driven layout shift Lighthouse's CLS
+audit flagged on `/`). Neither one was expected to touch a single rendered
+pixel of any desktop screenshot — the `/app` code-splitting only changes
+*when* JS is fetched, not what anything looks like, and the CLS fix only
+changes *which* font renders under a specific timing condition. It was the
+second one that did, and is worth recording exactly why.
+
+**The fix:** `scripts/fix-font-display.mjs` (new, runs in prebuild/predev
+alongside the existing `tokens-to-css.mjs`) rewrites every landing
+`@fontsource` face's `font-display: swap` to `font-display: optional`.
+`swap` paints the fallback font immediately and then reflows the page once
+the real webfont finishes loading — a page-wide layout shift happening
+*after* first paint, which is exactly what CLS measures, and exactly what
+was showing up as 0.162 on `/`. `optional` gives the browser a short (~100ms)
+window to use the font if it's already available (cached from an earlier
+visit) and otherwise commits to the fallback font for that page view, with
+no later swap and therefore no later reflow — confirmed directly, not just
+by the audit's own number: a `PerformanceObserver` for `layout-shift`
+entries measured 0 shift, 0 entries, at every one of four different
+conditions (normal load, fonts artificially delayed, canvas disabled,
+reduced-motion) after this fix, against a real, reproducible shift before
+it.
+
+**Why `home` and `methodology` specifically changed height, and nothing
+else did:** `scripts/shots.mjs` always launches a fresh browser context
+with no font cache — exactly the "first visit" condition `optional` is
+designed around, so every capture of a landing route now renders body text
+in the *fallback* font, not Newsreader/Lora, unless the page has no real
+body copy set in those families to begin with. `home` and `methodology`
+are the two routes with substantial Newsreader/Lora prose; `pro`/`privacy`/
+`terms` show 0.0000% precisely because they don't lean on those families
+enough for a fallback-vs-real-font metrics difference to move a pixel. The
+fallback font's line-height and character widths aren't identical to
+Newsreader/Lora's, so the same text wraps and stacks slightly differently —
+`methodology` (the most text-heavy route) shortened by ~300-400px out of
+~20,000px total (under 2%); `home` moved by tens of px in either direction
+depending on width. Checked directly against the previous baseline, not
+assumed from the numbers alone: both pages render fully, correctly, with no
+overlapping or cut-off text at any width — this is a real but cosmetically
+minor font substitution, not a layout break.
+
+This is also the more representative capture for what "before a public
+launch" actually means: a first-time visitor with no cached fonts is
+precisely the case these two fixes were aimed at, more so than a returning
+visitor whose browser already has Newsreader/Lora cached and would see the
+real fonts immediately (still within `optional`'s ~100ms window, still no
+reflow) on every page after their first.
+
+Every PNG under `desktop/` for `home` and `methodology` reflects the
+fallback-font-rendered, cold-cache layout as of this date; every other
+route's PNGs are unchanged (confirmed 0.0000%/within-floor across the
+board) since neither fix touches anything else on the page.
+
+## Re-captured 2026-09-28 — Compare tab's WIN-badge direction bug fixed
+
+Deliberate change, not drift: fixed a correctness bug where Drawdown, VaR
+95%, and CVaR 95% (all stored as negative numbers — a loss) awarded WIN to
+the *worse* side. `Comparison.jsx`'s old `winner()` applied a bare
+`lowerBetter` boolean straight to the raw signed value — for these three
+metrics that meant "more negative" (a bigger loss) read as "lower" and
+therefore "better," the opposite of correct (e.g. a -6.6% drawdown used to
+beat a -4.7% one). Replaced with `lib/compareMetrics.js`, a single explicit
+per-metric direction table every consumer (the win-count array and each
+`MetricRow`) now reads from — see that file's own header comment.
+
+That same fix changed how an exact **tie** resolves: the old `winner()` had
+no tie case at all (`aVal < bVal ? 'A' : 'B'` and `aVal > bVal ? 'A' : 'B'`
+both evaluate to `'B'` when the two values are equal), so it silently
+declared Portfolio B the winner of every metric whenever A and B scored
+identically. The fix returns `null` (no winner, no WIN badge, no
+highlight) on a genuine tie instead. This harness's own fixture feeds
+`/api/analyse`, `/api/analyse-summary`, and `/api/analyse-full` the exact
+same captured data for both Portfolio A and Portfolio B — so every metric
+in `app-compare`'s screenshot ties, and the old baseline showed Portfolio B
+winning all 6 metrics it counted, with a "Portfolio B wins on 6 of 6
+metrics" banner and a WIN badge/highlight on every single row. The new
+baseline correctly shows no winner banner and no WIN badges anywhere on
+that screenshot (confirmed by inspecting the diff image directly, not just
+the percentage) — a real, larger-looking diff (2.8%-3.9% across the six
+desktop widths) that is entirely explained by this, not a layout break.
+
+Verified against the reported bug's own numbers separately (a disposable
+Playwright script with genuinely different A/B fixtures, deleted after
+use): drawdown -6.6% vs -4.7%, VaR 95% -1.5% vs -1.4%, and CVaR 95% -2.2%
+vs -1.6% now all correctly award WIN to the smaller-loss side, and the
+win-count banner/Comparison-summary text recompute from the same corrected
+per-metric results (now including CVaR and, when present, Beta/Alpha in
+the counted set — the old win-count array omitted CVaR entirely and had
+already special-cased Drawdown/VaR with an ad-hoc `Math.abs()`, a second,
+silently-diverged copy of the same direction logic `MetricRow` used raw and
+unabs'd).
+
+Every PNG under `desktop/` for the eight `app-*` views reflects this fix
+as of this date (all eight were recaptured together via `--routes=/app`;
+only `app-compare` actually changed pixel content — the other seven
+recaptured identical to what they already were).
+
 ## Local-only — not committed
 
 `desktop/` is gitignored (this README isn't — it's the one file in this

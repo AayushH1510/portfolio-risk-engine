@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { runExportPDF } from './ExportPDF'
 import { runExportCSV } from './ExportCSV'
 
 // Combined "Export" trigger for the desktop header — replaces two separate
@@ -8,8 +7,10 @@ import { runExportCSV } from './ExportCSV'
 // Sign in). The sidebar drawer keeps the original two full-width buttons
 // (ExportPDF.jsx / ExportCSV.jsx's own default exports) — phone/tablet were
 // never the width-constrained case, so there's no reason to collapse them
-// there too. This menu calls the same runExportPDF/runExportCSV functions
-// those two files export, not a reimplementation of either flow.
+// there too. PDF Report below dynamically imports runExportPDF from
+// lib/exportPdfReport.js — same lazy-loaded flow ExportPDF.jsx's own button
+// uses, not a second, statically-bundled copy — CSV Data reuses runExportCSV
+// directly since that one's cheap enough not to need splitting out.
 export default function ExportMenu({ data, tickers, weights }) {
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState(null)
@@ -87,6 +88,13 @@ export default function ExportMenu({ data, tickers, weights }) {
     triggerRef.current?.focus()
   }
 
+  const runPdfAndClose = async () => {
+    const { runExportPDF } = await import('../lib/exportPdfReport')
+    runExportPDF({ data, tickers, weights })
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
   return (
     <div className="export-menu" ref={wrapperRef}>
       <button
@@ -117,7 +125,7 @@ export default function ExportMenu({ data, tickers, weights }) {
             ref={pdfItemRef}
             className="export-menu-item"
             role="menuitem"
-            onClick={() => runAndClose(runExportPDF)}
+            onClick={runPdfAndClose}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
