@@ -174,12 +174,6 @@ export default function Valuation({ tickers, onTickerClick }) {
 
   const selectedStock = data.find(d => d.ticker === selected)
 
-  // Ranking helpers
-  const rank = (arr, key, lowerBetter = false) => {
-    const sorted = [...arr].filter(d => d[key] != null).sort((a,b) => lowerBetter ? a[key]-b[key] : b[key]-a[key])
-    return sorted.map((d,i) => ({ ticker: d.ticker, rank: i+1 }))
-  }
-
   // A fund/ETF has no P/S ratio, gross margin, etc. of its own - those are
   // company-level metrics that belong to its underlying holdings, not the
   // wrapper (see api.py: is_fund). A portfolio made entirely of funds gets

@@ -183,6 +183,10 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
   // this list used its own separate Math.abs()-patched logic and omitted
   // CVaR entirely, a second, silently-divergent source of truth for the
   // same question.
+  // Beta is deliberately absent from this list — it's still rendered as its
+  // own MetricRow below, but compareMetrics.js marks it comparable:false
+  // (no "better" direction: lower is more defensive, not superior), so it
+  // never contributes a win to either side and never counts toward "of Y".
   const metrics = [
     { key: 'return',     aV: dataA.annualised_return,        bV: dataB.annualised_return },
     { key: 'volatility', aV: dataA.annualised_volatility,    bV: dataB.annualised_volatility },
@@ -192,7 +196,6 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
     { key: 'var95',      aV: dataA.var_cvar.var_pct,         bV: dataB.var_cvar.var_pct },
     { key: 'cvar95',     aV: dataA.var_cvar.cvar_pct,        bV: dataB.var_cvar.cvar_pct },
     ...(dataA.beta_alpha && dataB.beta_alpha ? [
-      { key: 'beta',  aV: dataA.beta_alpha.beta,  bV: dataB.beta_alpha.beta },
       { key: 'alpha', aV: dataA.beta_alpha.alpha, bV: dataB.beta_alpha.alpha },
     ] : []),
   ]
@@ -388,7 +391,15 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
           <div style={{ fontSize: 'var(--text-caption)', fontWeight: 'var(--weight-medium)', textTransform: 'uppercase', letterSpacing: 'var(--tracking-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-primary)', marginBottom: 10 }}>
             Head to head
           </div>
-          <MetricRow label="Return"    aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  metricKey="return"     isCompactViewport={isCompactViewport} />
+          {/* "Ann. Return", not "Return" — annualised_return is CAGR-
+              extrapolated to a full year (stats_engine.py's
+              compute_annualised_return), so a short selected window's
+              actual gain reads much larger here than the Cumulative
+              Returns chart's own visible climb (e.g. a ~10% two-month gain
+              annualises to ~105%). Both numbers are correct; the label is
+              what was missing — Dashboard.jsx already disambiguates the
+              same figure as "Annual Return" for the same reason. */}
+          <MetricRow label="Ann. Return" aVal={dataA.annualised_return}         bVal={dataB.annualised_return}         fmt={fmt}  metricKey="return"     isCompactViewport={isCompactViewport} />
           <MetricRow label="Volatility" aVal={dataA.annualised_volatility}    bVal={dataB.annualised_volatility}    fmt={fmt}  metricKey="volatility" isCompactViewport={isCompactViewport} />
           <MetricRow label="Sharpe"    aVal={dataA.sharpe_ratio}              bVal={dataB.sharpe_ratio}              fmt={fmtN} metricKey="sharpe"     isCompactViewport={isCompactViewport} />
           <MetricRow label="Sortino"   aVal={dataA.sortino_ratio}             bVal={dataB.sortino_ratio}             fmt={fmtN} metricKey="sortino"    isCompactViewport={isCompactViewport} />
@@ -422,7 +433,7 @@ export default function Comparison({ dataA, dataB, nameA, nameB, tickersA, ticke
         priority="secondary"
         tone={overallWinner ? 'good' : 'neutral'}
         text={overallWinner
-          ? `<strong>${overallWinner === 'A' ? nameA : nameB}</strong> leads on ${Math.max(winsA, winsB)} of ${metrics.length} risk-adjusted metrics. Return: <strong>${fmt(dataA.annualised_return)}</strong> vs <strong>${fmt(dataB.annualised_return)}</strong>. Sharpe: <strong>${fmtN(dataA.sharpe_ratio)}</strong> vs <strong>${fmtN(dataB.sharpe_ratio)}</strong>. Monte Carlo median: <strong>$${Math.round(dataA.monte_carlo.p50_final).toLocaleString()}</strong> vs <strong>$${Math.round(dataB.monte_carlo.p50_final).toLocaleString()}</strong>.`
+          ? `<strong>${overallWinner === 'A' ? nameA : nameB}</strong> leads on ${Math.max(winsA, winsB)} of ${metrics.length} risk-adjusted metrics. Annualised return: <strong>${fmt(dataA.annualised_return)}</strong> vs <strong>${fmt(dataB.annualised_return)}</strong>. Sharpe: <strong>${fmtN(dataA.sharpe_ratio)}</strong> vs <strong>${fmtN(dataB.sharpe_ratio)}</strong>. Monte Carlo median: <strong>$${Math.round(dataA.monte_carlo.p50_final).toLocaleString()}</strong> vs <strong>$${Math.round(dataB.monte_carlo.p50_final).toLocaleString()}</strong>.`
           : `Both portfolios are evenly matched across ${metrics.length} metrics. Look at individual metrics above to decide which fits your risk tolerance.`
         }
       />

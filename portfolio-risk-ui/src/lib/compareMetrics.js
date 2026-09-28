@@ -23,15 +23,22 @@ export const METRIC_DIRECTIONS = {
   drawdown:   { label: 'Drawdown',   score: v => v },   // negative; less negative (smaller loss) = higher raw value = better
   var95:      { label: 'VaR 95%',    score: v => v },   // negative; smaller loss = higher raw value = better
   cvar95:     { label: 'CVaR 95%',   score: v => v },   // negative; smaller loss = higher raw value = better
-  beta:       { label: 'Beta',       score: v => -v },  // lower raw value (less systematic risk) = better
+  // Beta has no "better" direction — a lower beta is more defensive
+  // (tracks the market less), not objectively superior; a higher beta is a
+  // deliberate, equally valid choice for someone seeking more upside
+  // participation. comparable:false means winner() below always returns
+  // null for this key, regardless of the two values: still shown in the
+  // head-to-head table, never awarded a WIN, never counted in "wins X of Y".
+  beta:       { label: 'Beta',       comparable: false },
   alpha:      { label: 'Alpha',      score: v => v },   // higher raw value = better
 }
 
-// Returns 'A', 'B', or null (missing data or an exact tie — neither side is
-// declared a winner).
+// Returns 'A', 'B', or null (missing data, a metric marked non-comparable,
+// or an exact tie — neither side is declared a winner).
 export function winner(aVal, bVal, metricKey) {
   const direction = METRIC_DIRECTIONS[metricKey]
   if (!direction) throw new Error(`compareMetrics: unknown metric key "${metricKey}"`)
+  if (direction.comparable === false) return null
   if (typeof aVal !== 'number' || typeof bVal !== 'number' || Number.isNaN(aVal) || Number.isNaN(bVal)) return null
   const aScore = direction.score(aVal)
   const bScore = direction.score(bVal)

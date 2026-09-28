@@ -61,10 +61,15 @@ test('volatility: lower raw value wins', () => {
   assert.equal(winner(0.18, 0.18, 'volatility'), null)
 })
 
-test('beta: lower raw value wins', () => {
-  assert.equal(winner(0.9, 1.4, 'beta'), 'A')
-  assert.equal(winner(1.4, 0.9, 'beta'), 'B')
+// ── Non-comparable metrics: shown, but never awarded a winner ──────────────
+
+test('beta: never declares a winner, regardless of which side is lower', () => {
+  assert.equal(winner(0.9, 1.4, 'beta'), null)
+  assert.equal(winner(1.4, 0.9, 'beta'), null)
   assert.equal(winner(1.1, 1.1, 'beta'), null)
+  // Extreme values still don't force a winner — non-comparability isn't a
+  // near-tie special case, it applies unconditionally to this metric.
+  assert.equal(winner(-2, 5, 'beta'), null)
 })
 
 // ── Loss metrics expressed as negatives: smaller loss (less negative /
@@ -110,8 +115,17 @@ test('null or missing values return null rather than a winner', () => {
 test('every metric direction table entry is well-formed', () => {
   for (const [key, dir] of Object.entries(METRIC_DIRECTIONS)) {
     assert.equal(typeof dir.label, 'string', `${key}.label should be a string`)
-    assert.equal(typeof dir.score, 'function', `${key}.score should be a function`)
+    // Every comparable metric needs a score(); a metric marked
+    // comparable:false (currently just beta) is exempt — it's never scored.
+    if (dir.comparable !== false) {
+      assert.equal(typeof dir.score, 'function', `${key}.score should be a function`)
+    }
   }
+})
+
+test('beta is the only metric currently marked non-comparable', () => {
+  const nonComparable = Object.entries(METRIC_DIRECTIONS).filter(([, dir]) => dir.comparable === false).map(([key]) => key)
+  assert.deepEqual(nonComparable, ['beta'])
 })
 
 test('unknown metric key throws rather than silently defaulting a direction', () => {
