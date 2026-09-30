@@ -205,6 +205,11 @@ export const landingPage: LandingPage = {
     { label: 'How', href: '#how' },
     { label: 'Method', href: '#method' },
     { label: 'Pricing', href: '#pricing' },
+    // Plain <a href> (Nav.jsx renders every nav link the same way,
+    // unconditionally) — a real page navigation out of the SPA to the
+    // static deck at public/overview/index.html, not a same-page anchor
+    // like the rest of this list.
+    { label: 'Product overview', href: '/overview' },
   ],
   navAction: { label: 'Launch the app →', href: APP_URL, variant: 'secondary' },
 
@@ -455,6 +460,7 @@ export const landingPage: LandingPage = {
           { label: 'What it is', href: '#what' },
           { label: 'The engine', href: '#features' },
           { label: 'Pricing', href: '#pricing' },
+          { label: 'Product overview', href: '/overview' },
         ],
       },
       {
