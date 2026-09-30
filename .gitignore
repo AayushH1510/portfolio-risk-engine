@@ -19,3 +19,6 @@ portfolio-risk-ui/screenshots-*/
 portfolio-risk-ui/scripts/baselines/desktop/
 
 .vercel
+
+*.pdf
+*.pptx
