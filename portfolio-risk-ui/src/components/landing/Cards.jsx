@@ -31,7 +31,19 @@ function Card({ card }) {
 
 export default function Cards({ block }) {
   return (
-    <section id={block.id} style={{ padding: '0 var(--layout-gutter) var(--layout-sectionPadY)' }}>
+    // padding was '0 ... sectionPadY' (no top padding) — the one plain
+    // section (no border-top/raised band like Steps.jsx/Pillars.jsx) whose
+    // <section> didn't carry sectionPadY on top the way Prose.jsx/
+    // Pricing.jsx's do. A same-page anchor jump scrolls the TARGET
+    // ELEMENT's own top edge to the viewport top, so every other section's
+    // sectionPadY top padding is what keeps its heading clear of the fixed
+    // 73px nav after a #why/#what/etc. jump — with zero top padding here,
+    // the heading sat flush against the section's top edge, landing
+    // directly under the nav (measured at the time: -0.19px from viewport
+    // top, vs 130-195px for the other four). Matching the other plain
+    // sections' padding, not adding a new scroll-margin-top mechanism
+    // nothing else on this page uses.
+    <section id={block.id} style={{ padding: 'var(--layout-sectionPadY) var(--layout-gutter)' }}>
       <SectionFrame index={block.index} label={block.label}>
         <h2 style={{ ...typeStyle('displayM'), margin: '0 0 var(--space-12)', color: 'var(--color-text-primary)', maxWidth: '800px', textWrap: 'balance' }}>
           {block.heading}
