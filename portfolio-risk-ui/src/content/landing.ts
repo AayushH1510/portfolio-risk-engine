@@ -205,11 +205,6 @@ export const landingPage: LandingPage = {
     { label: 'How', href: '#how' },
     { label: 'Method', href: '#method' },
     { label: 'Pricing', href: '#pricing' },
-    // Plain <a href> (Nav.jsx renders every nav link the same way,
-    // unconditionally) — a real page navigation out of the SPA to the
-    // static deck at public/overview/index.html, not a same-page anchor
-    // like the rest of this list.
-    { label: 'Product overview', href: '/overview' },
   ],
   navAction: { label: 'Launch the app →', href: APP_URL, variant: 'secondary' },
 
@@ -268,6 +263,7 @@ export const landingPage: LandingPage = {
         'Varense takes the portfolio you already hold and answers a single question in a dozen ways: **what can this lose, and how often?**',
         'Enter your tickers and weights. The engine pulls real fundamentals and price history, builds the covariance structure between your holdings, and runs the full risk stack - value at risk, tail expectation, correlated Monte Carlo, crisis replay, frontier optimization - in a single pass. No recommendations. No signals. Just the distribution you are actually exposed to.',
       ],
+      moreLink: { label: 'See the full product overview →', href: '/overview' },
     },
 
     {

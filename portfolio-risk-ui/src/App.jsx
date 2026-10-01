@@ -510,12 +510,6 @@ export default function App() {
             <span id="footer-feedback-slot" />
             <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy</Link>
             <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms</Link>
-            {/* Plain <a>, not <Link> — /overview is a static file
-                (public/overview/index.html), not a React Router route, so
-                a client-side Link would try to match it against <Routes>
-                and render nothing. A real browser navigation is required
-                to actually leave the SPA and load it. */}
-            <a href="/overview" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Product overview</a>
           </span>
         </div>
       </div>
