@@ -1,0 +1,31 @@
+/* The constants and divergences grids on /methodology.
+
+   Flex-wrap, not auto-fit grid: with repeat(auto-fit, minmax(Npx, 1fr)) the
+   column count is whatever the container fits, so an item count that does
+   not divide it leaves a lone card on the last row (6 constants at 5
+   columns; 5 divergences at 4). Here each wrapped line grows its own items
+   to fill the line, so a short last row spreads across the full width.
+   Column counts are set per breakpoint through flex-basis below. */
+
+.methodology-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.methodology-grid > * {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+@media (min-width: 600px) {
+  .methodology-grid--constants > * {
+    flex-basis: calc(50% - 0.5px);
+  }
+}
+
+@media (min-width: 900px) {
+  .methodology-grid--constants > *,
+  .methodology-grid--divergences > * {
+    flex-basis: calc((100% - 2px) / 3);
+  }
+}

@@ -7,6 +7,7 @@ import Footer from '../components/landing/Footer'
 import Logo from '../components/Logo'
 import { landingPage } from '../content/landing'
 import { constants, divergencesCallout, dataSourcing, metrics, APP_URL } from '../content/methodology'
+import './methodology-grids.css'
 
 // Same **bold** convention as Prose.jsx, extended with `mono` backtick spans
 // for formula fragments, constants, and numbers inline in prose — this page's
@@ -205,14 +206,12 @@ export default function Methodology() {
         <div style={{ ...typeStyle('monoSection'), color: 'var(--color-text-ghost)', marginBottom: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-line-default)' }}>
           Constants, read directly from the code
         </div>
-        {/* min(220px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
-            floors" standing decision. */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1px', border: '1px solid var(--color-line-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+        <div className="methodology-grid methodology-grid--constants" style={{ gap: '1px', border: '1px solid var(--color-line-default)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
           {constants.map((c) => (
             <div key={c.label} style={{ background: 'var(--color-bg-panel)', padding: '20px 22px' }}>
               <div style={{ ...typeStyle('monoTile'), color: 'var(--color-text-faint)', marginBottom: 'var(--space-3)' }}>{c.label}</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '22px', color: 'var(--color-accent-mint)', marginBottom: 'var(--space-3)' }}>{c.value}</div>
-              <div style={{ ...typeStyle('bodyXS'), color: 'var(--color-text-ghost)', lineHeight: 1.6 }}>{c.note}</div>
+              <div style={{ ...typeStyle('bodyS'), color: 'var(--color-text-dim)', lineHeight: 1.6 }}>{c.note}</div>
             </div>
           ))}
         </div>
@@ -227,11 +226,7 @@ export default function Methodology() {
           <p style={{ ...typeStyle('lead'), color: 'var(--color-text-muted)', maxWidth: '680px', margin: '0 0 var(--space-14)' }}>
             These aren't buried in a footnote. They shape how nearly every number below should be read.
           </p>
-          {/* min(280px, 100%): see RESPONSIVE_AUDIT.md's "auto-fit grid
-              floors" standing decision — this one was razor-thin even
-              before that finding (280px floor vs. ~280px available at
-              320px), the most marginal of the five grids in this pass. */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '1px', border: '1px solid var(--color-line-default)' }}>
+          <div className="methodology-grid methodology-grid--divergences" style={{ gap: '1px', border: '1px solid var(--color-line-default)' }}>
             {divergencesCallout.map((d) => (
               <div key={d.title} style={{ background: 'var(--color-bg-panel)', boxShadow: 'var(--shadow-hairline)', padding: '32px 30px' }}>
                 <h3 style={{ ...typeStyle('headingXS'), color: 'var(--color-accent-mint)', margin: '0 0 var(--space-4)' }}>{d.title}</h3>

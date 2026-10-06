@@ -1,6 +1,7 @@
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import ScrollManager from './components/ScrollManager.jsx'
 // react, not /next — this is Vite, not Next.js. The Vercel dashboard's
 // setup instructions default to the Next.js import; that one silently
 // does nothing here (no Next.js router to hook into).
@@ -49,6 +50,7 @@ function AppLoading() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+      <ScrollManager />
       <Suspense fallback={<AppLoading />}>
         <Routes>
           <Route path="/" element={<Landing />} />
