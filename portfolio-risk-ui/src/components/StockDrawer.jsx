@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import { isRateLimited } from '../lib/rateLimit'
+import BusyNotice from './BusyNotice'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -75,6 +77,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
   const [stock, setStock]         = useState(null)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
+  const [rateLimited, setRateLimited] = useState(false)
   const [visible, setVisible]     = useState(false)
   // Bumped by the retry button below to force the fetch effect to re-run
   // for the same ticker — its value never means anything beyond "changed
@@ -105,6 +108,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setRateLimited(false)
     setStock(null)
 
     const controller = new AbortController()
@@ -114,6 +118,11 @@ export default function StockDrawer({ ticker, weight, onClose }) {
       .then(async r => {
         const d = await r.json()
         if (!r.ok) {
+          if (isRateLimited(r.status, d.detail)) {
+            const busy = new Error(d.detail)
+            busy.rateLimited = true
+            throw busy
+          }
           throw new Error(d.detail || 'Could not load data')
         }
         if (cancelled) return
@@ -125,6 +134,7 @@ export default function StockDrawer({ ticker, weight, onClose }) {
         const message = e.name === 'AbortError'
           ? 'Taking too long to respond. Please try again.'
           : (e.message || 'Could not load data')
+        setRateLimited(e.rateLimited === true)
         setError(message)
         setLoading(false)
       })
@@ -223,7 +233,11 @@ export default function StockDrawer({ ticker, weight, onClose }) {
             </div>
           )}
 
-          {error && (
+          {error && rateLimited && (
+            <BusyNotice onRetry={() => setRetryCount(c => c + 1)} />
+          )}
+
+          {error && !rateLimited && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div style={{ fontSize: 12, color: 'var(--signal-negative)', marginBottom: 12 }}>
                 {error}

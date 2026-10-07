@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import axios from 'axios'
 import { format, subMonths, subYears } from 'date-fns'
 import { errorMessage } from '../lib/errorMessage'
+import { isRateLimitError } from '../lib/rateLimit'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -40,10 +41,23 @@ export function useAnalysis() {
   const [heavyLoading, setHeavyLoading] = useState(false)
   const [heavyError, setHeavyError]     = useState(null)
 
+  // True when the error above is the market-data rate limit (see lib/rateLimit.js),
+  // so the UI can show a busy state with a retry instead of the raw message.
+  const [rateLimited, setRateLimited]           = useState(false)
+  const [heavyRateLimited, setHeavyRateLimited] = useState(false)
+
+  // The last run's arguments and request body, so "Try again" re-sends exactly
+  // the same request without re-reading (or resetting) any input.
+  const lastRunArgs = useRef({ customDates: null, onSuccess: undefined })
+  const lastPayload = useRef(null)
+
   const runAnalysis = useCallback(async (customDates = null, onSuccess) => {
     setLoading(true)
     setError(null)
+    setRateLimited(false)
     setHeavyError(null)
+    setHeavyRateLimited(false)
+    lastRunArgs.current = { customDates, onSuccess }
 
     const startDate = customDates ? customDates.start : fmt(periodMap[period]())
     const endDate   = customDates ? customDates.end   : fmt(new Date())
@@ -58,6 +72,7 @@ export function useAnalysis() {
       benchmark:       benchmark || 'SPY',
       rolling_window:  rollingWindow,
     }
+    lastPayload.current = payload
 
     try {
       const res = await axios.post(`${API}/api/analyse-summary`, payload)
@@ -75,7 +90,10 @@ export function useAnalysis() {
       setHeavyLoading(true)
       axios.post(`${API}/api/analyse-full`, payload)
         .then(fullRes => setData(fullRes.data))
-        .catch(err => setHeavyError(errorMessage(err, 'Something went wrong loading the full simulation. Please try again in a moment.')))
+        .catch(err => {
+          setHeavyRateLimited(isRateLimitError(err))
+          setHeavyError(errorMessage(err, 'Something went wrong loading the full simulation. Please try again in a moment.'))
+        })
         .finally(() => setHeavyLoading(false))
 
     } catch (err) {
@@ -86,11 +104,35 @@ export function useAnalysis() {
       // read a detail from at all — a real network failure, a timeout, or
       // the request never reaching the server — so it must not imply the
       // user did anything wrong; the tickers may be completely fine.
+      setRateLimited(isRateLimitError(err))
       setError(errorMessage(err, 'Something went wrong loading data. Please try again in a moment.'))
     } finally {
       setLoading(false)
     }
   }, [tickers, weights, period, portfolioValue, benchmark, rollingWindow])
+
+  // Re-runs the last Run Analysis exactly as it was called.
+  const retryRun = useCallback(() => {
+    const { customDates, onSuccess } = lastRunArgs.current
+    return runAnalysis(customDates, onSuccess)
+  }, [runAnalysis])
+
+  // Re-sends only the heavy-tier request (/api/analyse-full) with the last
+  // run's body. The fast summary already on screen is left as it is.
+  const retryHeavy = useCallback(() => {
+    const payload = lastPayload.current
+    if (!payload) return
+    setHeavyLoading(true)
+    setHeavyError(null)
+    setHeavyRateLimited(false)
+    axios.post(`${API}/api/analyse-full`, payload)
+      .then(fullRes => setData(fullRes.data))
+      .catch(err => {
+        setHeavyRateLimited(isRateLimitError(err))
+        setHeavyError(errorMessage(err, 'Something went wrong loading the full simulation. Please try again in a moment.'))
+      })
+      .finally(() => setHeavyLoading(false))
+  }, [])
 
   const updateWeight = useCallback((index, value) => {
     setWeights(prev => {
@@ -117,6 +159,7 @@ export function useAnalysis() {
   return {
     tickers, weights, period, portfolioValue, benchmark, rollingWindow,
     data, loading, error, hasRun, heavyLoading, heavyError,
+    rateLimited, heavyRateLimited, retryRun, retryHeavy,
     setTickers: updateTickers,
     updateWeight,
     setWeightsAll,

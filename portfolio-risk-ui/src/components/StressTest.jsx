@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { errorMessage } from '../lib/errorMessage'
+import { isRateLimitError } from '../lib/rateLimit'
 import MetricTooltip from './MetricTooltip'
+import BusyNotice from './BusyNotice'
 
 // The backend's catch-all message for an unexpected server error — see
 // api.py's GENERIC_ERROR_DETAIL. Swapped for a more actionable instruction
@@ -92,19 +94,24 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
   const [scenarios, setScenarios] = useState(null)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
+  const [rateLimited, setRateLimited] = useState(false)
+  // Bumped by "Try again" to re-run the same request; nothing else changes it.
+  const [attempt, setAttempt]     = useState(0)
 
   useEffect(() => {
     if (!tickers?.length) return
     setLoading(true)
     setError(null)
+    setRateLimited(false)
     axios.post(`${API}/api/stress-test`, { tickers, weights, portfolio_value: portfolioValue })
       .then(res => setScenarios(res.data.scenarios))
       .catch(e => {
+        setRateLimited(isRateLimitError(e))
         const msg = errorMessage(e, 'Failed to load stress test scenarios')
         setError(msg === GENERIC_BACKEND_ERROR ? 'Please refresh the page and try again.' : msg)
       })
       .finally(() => setLoading(false))
-  }, [tickers.join(','), weights.join(',')])
+  }, [tickers.join(','), weights.join(','), attempt])
 
   return (
     <div className="card" style={{ padding: '14px 16px' }}>
@@ -129,7 +136,11 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
         </div>
       )}
 
-      {error && (
+      {error && rateLimited && (
+        <BusyNotice onRetry={() => setAttempt(a => a + 1)} />
+      )}
+
+      {error && !rateLimited && (
         <div style={{ fontSize: 12, color: 'var(--signal-negative)' }}>{error}</div>
       )}
 

@@ -80,7 +80,7 @@ function SimulatedPaths({ allPaths, xAxisMap, yAxisMap }) {
   return <g>{paths}</g>
 }
 
-export default function MonteCarlo({ data, heavyError }) {
+export default function MonteCarlo({ data, heavyError, heavyRateLimited, onRetryHeavy }) {
   const [scenario, setScenario] = useState('base')
   // Same hooks-before-early-return placement as Backtest.jsx's/
   // RiskAnalysis.jsx's identical reasoning: `data` (and `data.monte_carlo`,
@@ -102,7 +102,7 @@ export default function MonteCarlo({ data, heavyError }) {
   // crashing on the missing fields; this re-renders on its own the moment
   // useAnalysis's background call resolves and replaces `data`.
   if (!data.monte_carlo) {
-    return <HeavyTierPending label="Loading Monte Carlo simulation..." error={heavyError} />
+    return <HeavyTierPending label="Loading Monte Carlo simulation..." error={heavyError} rateLimited={heavyRateLimited} onRetry={onRetryHeavy} />
   }
 
   const mc = data[`monte_carlo_${scenario}`] || data.monte_carlo

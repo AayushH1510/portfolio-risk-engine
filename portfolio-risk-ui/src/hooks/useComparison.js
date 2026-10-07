@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import axios from 'axios'
 import { format, subMonths, subYears } from 'date-fns'
 import { errorMessage } from '../lib/errorMessage'
+import { isRateLimitError } from '../lib/rateLimit'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -25,6 +26,7 @@ export function useComparison() {
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
+  const [rateLimited, setRateLimited] = useState(false)
   const [hasRun, setHasRun]   = useState(false)
 
   const setTickers = useCallback((newTickers) => {
@@ -40,6 +42,7 @@ export function useComparison() {
   const runComparison = useCallback(async (customDates = null) => {
     setLoading(true)
     setError(null)
+    setRateLimited(false)
     const startDate = customDates ? customDates.start : fmt(periodMap[period]())
     const endDate   = customDates ? customDates.end   : fmt(new Date())
     try {
@@ -63,6 +66,7 @@ export function useComparison() {
       // only fires when there's no response to read one from — a network
       // failure or timeout, not a tickers problem — so it must not imply
       // the user did anything wrong.
+      setRateLimited(isRateLimitError(err))
       setError(errorMessage(err, 'Something went wrong loading data. Please try again in a moment.'))
     } finally {
       setLoading(false)
@@ -71,7 +75,7 @@ export function useComparison() {
 
   return {
     tickers, weights, period, portfolioValue,
-    data, loading, error, hasRun,
+    data, loading, error, rateLimited, hasRun,
     setTickers, setWeightsAll, setPeriod, setPortfolioValue, setHasRun,
     runComparison,
   }

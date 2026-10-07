@@ -135,7 +135,7 @@ function ReturnsTable({ backtest, strategies }) {
   )
 }
 
-export default function Backtest({ data, tickers, heavyError }) {
+export default function Backtest({ data, tickers, heavyError, heavyRateLimited, onRetryHeavy }) {
   // Hooks placed before either early return below (both `data` and
   // `backtest` genuinely toggle null -> non-null within one mounted
   // instance of this component, before/after Run Analysis and while the
@@ -166,7 +166,7 @@ export default function Backtest({ data, tickers, heavyError }) {
         </div>
       )
     }
-    return <HeavyTierPending label="Loading backtest results..." error={heavyError} />
+    return <HeavyTierPending label="Loading backtest results..." error={heavyError} rateLimited={heavyRateLimited} onRetry={onRetryHeavy} />
   }
 
   const strategies = getStrategies(getBenchmarkLabel(data.benchmark))

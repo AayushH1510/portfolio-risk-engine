@@ -101,7 +101,7 @@ function WeightCard({ title, weights, color, highlightBorderColor, highlight }) 
   )
 }
 
-export default function Frontier({ data, tickers, weights, heavyError }) {
+export default function Frontier({ data, tickers, weights, heavyError, heavyRateLimited, onRetryHeavy }) {
   const canvasRef = useRef(null)
   const animRef   = useRef(null)
   const ptsRef    = useRef([])
@@ -480,7 +480,7 @@ export default function Frontier({ data, tickers, weights, heavyError }) {
   // summary renders from, filled in by the background /api/analyse-full
   // call. Re-renders on its own once useAnalysis replaces `data`.
   if (!hasFrontier) {
-    return <HeavyTierPending label="Building the efficient frontier..." error={heavyError} />
+    return <HeavyTierPending label="Building the efficient frontier..." error={heavyError} rateLimited={heavyRateLimited} onRetry={onRetryHeavy} />
   }
 
   const { max_sharpe_sharpe, max_sharpe_weights } = ef

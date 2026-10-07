@@ -13,6 +13,7 @@ import Learn from './pages/Learn'
 import AuthModal from './components/AuthModal'
 import ExportMenu from './components/ExportMenu'
 import CompareWrapper from './components/CompareWrapper'
+import BusyNotice from './components/BusyNotice'
 import StockDrawer from './components/StockDrawer'
 import OnboardingTour from './components/OnboardingTour'
 import FeedbackButton from './components/FeedbackButton'
@@ -20,6 +21,7 @@ import { useComparison } from './hooks/useComparison'
 import { useAnalysis } from './hooks/useAnalysis'
 import { usePortfolios } from './hooks/usePortfolios'
 import { useAuth } from './hooks/useAuth'
+import useCompactViewport from './hooks/useCompactViewport'
 import { supportsFinePointer } from './lib/pointer'
 import { buildSectorRows, hasTransientFailure } from './lib/sectorExposure'
 
@@ -93,6 +95,8 @@ export default function App() {
   const { portfolios, savePortfolio, deletePortfolio } = usePortfolios(user)
   const compB = useComparison()
   const { data, loading, error, hasRun, heavyLoading, heavyError, runAnalysis, tickers, weights } = analysis
+  const { rateLimited, heavyRateLimited, retryRun, retryHeavy } = analysis
+  const isCompactViewport = useCompactViewport()
 
   useEffect(() => {
     if (!data || !tickers.length) {
@@ -200,6 +204,18 @@ export default function App() {
   useEffect(() => {
     if (tourActive) setSidebarOpen(true)
   }, [tourActive])
+
+  // A failed run otherwise leaves the drawer open on a compact viewport —
+  // today's behaviour, kept for every other error. The rate-limit busy
+  // state is the one exception: its message and Try again button render
+  // behind the open drawer there (see lib/rateLimit.js), so this closes it
+  // the same way a successful run does. Sidebar stays mounted either way —
+  // only its open/closed CSS state changes, so its inputs are untouched.
+  // Same tourActive guard as the open-on-tour-start effect above, for the
+  // same reason: Run Analysis is itself one of the tour's anchors.
+  useEffect(() => {
+    if (rateLimited && isCompactViewport && !tourActive) setSidebarOpen(false)
+  }, [rateLimited, isCompactViewport, tourActive])
 
   const closeSidebarDrawer = () => setSidebarOpen(false)
 
@@ -432,7 +448,13 @@ export default function App() {
 
         <main style={{ flex: 1, overflow: 'hidden', padding: 16, minHeight: 0 }}>
 
-          {error && (
+          {error && rateLimited && (
+            <div style={{ marginBottom: 12 }}>
+              <BusyNotice onRetry={retryRun} />
+            </div>
+          )}
+
+          {error && !rateLimited && (
             <div style={{
               background: 'var(--signal-negative-wash)', border: '1px solid var(--signal-negative)',
               padding: '10px 14px', marginBottom: 12,
@@ -478,8 +500,8 @@ export default function App() {
             <div style={{ height: '100%' }} className="fade-up">
               {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} sectorLoading={sectorLoading} />}
               {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} />}
-              {activeTab === 'montecarlo' && <MonteCarlo  data={data} heavyLoading={heavyLoading} heavyError={heavyError} />}
-              {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} />}
+              {activeTab === 'montecarlo' && <MonteCarlo  data={data} heavyLoading={heavyLoading} heavyError={heavyError} heavyRateLimited={heavyRateLimited} onRetryHeavy={retryHeavy} />}
+              {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} heavyRateLimited={heavyRateLimited} onRetryHeavy={retryHeavy} />}
               {activeTab === 'valuation'  && <Valuation   tickers={tickers} onTickerClick={openDrawer} />}
               {activeTab === 'compare'    && (
                 <CompareWrapper
@@ -487,7 +509,7 @@ export default function App() {
                   compB={compB} portfolios={portfolios}
                 />
               )}
-              {activeTab === 'backtest'   && <Backtest data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} />}
+              {activeTab === 'backtest'   && <Backtest data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} heavyRateLimited={heavyRateLimited} onRetryHeavy={retryHeavy} />}
               {activeTab === 'learn' && <Learn />}
             </div>
           )}

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import Comparison from '../pages/Comparison'
 import InsightBox from './InsightBox'
+import BusyNotice from './BusyNotice'
 
 const PERIODS = ['1M', '3M', '6M', '1Y', '3Y', '5Y', 'Max']
 
 export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfolios = [], currentPortfolioId = null }) {
   const {
     tickers, weights, period, portfolioValue,
-    data: dataB, loading, error, hasRun,
+    data: dataB, loading, error, rateLimited, hasRun,
     setTickers, setWeightsAll, setPeriod, setPortfolioValue, setHasRun,
     runComparison,
   } = compB
@@ -80,7 +81,13 @@ export default function CompareWrapper({ dataA, tickersA, nameA, compB, portfoli
       {/* Comparison error — Portfolio B failed to load. Rendered here, outside the
           !hasRun config panel, so a failed Re-run after a successful comparison
           still surfaces the error instead of silently leaving stale results up. */}
-      {error && (
+      {error && rateLimited && (
+        <div style={{ flexShrink: 0 }}>
+          <BusyNotice onRetry={() => runComparison()} />
+        </div>
+      )}
+
+      {error && !rateLimited && (
         <div style={{ fontSize: 12, color: 'var(--signal-negative)', padding: '8px 12px', background: 'rgba(var(--signal-negative-rgb),0.1)', flexShrink: 0 }}>
           {error}
         </div>

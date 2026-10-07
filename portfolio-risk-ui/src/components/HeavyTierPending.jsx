@@ -4,7 +4,21 @@
 // Backtest — each still renders instantly once heavy data arrives, no
 // manual refresh needed, since it's just a normal prop update from
 // useAnalysis once setData(fullResponse) runs.
-export default function HeavyTierPending({ label, error }) {
+import BusyNotice from './BusyNotice'
+
+export default function HeavyTierPending({ label, error, rateLimited, onRetry }) {
+  if (error && rateLimited) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 24,
+      }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <BusyNotice onRetry={onRetry} />
+        </div>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div style={{
