@@ -14,10 +14,6 @@ import { Analytics } from '@vercel/analytics/react'
 import './landing-fonts.css'
 import './index.css'
 import Landing from './pages/Landing.jsx'
-import LandingPro from './pages/LandingPro.jsx'
-import Methodology from './pages/Methodology.jsx'
-import Privacy from './pages/Privacy.jsx'
-import Terms from './pages/Terms.jsx'
 import StylePreview from './pages/StylePreview.jsx'
 
 // The app shell (tab components, Recharts, the Supabase client, everything
@@ -27,6 +23,21 @@ import StylePreview from './pages/StylePreview.jsx'
 // they ever click through to /app. React.lazy + Suspense below moves it to
 // its own chunk, fetched only once a visitor actually navigates to /app.
 const App = lazy(() => import('./App.jsx'))
+
+// Same reasoning, one level down: Landing (this file's own default "/"
+// route) stays a static import — it's the page this split exists to get to
+// first paint fastest, so it must never itself wait on a Suspense fallback.
+// Everything else reachable from the nav/footer but not rendered on "/" —
+// the alternate landing page, methodology, privacy, terms — doesn't need to
+// be in that same first download either. LandingPro in particular pulls in
+// an entirely separate component tree (components/LandingLayout.jsx) that
+// "/" never touches, so this is a clean split with no shared code moved
+// twice. All four share the same Suspense boundary /app already uses below
+// (one boundary wraps the whole <Routes>), so no new fallback is needed.
+const LandingPro = lazy(() => import('./pages/LandingPro.jsx'))
+const Methodology = lazy(() => import('./pages/Methodology.jsx'))
+const Privacy = lazy(() => import('./pages/Privacy.jsx'))
+const Terms = lazy(() => import('./pages/Terms.jsx'))
 
 // Same spinner markup/tokens as every other loading state already in the
 // app (Valuation.jsx, StockDrawer.jsx, SectorChart.jsx, etc.) — deliberately
