@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 // The actual report-building logic (a genuinely large function, though not
 // a heavy dependency in itself — see lib/exportPdfReport.js's own comment)
 // is dynamically imported on click, not statically imported here, so the
@@ -6,6 +8,13 @@
 // identical dynamic import rather than sharing a static one, for the same
 // reason.
 export default function ExportPDF({ data, tickers, weights }) {
+  // Preloaded once a run's results are on screen — this component only ever
+  // renders once hasRun is true (see Sidebar.jsx's hasRun-gated block, the
+  // single mount point on phone and desktop alike), so by the time someone
+  // actually taps Export, the module below is already cached and the pop-up
+  // opens almost immediately instead of waiting on a fresh import() first.
+  useEffect(() => { import('../lib/exportPdfReport') }, [])
+
   if (!data) return null
 
   const handleClick = async () => {
