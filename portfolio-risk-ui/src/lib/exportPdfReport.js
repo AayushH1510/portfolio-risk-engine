@@ -10,10 +10,37 @@
 // results are on screen, so by the time someone actually taps Export the
 // import below has usually already resolved from cache.
 import { getBenchmarkLabel } from './benchmarks'
+// Same import Hero.jsx already uses for the landing page's own styling —
+// Vite inlines JSON imports as plain objects, so this is live data, not a
+// build step. Doing the same thing here is what stops this report's colours
+// drifting from the brand again: see tokensToCSSVars below.
+import tokens from '../../design/tokens.json'
 
 const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
 const fmtN = v => v != null ? v.toFixed(2) : 'N/A'
 const fmtD = v => v != null ? `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDigits:0 })}` : 'N/A'
+
+// Mirrors scripts/tokens-to-css.mjs's own walk() — same recursive
+// leaf-with-"value"-key traversal, same `--color-a-b-c` naming — but run
+// here at runtime instead of at build time. tokens-to-css.mjs can do its
+// walk once and write a committed file because its output (landing-theme
+// .css) ships to a document that can <link> a stylesheet; this report is a
+// second document.write()'d document with no build step and no way to
+// <link> this project's own generated CSS, so the only way for it to read
+// the same source of truth is to walk the same JSON itself, inline, and
+// hand the result to the popup as a plain CSS-variables string.
+function tokensToCSSVars(node, path = []) {
+  const lines = []
+  for (const [k, v] of Object.entries(node)) {
+    if (k.startsWith('$')) continue
+    if (v && typeof v === 'object' && 'value' in v) {
+      lines.push(`--${[...path, k].join('-')}: ${v.value};`)
+    } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+      lines.push(...tokensToCSSVars(v, [...path, k]))
+    }
+  }
+  return lines
+}
 
 // Runs in the MAIN page's context (this module is imported into the app,
 // not into the pop-up), so the real app tokens from index.css are already
@@ -60,40 +87,46 @@ export function runExportPDF({ data, tickers, weights }) {
       ] : []),
     ]
 
-    const allocColors = ['var(--accent-dark)','var(--accent)','var(--signal-positive-soft)','var(--chart-mint)','var(--accent-light)']
-
+    // DESIGN.md's actual Metric Card spec: the value takes the signal colour,
+    // but only a warning/negative card gets a coloured top border — a good
+    // card keeps the ordinary hairline, so colour reads as signal on the
+    // number itself, not as decoration on every card regardless of direction.
     const metricCards = metricRows.map(m => `
-      <div class="vr-metric-card" style="background:var(--white);border-radius:var(--radius-7);border-top:3px solid ${m.good ? 'var(--accent)':'var(--negative)'}">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-secondary);margin-bottom:4px">${m.label}</div>
-        <div class="vr-metric-value" style="font-weight:700;font-family:var(--font-mono);color:${m.good ? 'var(--accent-dark)':'var(--report-red)'}">${m.val}</div>
+      <div class="vr-metric-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);${m.good ? '' : 'border-top:2px solid var(--color-signal-negative);'}">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--doc-ink-muted)">${m.label}</div>
+        <div class="vr-metric-value" style="font-weight:700;font-family:var(--doc-font-mono);color:${m.good ? 'var(--color-accent-mint)':'var(--color-signal-negative)'}">${m.val}</div>
       </div>
     `).join('')
 
     const tickerPills = tickers.map((t, i) => `
-      <span style="display:inline-block;background:rgba(var(--signal-positive-rgb),0.15);border:1px solid rgba(var(--signal-positive-rgb),0.3);border-radius:var(--radius-4);padding:2px 9px;font-size:11px;font-weight:700;color:var(--accent);font-family:var(--font-mono);margin-right:5px">${t} ${Math.round(weights[i]*100)}%</span>
+      <span style="display:inline-block;background:var(--doc-card);border:1px solid var(--doc-hairline);padding:2px 9px;font-size:11px;font-weight:700;color:var(--doc-ink);font-family:var(--doc-font-mono);margin-right:5px">${t} ${Math.round(weights[i]*100)}%</span>
     `).join('')
 
+    // Neutral, not a signal — allocation weight isn't a gain, loss, or risk
+    // figure, so it stays in the ink scale rather than borrowing the green
+    // family decoratively (the old version coloured every bar from a
+    // green-ish palette regardless of ticker).
     const allocBars = tickers.map((t, i) => `
       <div class="vr-alloc-row">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-weight:700;font-family:var(--font-mono);font-size:13px">${t}</span>
-          <span style="font-weight:700;color:var(--accent-dark);font-size:13px">${Math.round(weights[i]*100)}%</span>
+          <span style="font-weight:700;font-family:var(--doc-font-mono);font-size:13px;color:var(--doc-ink)">${t}</span>
+          <span style="font-weight:700;color:var(--doc-ink-secondary);font-size:13px">${Math.round(weights[i]*100)}%</span>
         </div>
-        <div style="height:6px;background:var(--report-track);border-radius:var(--radius-3)">
-          <div style="height:6px;width:${weights[i]*100}%;background:${allocColors[i % allocColors.length]};border-radius:var(--radius-3)"></div>
+        <div style="height:6px;background:var(--doc-track)">
+          <div style="height:6px;width:${weights[i]*100}%;background:var(--doc-ink-muted)"></div>
         </div>
       </div>
     `).join('')
 
     const mcItems = [
-      { label:'Median',        val: fmtD(mc.p50_final),                       color:'var(--accent-dark)' },
-      { label:'Good year',     val: fmtD(mc.p95_final),                       color:'var(--accent)' },
-      { label:'Bad year',      val: fmtD(mc.p5_final),                        color:'var(--report-red)' },
-      { label:'Profit chance', val: `${Math.round(mc.prob_profit*100)}%`,      color: mc.prob_profit > 0.6 ? 'var(--accent-dark)':'var(--report-amber)' },
+      { label:'Median',        val: fmtD(mc.p50_final),                       color:'var(--doc-ink)' },
+      { label:'Good year',     val: fmtD(mc.p95_final),                       color:'var(--color-accent-mint)' },
+      { label:'Bad year',      val: fmtD(mc.p5_final),                        color:'var(--color-signal-negative)' },
+      { label:'Profit chance', val: `${Math.round(mc.prob_profit*100)}%`,      color: mc.prob_profit > 0.6 ? 'var(--color-accent-mint)' : 'var(--color-signal-warning)' },
     ].map(m => `
-      <div class="vr-mc-item" style="background:var(--report-card-alt);border-radius:var(--radius-5)">
-        <div style="font-size:9px;color:var(--text-secondary);font-weight:700;text-transform:uppercase;margin-bottom:2px">${m.label}</div>
-        <div style="font-size:14px;font-weight:700;color:${m.color};font-family:var(--font-mono)">${m.val}</div>
+      <div class="vr-mc-item" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">
+        <div style="font-size:9px;color:var(--doc-ink-muted);font-weight:700;text-transform:uppercase;margin-bottom:2px">${m.label}</div>
+        <div style="font-size:14px;font-weight:700;color:${m.color};font-family:var(--doc-font-mono)">${m.val}</div>
       </div>
     `).join('')
 
@@ -106,22 +139,26 @@ export function runExportPDF({ data, tickers, weights }) {
         { label:'Alpha', a: fmt(ba.alpha),  b:"Jensen's" },
       ] : []),
     ].map(r => `
-      <div class="vr-risk-row" style="display:flex;justify-content:space-between;border-bottom:1px solid var(--report-bg)">
-        <span style="color:var(--text-muted);font-size:12px">${r.label}</span>
+      <div class="vr-risk-row" style="display:flex;justify-content:space-between;border-bottom:1px solid var(--doc-hairline)">
+        <span style="color:var(--doc-ink-muted);font-size:12px">${r.label}</span>
         <div style="text-align:right">
-          <div style="font-weight:700;color:var(--report-red);font-family:var(--font-mono);font-size:12px">${r.a}</div>
-          <div style="font-size:10px;color:var(--text-secondary)">${r.b}</div>
+          <div style="font-weight:700;color:var(--color-signal-negative);font-family:var(--doc-font-mono);font-size:12px">${r.a}</div>
+          <div style="font-size:10px;color:var(--doc-ink-muted)">${r.b}</div>
         </div>
       </div>
     `).join('')
 
-    const corrHeaders = corr.tickers.map(t => `<th class="vr-corr-head" style="font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);text-align:center">${t}</th>`).join('')
+    // Correlation heat: high correlation is the concentration-risk case
+    // (negative signal), low is the diversification case (positive signal),
+    // same three-tier reasoning as before, now sourced from the same
+    // tokens as everything else instead of one-off hex.
+    const corrHeaders = corr.tickers.map(t => `<th class="vr-corr-head" style="font-size:10px;color:var(--doc-ink-muted);font-family:var(--doc-font-mono);text-align:center">${t}</th>`).join('')
     const corrRows = corr.tickers.map((row, ri) => {
       const cells = corr.values[ri].map((val, ci) => {
-        const bg = val >= 0.7 ? 'var(--report-heat-high)' : val >= 0.4 ? 'var(--report-heat-mid)' : 'var(--report-heat-low)'
-        return `<td class="vr-corr-cell" style="text-align:center;font-size:11px;font-family:var(--font-mono);font-weight:600;border-radius:var(--radius-3);background:${bg}">${val.toFixed(2)}</td>`
+        const bg = val >= 0.7 ? 'var(--doc-heat-high)' : val >= 0.4 ? 'var(--doc-heat-mid)' : 'var(--doc-heat-low)'
+        return `<td class="vr-corr-cell" style="text-align:center;font-size:11px;font-family:var(--doc-font-mono);font-weight:600;background:${bg};color:var(--doc-ink)">${val.toFixed(2)}</td>`
       }).join('')
-      return `<tr><td style="font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);text-align:right;padding-right:8px">${row}</td>${cells}</tr>`
+      return `<tr><td style="font-size:10px;color:var(--doc-ink-muted);font-family:var(--doc-font-mono);text-align:right;padding-right:8px">${row}</td>${cells}</tr>`
     }).join('')
 
     // Growth chart as SVG sparkline
@@ -135,74 +172,74 @@ export function runExportPDF({ data, tickers, weights }) {
     const zeroY = svgH - ((0 - minC) / rngC) * svgH
 
     return `
-      <div class="vr-header" style="background:var(--card);display:flex;justify-content:space-between;align-items:flex-start">
+      <div class="vr-header" style="background:var(--doc-bg);border-bottom:1px solid var(--doc-hairline);display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="width:32px;height:32px;background:var(--accent);border-radius:var(--radius-7);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--card);font-size:16px">V</div>
-            <div>
-              <div style="font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.02em">varense</div>
-              <div style="font-size:10px;color:var(--accent);letter-spacing:0.05em">variance, made sense of</div>
-            </div>
+          <div class="vr-brand" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <svg viewBox="3 9 58 41" width="26" height="18.4" fill="none" role="img" aria-label="Varense">
+              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+              <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+            </svg>
+            <span style="font-family:var(--doc-font-primary);font-weight:500;font-size:19px;letter-spacing:-0.035em;color:var(--doc-ink)">Varense</span>
           </div>
           <div>${tickerPills}</div>
         </div>
         <div class="vr-header-right" style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:var(--white)">Varense Portfolio Report</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">${date}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-family:var(--font-mono)">${d.period.start} - ${d.period.end} · ${d.period.n_days} days</div>
+          <div style="font-size:18px;font-weight:700;color:var(--doc-ink);font-family:var(--doc-font-primary)">Varense Portfolio Report</div>
+          <div style="font-size:12px;color:var(--doc-ink-secondary);margin-top:4px">${date}</div>
+          <div style="font-size:11px;color:var(--doc-ink-muted);margin-top:5px;font-family:var(--doc-font-mono)">${d.period.start} - ${d.period.end} · ${d.period.n_days} days</div>
         </div>
       </div>
 
-      <div class="vr-body" style="display:flex;flex-direction:column;background:var(--report-bg)">
+      <div class="vr-body" style="display:flex;flex-direction:column;background:var(--doc-bg)">
 
         <div class="vr-section">
-          <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Key Metrics</div>
-          <div class="vr-metric-grid" style="display:grid">${metricCards}</div>
+          <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Key Metrics</div>
+          <div class="vr-metric-grid" style="display:flex;flex-wrap:wrap">${metricCards}</div>
         </div>
 
         <div class="vr-section">
-          <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Portfolio Growth</div>
-          <div class="vr-card vr-chart-card" style="background:var(--white);border-radius:var(--radius-sm)">
+          <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Portfolio Growth</div>
+          <div class="vr-card vr-chart-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">
             <div class="vr-chart-meta" style="display:flex;justify-content:space-between;font-size:12px">
-              <span style="color:var(--text-secondary)">Cumulative return from ${d.period.start}</span>
-              <span style="font-weight:700;color:${d.annualised_return > 0 ? 'var(--accent-dark)':'var(--report-red)'};font-family:var(--font-mono)">${fmt(cumVals[cumVals.length-1])} total</span>
+              <span style="color:var(--doc-ink-secondary)">Cumulative return from ${d.period.start}</span>
+              <span style="font-weight:700;color:${d.annualised_return > 0 ? 'var(--color-accent-mint)':'var(--color-signal-negative)'};font-family:var(--doc-font-mono)">${fmt(cumVals[cumVals.length-1])} total</span>
             </div>
             <svg class="vr-chart-svg" width="100%" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.2"/>
-                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                  <stop offset="0%" stop-color="var(--color-accent-mint)" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="var(--color-accent-mint)" stop-opacity="0"/>
                 </linearGradient>
               </defs>
-              ${zeroY > 0 && zeroY < svgH ? `<line x1="0" y1="${zeroY}" x2="${svgW}" y2="${zeroY}" stroke="var(--report-gridline)" stroke-dasharray="6,4" stroke-width="1"/>` : ''}
+              ${zeroY > 0 && zeroY < svgH ? `<line x1="0" y1="${zeroY}" x2="${svgW}" y2="${zeroY}" stroke="var(--doc-hairline)" stroke-dasharray="6,4" stroke-width="1"/>` : ''}
               <polygon points="${points} ${svgW},${svgH} 0,${svgH}" fill="url(#sg1)"/>
-              <polyline points="${points}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              <polyline points="${points}" fill="none" stroke="var(--color-accent-mint)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
             </svg>
           </div>
         </div>
 
         <div class="vr-grid2" style="display:grid">
           <div class="vr-section">
-            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Allocation</div>
-            <div class="vr-card" style="background:var(--white);border-radius:var(--radius-sm)">${allocBars}</div>
+            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Allocation</div>
+            <div class="vr-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">${allocBars}</div>
           </div>
           <div class="vr-section">
-            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Monte Carlo - 1 Year</div>
-            <div class="vr-card" style="background:var(--white);border-radius:var(--radius-sm)">
+            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Monte Carlo - 1 Year</div>
+            <div class="vr-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">
               <div class="vr-mc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${mcItems}</div>
-              <div style="margin-top:10px;font-size:10px;color:var(--text-secondary)">Based on ${mc.n_simulations?.toLocaleString() || '1,000'} simulations. Median: ${fmtD(mc.p50_final)} · Good: ${fmtD(mc.p95_final)} · Bad: ${fmtD(mc.p5_final)}</div>
+              <div style="margin-top:10px;font-size:10px;color:var(--doc-ink-muted)">Based on ${mc.n_simulations?.toLocaleString() || '1,000'} simulations. Median: ${fmtD(mc.p50_final)} · Good: ${fmtD(mc.p95_final)} · Bad: ${fmtD(mc.p5_final)}</div>
             </div>
           </div>
         </div>
 
         <div class="vr-grid2" style="display:grid">
           <div class="vr-section">
-            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Downside Risk</div>
-            <div class="vr-card" style="background:var(--white);border-radius:var(--radius-sm)">${riskRows}</div>
+            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Downside Risk</div>
+            <div class="vr-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">${riskRows}</div>
           </div>
           <div class="vr-section">
-            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Correlation Matrix</div>
-            <div class="vr-card" style="background:var(--white);border-radius:var(--radius-sm)">
+            <div class="vr-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--doc-ink-muted)">Correlation Matrix</div>
+            <div class="vr-card" style="background:var(--doc-card);border:1px solid var(--doc-hairline);">
               <table class="vr-corr-table" style="width:100%;border-collapse:separate">
                 <thead><tr><th style="width:50px"></th>${corrHeaders}</tr></thead>
                 <tbody>${corrRows}</tbody>
@@ -212,19 +249,19 @@ export function runExportPDF({ data, tickers, weights }) {
         </div>
 
         <div style="text-align:center">
-          <div style="display:inline-block;border:1px solid var(--report-border);border-radius:var(--radius-5);padding:5px 16px;font-size:11px;color:var(--text-secondary)">
-            Generated by <strong style="color:var(--accent-dark)">varense</strong> · Free tier · ${date}
+          <div style="display:inline-block;border:1px solid var(--doc-hairline);padding:5px 16px;font-size:11px;color:var(--doc-ink-muted)">
+            Generated by <strong style="color:var(--doc-ink)">Varense</strong> · Free tier · ${date}
           </div>
         </div>
 
       </div>
 
-      <div class="vr-footer" style="background:var(--card);display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--text-muted);line-height:1.5;max-width:460px">
+      <div class="vr-footer" style="background:var(--doc-bg);border-top:1px solid var(--doc-hairline);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:10px;color:var(--doc-ink-muted);line-height:1.5;max-width:460px">
           This report is for educational purposes only and does not constitute financial advice.
           Past performance does not guarantee future results. Always do your own research.
         </div>
-        <div style="font-size:13px;font-weight:700;color:var(--accent)">varense.com</div>
+        <div style="font-size:13px;font-weight:700;color:var(--doc-ink);font-family:var(--doc-font-primary)">varense.vercel.app</div>
       </div>
     `
   }
@@ -241,6 +278,7 @@ export function runExportPDF({ data, tickers, weights }) {
   }
 
   const reportHTML = buildReportHTML()
+  const colorVars = tokensToCSSVars(tokens.color, ['color']).join('\n              ')
   win.document.write(`
       <!DOCTYPE html>
       <html>
@@ -248,27 +286,49 @@ export function runExportPDF({ data, tickers, weights }) {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Varense Portfolio Report</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+          <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/400.css" rel="stylesheet">
+          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/500.css" rel="stylesheet">
+          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/600.css" rel="stylesheet">
+          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/400.css" rel="stylesheet">
+          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/500.css" rel="stylesheet">
           <style>
             /* This popup is a separate document (window.open + document.write) that
-               does NOT inherit the app's index.css, so the design tokens it uses below
-               are duplicated here — values must stay in sync with index.css by hand. */
+               does NOT inherit the app's index.css, so it can't just reference the
+               app's own CSS variables either. These --color-* lines are generated at
+               runtime from design/tokens.json by tokensToCSSVars above (mirroring
+               scripts/tokens-to-css.mjs's own build-time walk) — not hand-copied, so
+               a token change in that file reaches this report automatically. */
             :root {
-              --accent-dark: #2d6a4f; --accent: #52b788; --signal-positive-soft: #74c69d;
-              --chart-mint: #95d5b2; --accent-light: #b7e4c7; --report-text-dark: #1a2a1a;
-              --card: #1e2420; --white: #ffffff; --text-muted: #5a7a5a; --text-secondary: #8aaa8a;
-              --negative: #e05c5c; --report-red: #c0392b; --report-bg: #f0f4f0;
-              --report-track: #e8ede8; --report-gridline: #e0e8e0; --report-heat-high: #fdd;
-              --report-heat-mid: #fef3d0; --report-heat-low: #e8f5ee; --report-card-alt: #f8faf8;
-              --report-card-soft: #f5faf5; --report-amber: #b7791f; --report-border: #c8d8c8;
-              --black-rgb: 0,0,0; --signal-positive-rgb: 82,183,136;
-              --font-mono: monospace; --font-report: Inter, sans-serif;
-              --radius-14: 14px; --radius-3: 3px; --radius-4: 4px; --radius-5: 5px;
-              --radius-7: 7px; --radius-sm: 8px; --radius-full: 50%;
+              ${colorVars}
+
+              /* A light, print-friendly read of the same brand: no light mode exists
+                 in design/tokens.json (colorMode: "dark-only"), so these two reuse
+                 existing dark-theme token VALUES in an inverted role — the darkest
+                 canvas tone (color.bg.base) as ink on paper, the lightest text tone
+                 (color.text.primary) as the page itself — rather than inventing new,
+                 undocumented hex. Everything else below is a direct var(--color-*)
+                 reference, nothing new to keep in sync. */
+              --doc-bg: var(--color-text-primary);
+              --doc-card: var(--color-text-body);
+              --doc-track: var(--color-text-body);
+              --doc-ink: var(--color-bg-base);
+              --doc-ink-secondary: var(--color-line-interactive);
+              --doc-ink-muted: var(--color-line-hover);
+              --doc-hairline: var(--color-line-default);
+              --doc-heat-high: var(--color-signal-negative);
+              --doc-heat-mid: var(--color-signal-warning);
+              --doc-heat-low: var(--color-accent-mint);
+
+              --doc-font-primary: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+              --doc-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
             }
             * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { background: var(--report-bg); font-family: var(--font-report); }
+            body { background: var(--doc-bg); font-family: var(--doc-font-primary); color: var(--doc-ink); }
+
+            /* DESIGN.md Core Rules, applied to this report: zero border-radius
+               everywhere (no exceptions), no box-shadows. */
+            [class^="vr-"], .vr-metric-card, table, th, td, span, div, button { border-radius: 0 !important; }
 
             /* Every section below (a caption label plus its content card(s)) keeps
                itself whole across a page break, print or screen — the "Downside
@@ -284,8 +344,14 @@ export function runExportPDF({ data, tickers, weights }) {
             .vr-card { padding: 16px; }
             .vr-chart-card { padding: 16px; }
             .vr-chart-meta { margin-bottom: 8px; }
-            .vr-metric-grid { grid-template-columns: repeat(5, 1fr); gap: 7px; }
-            .vr-metric-card { padding: 10px 12px; }
+            /* flex-wrap, not a fixed grid-template-columns — same reasoning as
+               .dashboard-grid__row1/row2 in index.css: Beta/Alpha make this 7 or 9
+               cards depending on the run, and a fixed column count leaves an odd
+               remainder (Alpha) stranded alone on the last row instead of filling
+               it. flex-grow on every card fills whatever's left on its own row,
+               for any count, the same fix Dashboard's own metric rows already use. */
+            .vr-metric-grid { gap: 7px; }
+            .vr-metric-card { flex: 1 1 130px; min-width: 0; padding: 10px 12px; }
             .vr-metric-value { font-size: 18px; }
             .vr-grid2 { grid-template-columns: 1fr 1fr; gap: 16px; }
             .vr-alloc-row { margin-bottom: 10px; }
@@ -298,18 +364,15 @@ export function runExportPDF({ data, tickers, weights }) {
             /* Readable on a phone before printing — no pinch-zoom needed to read the
                report or reach the "Got it" button below. The viewport meta tag above
                makes these CSS px match device px; this collapses the desktop-width
-               layout (5-column metric grid, two 2-column rows, a wide header) to
-               something that fits a 384-430px-wide phone screen on its own. */
+               layout (two 2-column rows, a wide header) to something that fits a
+               384-430px-wide phone screen on its own — the metric grid already
+               reflows itself via flex-wrap above, no separate breakpoint needed. */
             @media screen and (max-width: 720px) {
               .vr-header { padding: 16px 18px; flex-wrap: wrap; gap: 12px; }
               .vr-header-right { text-align: left; }
               .vr-body { padding: 14px 16px; gap: 16px; }
               .vr-footer { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-              .vr-metric-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
               .vr-grid2 { grid-template-columns: 1fr; gap: 16px; }
-            }
-            @media screen and (min-width: 721px) and (max-width: 980px) {
-              .vr-metric-grid { grid-template-columns: repeat(3, 1fr); }
             }
 
             /* Aims for one landscape A4 page: tighter padding/gaps/type than the
@@ -330,7 +393,7 @@ export function runExportPDF({ data, tickers, weights }) {
               .vr-chart-meta { margin-bottom: 4px; }
               .vr-chart-svg { height: 72px; }
               .vr-metric-grid { gap: 5px; }
-              .vr-metric-card { padding: 6px 8px; }
+              .vr-metric-card { flex-basis: 100px; padding: 6px 8px; }
               .vr-metric-value { font-size: 14px; }
               .vr-grid2 { gap: 10px; }
               .vr-alloc-row { margin-bottom: 5px; }
@@ -349,17 +412,20 @@ export function runExportPDF({ data, tickers, weights }) {
                dropped entirely — both are already forced by this page's own CSS
                above (print-color-adjust:exact; @page size:A4 landscape) regardless
                of what's checked in the dialog, confirmed against real print output. -->
-          <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(var(--black-rgb),0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
-            <div style="background:var(--white);border-radius:var(--radius-14);padding:24px 28px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(var(--black-rgb),0.3);font-family:var(--font-report);">
+          <div id="modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
+            <div style="background:var(--doc-bg);border:1px solid var(--doc-hairline);padding:24px 28px;max-width:420px;width:100%;font-family:var(--doc-font-primary);">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <div style="width:34px;height:34px;background:var(--accent-dark);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--white);font-size:16px;flex-shrink:0;">V</div>
-                <div style="font-size:16px;font-weight:700;color:var(--report-text-dark);">Save your PDF report</div>
+                <svg viewBox="3 9 58 41" width="24" height="17" fill="none" role="img" aria-label="Varense">
+                  <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+                  <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+                </svg>
+                <div style="font-size:16px;font-weight:700;color:var(--doc-ink);">Save your PDF report</div>
               </div>
-              <div style="font-size:13px;color:var(--report-text-dark);line-height:1.5;margin-bottom:20px;">
+              <div style="font-size:13px;color:var(--doc-ink);line-height:1.5;margin-bottom:20px;">
                 In the print dialog, choose <strong>Save as PDF</strong>.
               </div>
               <button onclick="document.getElementById('modal-overlay').style.display='none';window.print();"
-                style="width:100%;min-height:46px;padding:12px;background:var(--accent-dark);color:var(--white);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.03em;">
+                style="width:100%;min-height:46px;padding:12px;background:var(--doc-ink);color:var(--doc-bg);border:none;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.03em;font-family:var(--doc-font-primary);">
                 Got it - open print dialog
               </button>
             </div>
