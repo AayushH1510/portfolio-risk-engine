@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { runExportCSV } from './ExportCSV'
 
-// Combined "Export" trigger for the desktop header — replaces two separate
+// Combined "Export" trigger for the desktop header — replaces separate
 // Export PDF / Export CSV buttons there (RESPONSIVE_AUDIT.md's 1280px
 // nav-fit fix: the header didn't have room for both plus eight tabs plus
-// Sign in). The sidebar drawer keeps the original two full-width buttons
+// Sign in). The sidebar drawer keeps the original full-width buttons
 // (ExportPDF.jsx / ExportCSV.jsx's own default exports) — phone/tablet were
 // never the width-constrained case, so there's no reason to collapse them
-// there too. PDF Report below dynamically imports runExportPDF from
-// lib/exportPdfReport.js — same lazy-loaded flow ExportPDF.jsx's own button
-// uses, not a second, statically-bundled copy — CSV Data reuses runExportCSV
-// directly since that one's cheap enough not to need splitting out.
-export default function ExportMenu({ data, tickers, weights }) {
+// there too. Summary PDF / Full report PDF below each dynamically import
+// their own runExportPDF/runExportFullReportPDF — same lazy-loaded flow
+// ExportPDF.jsx's own buttons use, not a second, statically-bundled copy —
+// CSV Data reuses runExportCSV directly since that one's cheap enough not
+// to need splitting out.
+export default function ExportMenu({ data, tickers, weights, portfolioValue, sectorData, comparison }) {
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState(null)
   const wrapperRef = useRef(null)
   const triggerRef = useRef(null)
   const pdfItemRef = useRef(null)
+  const fullReportItemRef = useRef(null)
   const csvItemRef = useRef(null)
 
   const positionPanel = () => {
@@ -53,7 +55,7 @@ export default function ExportMenu({ data, tickers, weights }) {
       }
       if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
       e.preventDefault()
-      const items = [pdfItemRef.current, csvItemRef.current]
+      const items = [pdfItemRef.current, fullReportItemRef.current, csvItemRef.current]
       const currentIndex = items.indexOf(document.activeElement)
       const nextIndex = e.key === 'ArrowDown'
         ? (currentIndex + 1) % items.length
@@ -95,6 +97,13 @@ export default function ExportMenu({ data, tickers, weights }) {
     triggerRef.current?.focus()
   }
 
+  const runFullReportAndClose = async () => {
+    const { runExportFullReportPDF } = await import('../lib/exportFullReportPdf')
+    runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison })
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
   return (
     <div className="export-menu" ref={wrapperRef}>
       <button
@@ -132,7 +141,20 @@ export default function ExportMenu({ data, tickers, weights }) {
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            PDF Report
+            Summary PDF
+          </button>
+          <button
+            ref={fullReportItemRef}
+            className="export-menu-item"
+            role="menuitem"
+            onClick={runFullReportAndClose}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Full report PDF
           </button>
           <button
             ref={csvItemRef}

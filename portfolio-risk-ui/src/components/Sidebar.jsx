@@ -40,6 +40,7 @@ export default function Sidebar({
   onRun, loading, onTickerClick,
   data, hasRun, drawerOpen, onCloseDrawer,
   user, authLoading, onSignOut, onShowAuth,
+  sectorData, comparison,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
   const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
@@ -480,10 +481,15 @@ export default function Sidebar({
         </button>
 
         {/* Export PDF/CSV — drawer-width counterpart to the header's own
-            copy (App.jsx, hidden below 1024px). Same hasRun gate. */}
+            copy (App.jsx, hidden below 1024px). Same hasRun gate.
+            .sidebar-export-actions stacks these full-width now (index.css)
+            rather than two side by side — ExportPDF renders two buttons
+            (Summary PDF / Full report PDF) plus ExportCSV's one makes three,
+            and a stacked column is what keeps each a real 44px-tall tap
+            target at drawer width instead of three squeezed into one row. */}
         {hasRun && (
           <div className="sidebar-export-actions">
-            <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
+            <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={portfolioValue} sectorData={sectorData} comparison={comparison} />
             <ExportCSV data={data} tickers={tickers} weights={weights} />
           </div>
         )}

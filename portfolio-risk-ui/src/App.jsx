@@ -98,6 +98,15 @@ export default function App() {
   const { rateLimited, heavyRateLimited, retryRun, retryHeavy } = analysis
   const isCompactViewport = useCompactViewport()
 
+  // The Full report PDF's own Compare section (lib/exportFullReportPdf.js)
+  // needs Portfolio B's data the same way it needs `data`/`sectorData` —
+  // plain prop plumbing of state App.jsx already holds via useComparison(),
+  // not a new fetch. Shaped once here rather than passed as raw `compB` so
+  // both export trigger points (ExportMenu below, Sidebar's own ExportPDF)
+  // read the same small, stable object instead of each picking fields off
+  // compB themselves.
+  const comparisonForExport = { hasRun: compB.hasRun, data: compB.data, tickers: compB.tickers, weights: compB.weights }
+
   useEffect(() => {
     if (!data || !tickers.length) {
       setSectorData(null)
@@ -291,6 +300,8 @@ export default function App() {
         onTickerClick={openDrawer}
         drawerOpen={sidebarOpen}
         onCloseDrawer={closeSidebarDrawer}
+        sectorData={sectorData}
+        comparison={comparisonForExport}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
@@ -360,7 +371,12 @@ export default function App() {
 
             {hasRun && (
               <div className="header-export-actions">
-                <ExportMenu data={data} tickers={tickers} weights={weights} />
+                <ExportMenu
+                  data={data} tickers={tickers} weights={weights}
+                  portfolioValue={analysis.portfolioValue}
+                  sectorData={sectorData}
+                  comparison={comparisonForExport}
+                />
               </div>
             )}
 

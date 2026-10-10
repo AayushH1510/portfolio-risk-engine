@@ -640,7 +640,12 @@ aside.sidebar-shell.sidebar-open {
 /* Export PDF/CSV inside the sidebar (Sidebar.jsx, below Run Analysis) — the
    drawer-width counterpart to .header-export-actions above; visible only
    below 1024px (shown only when hasRun, gated in JS). */
-.sidebar-export-actions { display: flex; gap: 8px; margin-top: 10px; }
+/* flex-direction: column, not row — this now holds three buttons (Summary
+   PDF / Full report PDF from ExportPDF.jsx, plus Export CSV), and a row
+   would squeeze all three into the drawer's own ~220-400px width. Stacking
+   full-width is also what gives each button room for a real 44px tap
+   target (ExportPDF.jsx's own minHeight:44) rather than a cramped row. */
+.sidebar-export-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 @media (min-width: 1024px) {
   .sidebar-export-actions { display: none; }
 }

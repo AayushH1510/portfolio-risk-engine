@@ -10,57 +10,15 @@
 // results are on screen, so by the time someone actually taps Export the
 // import below has usually already resolved from cache.
 import { getBenchmarkLabel } from './benchmarks'
-// Same import Hero.jsx already uses for the landing page's own styling —
-// Vite inlines JSON imports as plain objects, so this is live data, not a
-// build step. Doing the same thing here is what stops this report's colours
-// drifting from the brand again: see tokensToCSSVars below.
-import tokens from '../../design/tokens.json'
-
-const fmt  = v => v != null ? `${(v * 100).toFixed(1)}%` : 'N/A'
-const fmtN = v => v != null ? v.toFixed(2) : 'N/A'
-const fmtD = v => v != null ? `$${Math.abs(v).toLocaleString('en-US', { maximumFractionDigits:0 })}` : 'N/A'
-
-// Mirrors scripts/tokens-to-css.mjs's own walk() — same recursive
-// leaf-with-"value"-key traversal, same `--color-a-b-c` naming — but run
-// here at runtime instead of at build time. tokens-to-css.mjs can do its
-// walk once and write a committed file because its output (landing-theme
-// .css) ships to a document that can <link> a stylesheet; this report is a
-// second document.write()'d document with no build step and no way to
-// <link> this project's own generated CSS, so the only way for it to read
-// the same source of truth is to walk the same JSON itself, inline, and
-// hand the result to the popup as a plain CSS-variables string.
-function tokensToCSSVars(node, path = []) {
-  const lines = []
-  for (const [k, v] of Object.entries(node)) {
-    if (k.startsWith('$')) continue
-    if (v && typeof v === 'object' && 'value' in v) {
-      lines.push(`--${[...path, k].join('-')}: ${v.value};`)
-    } else if (v && typeof v === 'object' && !Array.isArray(v)) {
-      lines.push(...tokensToCSSVars(v, [...path, k]))
-    }
-  }
-  return lines
-}
-
-// Runs in the MAIN page's context (this module is imported into the app,
-// not into the pop-up), so the real app tokens from index.css are already
-// on :root here — no need to duplicate them, unlike the report document
-// itself below. Used only when window.open() is refused (pop-up blocker);
-// nothing else in this file calls it.
-function showExportMessage(text) {
-  const el = document.createElement('div')
-  el.setAttribute('role', 'status')
-  el.textContent = text
-  el.style.cssText = [
-    'position:fixed', 'left:50%', 'bottom:24px', 'transform:translateX(-50%)',
-    'z-index:2147483647', 'background:var(--signal-negative, #e05c5c)', 'color:#fff',
-    'padding:12px 20px', 'font-family:var(--font-primary, system-ui, sans-serif)',
-    'font-size:13px', 'max-width:min(90vw, 420px)', 'text-align:center',
-    'box-shadow:0 4px 16px rgba(0,0,0,0.3)', 'border-radius:0',
-  ].join(';')
-  document.body.appendChild(el)
-  setTimeout(() => el.remove(), 5000)
-}
+// fmt/fmtN/fmtD, tokensToCSSVars, docTokenCSS, FONT_LINKS, MARK_PATHS and
+// openReportPopup all moved to lib/pdfReportShared.js once a second report
+// (lib/exportFullReportPdf.js) needed the identical token-walking and
+// pop-up-boilerplate logic — a hand-copied second version here would have
+// been exactly the kind of drift this file's own tokensToCSSVars was
+// originally written to stop, just with two call sites instead of one. See
+// that module's own header comment for the full reasoning.
+import { fmt, fmtN, fmtD, docTokenCSS, FONT_LINKS, MARK_PATHS, openReportPopup } from './pdfReportShared'
+import { buildAreaSparkline } from './reportCharts'
 
 export function runExportPDF({ data, tickers, weights }) {
   const buildReportHTML = () => {
@@ -161,23 +119,18 @@ export function runExportPDF({ data, tickers, weights }) {
       return `<tr><td style="font-size:10px;color:var(--doc-ink-muted);font-family:var(--doc-font-mono);text-align:right;padding-right:8px">${row}</td>${cells}</tr>`
     }).join('')
 
-    // Growth chart as SVG sparkline
+    // Growth chart as SVG sparkline — buildAreaSparkline (lib/reportCharts.js)
+    // is this exact chart, generalised once the full report needed the same
+    // scaling math for its own Dashboard/drawdown sections.
     const cumVals = cum.values
-    const minC = Math.min(...cumVals), maxC = Math.max(...cumVals)
-    const rngC = maxC - minC || 0.01
-    const svgW = 700, svgH = 120
-    const points = cumVals.map((v, i) =>
-      `${(i / (cumVals.length-1)) * svgW},${svgH - ((v - minC) / rngC) * svgH}`
-    ).join(' ')
-    const zeroY = svgH - ((0 - minC) / rngC) * svgH
+    const growthSparkline = buildAreaSparkline(cumVals, { gradientId: 'sg1', className: 'vr-chart-svg' })
 
     return `
       <div class="vr-header" style="background:var(--doc-bg);border-bottom:1px solid var(--doc-hairline);display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div class="vr-brand" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             <svg viewBox="3 9 58 41" width="26" height="18.4" fill="none" role="img" aria-label="Varense">
-              <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
-              <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+              ${MARK_PATHS}
             </svg>
             <span style="font-family:var(--doc-font-primary);font-weight:500;font-size:19px;letter-spacing:-0.035em;color:var(--doc-ink)">Varense</span>
           </div>
@@ -204,17 +157,7 @@ export function runExportPDF({ data, tickers, weights }) {
               <span style="color:var(--doc-ink-secondary)">Cumulative return from ${d.period.start}</span>
               <span style="font-weight:700;color:${d.annualised_return > 0 ? 'var(--color-accent-mint)':'var(--color-signal-negative)'};font-family:var(--doc-font-mono)">${fmt(cumVals[cumVals.length-1])} total</span>
             </div>
-            <svg class="vr-chart-svg" width="100%" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="var(--color-accent-mint)" stop-opacity="0.2"/>
-                  <stop offset="100%" stop-color="var(--color-accent-mint)" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              ${zeroY > 0 && zeroY < svgH ? `<line x1="0" y1="${zeroY}" x2="${svgW}" y2="${zeroY}" stroke="var(--doc-hairline)" stroke-dasharray="6,4" stroke-width="1"/>` : ''}
-              <polygon points="${points} ${svgW},${svgH} 0,${svgH}" fill="url(#sg1)"/>
-              <polyline points="${points}" fill="none" stroke="var(--color-accent-mint)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-            </svg>
+            ${growthSparkline}
           </div>
         </div>
 
@@ -266,19 +209,14 @@ export function runExportPDF({ data, tickers, weights }) {
     `
   }
 
-  // Checked before building the (large) report string at all — nothing to
-  // do with it if the pop-up never opens. A blocked pop-up returns null
-  // rather than throwing, so this is the one thing that used to fail
-  // silently: win.document.write below would have thrown on a null win,
-  // visible only in the console, with no on-screen sign anything went wrong.
-  const win = window.open('', '_blank', 'width=1100,height=900')
-  if (!win) {
-    showExportMessage('Your browser blocked the report pop-up. Please allow pop-ups for this site, then try Export PDF again.')
-    return
-  }
+  // openReportPopup (lib/pdfReportShared.js) does the window.open + null
+  // check + pop-up-blocked message — shared with the full report so both
+  // fail the same way, checked before building either's (large) HTML string
+  // at all, since there's nothing to do with it if the pop-up never opens.
+  const win = openReportPopup()
+  if (!win) return
 
   const reportHTML = buildReportHTML()
-  const colorVars = tokensToCSSVars(tokens.color, ['color']).join('\n              ')
   win.document.write(`
       <!DOCTYPE html>
       <html>
@@ -286,42 +224,18 @@ export function runExportPDF({ data, tickers, weights }) {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Varense Portfolio Report</title>
-          <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/400.css" rel="stylesheet">
-          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/500.css" rel="stylesheet">
-          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.2.5/600.css" rel="stylesheet">
-          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/400.css" rel="stylesheet">
-          <link href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.2.5/500.css" rel="stylesheet">
+          ${FONT_LINKS}
           <style>
             /* This popup is a separate document (window.open + document.write) that
                does NOT inherit the app's index.css, so it can't just reference the
-               app's own CSS variables either. These --color-* lines are generated at
-               runtime from design/tokens.json by tokensToCSSVars above (mirroring
-               scripts/tokens-to-css.mjs's own build-time walk) — not hand-copied, so
-               a token change in that file reaches this report automatically. */
+               app's own CSS variables either. docTokenCSS() (lib/pdfReportShared.js)
+               generates the color and doc token lines at runtime from
+               design/tokens.json (mirroring scripts/tokens-to-css.mjs's own
+               build-time walk) — not hand-copied, so a token change in that file
+               reaches this report automatically, and the full report (which needs
+               the identical block) can't drift from it either. */
             :root {
-              ${colorVars}
-
-              /* A light, print-friendly read of the same brand: no light mode exists
-                 in design/tokens.json (colorMode: "dark-only"), so these two reuse
-                 existing dark-theme token VALUES in an inverted role — the darkest
-                 canvas tone (color.bg.base) as ink on paper, the lightest text tone
-                 (color.text.primary) as the page itself — rather than inventing new,
-                 undocumented hex. Everything else below is a direct var(--color-*)
-                 reference, nothing new to keep in sync. */
-              --doc-bg: var(--color-text-primary);
-              --doc-card: var(--color-text-body);
-              --doc-track: var(--color-text-body);
-              --doc-ink: var(--color-bg-base);
-              --doc-ink-secondary: var(--color-line-interactive);
-              --doc-ink-muted: var(--color-line-hover);
-              --doc-hairline: var(--color-line-default);
-              --doc-heat-high: var(--color-signal-negative);
-              --doc-heat-mid: var(--color-signal-warning);
-              --doc-heat-low: var(--color-accent-mint);
-
-              --doc-font-primary: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
-              --doc-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+              ${docTokenCSS()}
             }
             * { box-sizing: border-box; margin: 0; padding: 0; }
             body { background: var(--doc-bg); font-family: var(--doc-font-primary); color: var(--doc-ink); }
@@ -416,8 +330,7 @@ export function runExportPDF({ data, tickers, weights }) {
             <div style="background:var(--doc-bg);border:1px solid var(--doc-hairline);padding:24px 28px;max-width:420px;width:100%;font-family:var(--doc-font-primary);">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                 <svg viewBox="3 9 58 41" width="24" height="17" fill="none" role="img" aria-label="Varense">
-                  <path d="M5.19,44.5 A27,30 0 1 1 58.81,44.5" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
-                  <path d="M5,48 L16,48 L23,41.5 L26.5,44.5 L36,34 L48,48 L59,48" fill="none" stroke="var(--doc-ink)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"></path>
+                  ${MARK_PATHS}
                 </svg>
                 <div style="font-size:16px;font-weight:700;color:var(--doc-ink);">Save your PDF report</div>
               </div>
