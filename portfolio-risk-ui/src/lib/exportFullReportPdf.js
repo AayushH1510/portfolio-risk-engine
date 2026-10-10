@@ -13,15 +13,17 @@
 // chart-drawing with both the Summary report and each other via
 // lib/reportCharts.js — see those modules' own header comments.
 //
-// Every section renders strictly from the `data`/`sectorData`/`comparison`
-// already sitting in React state when Export is clicked — nothing here
-// calls the API. A tab whose figures live only in that tab's own local
-// component state (Valuation's fundamentals table, Risk Analysis's stress
-// test scenarios — neither is lifted into App.jsx/useAnalysis, see each
-// section builder's own comment) can't be reached from here without a new
-// fetch, which the brief explicitly rules out — those two sections always
-// render their explanatory text plus a plain "not available to this
-// export" note instead of silently omitting themselves.
+// Every section renders strictly from state already sitting in React when
+// Export is clicked — nothing here calls the API. `stressTestData` and
+// `valuationData` are each a lifted copy of a result that tab's own
+// component (StressTest.jsx, Valuation.jsx) already fetched for its own
+// purposes and reported upward via a callback (see App.jsx) — null until
+// that tab has actually been opened and loaded since the current portfolio
+// was run, in which case the section shows an actionable placeholder
+// ("Open the ... tab before exporting...") rather than silently omitting
+// itself. That's a different case from a section that genuinely needs the
+// user to run something (Compare, the heavy-tier Monte Carlo/Frontier/
+// Backtest), which keeps the plainer "Not run in this session" wording.
 import { getBenchmarkLabel, getBenchmarkPhrase } from './benchmarks'
 import { winner } from './compareMetrics'
 import { fmt, fmtN, fmtD, docTokenCSS, FONT_LINKS, MARK_PATHS, openReportPopup } from './pdfReportShared'
@@ -204,7 +206,36 @@ function buildDashboardSection({ data, sectorData }) {
 
 // ── Risk Analysis ───────────────────────────────────────────────────────
 
-function buildRiskSection({ data }) {
+// A single stress-test scenario card — mirrors StressTest.jsx's own
+// ScenarioCard (same fields, same "no historical data"/excluded-tickers
+// handling), simplified for print: no loading/retry state (this only ever
+// renders once stressTestData is already in hand).
+function buildStressCard({ name, period, portfolio_return, worst_day, recovery_days, excluded_tickers }, portfolioValue) {
+  if (portfolio_return == null) {
+    return `
+      <div class="fr-card">
+        <div class="fr-metric-card-label">${name}</div>
+        <div style="font-size:10px;color:var(--doc-ink-muted);margin-top:2px;font-family:var(--doc-font-mono)">${period}</div>
+        <div style="font-size:11px;color:var(--doc-ink-muted);margin-top:10px">No historical data available for this portfolio in this window.</div>
+      </div>`
+  }
+  const lossColor = portfolio_return < -0.3 ? 'var(--color-signal-negative)' : portfolio_return < -0.1 ? 'var(--color-signal-warning)' : 'var(--color-accent-mint)'
+  const dollarLoss = portfolioValue != null ? fmtD(portfolioValue * Math.abs(portfolio_return)) : null
+  return `
+    <div class="fr-card">
+      <div class="fr-metric-card-label">${name}</div>
+      <div style="font-size:10px;color:var(--doc-ink-muted);margin-top:2px;font-family:var(--doc-font-mono)">${period}</div>
+      <div style="font-size:20px;font-weight:700;font-family:var(--doc-font-mono);color:${lossColor};margin-top:10px">${fmt(portfolio_return)}</div>
+      ${dollarLoss ? `<div style="font-size:10px;color:var(--doc-ink-muted);font-family:var(--doc-font-mono)">-${dollarLoss}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--doc-ink-muted)">
+        <span>Worst day <strong style="color:var(--color-signal-negative);font-family:var(--doc-font-mono)">${fmt(worst_day)}</strong></span>
+        <span>Recovery <strong style="color:var(--doc-ink);font-family:var(--doc-font-mono)">${recovery_days == null ? 'Not yet' : `${recovery_days}d`}</strong></span>
+      </div>
+      ${excluded_tickers?.length ? `<div style="font-size:9px;color:var(--doc-ink-muted);margin-top:8px">Excludes ${excluded_tickers.join(', ')}</div>` : ''}
+    </div>`
+}
+
+function buildRiskSection({ data, stressTestData, portfolioValue }) {
   const { rolling_volatility: rv, rolling_sharpe: rs, annualised_volatility: vol,
           sharpe_ratio: sharpe, var_cvar: vc, var_cvar_99: vc99,
           correlation_matrix: corr, treynor_ratio: treynor, information_ratio: infoRatio,
@@ -285,7 +316,9 @@ function buildRiskSection({ data }) {
       ${group(
         sectionLabel('Stress Test'),
         whyBox('Backtested returns show how your portfolio performs in normal conditions. Stress tests show what happens when markets panic, the scenario most investors are least prepared for.'),
-        notRunBox('Stress test scenarios are fetched on the Risk Analysis tab itself and are not retained in memory after that, so they are not available to this export.'),
+        stressTestData
+          ? `<div class="fr-strategy-row">${stressTestData.map(s => buildStressCard(s, portfolioValue)).join('')}</div>`
+          : notRunBox('Open the Risk Analysis tab before exporting to include stress tests.'),
       )}
     </section>
   `
@@ -400,19 +433,73 @@ function buildFrontierSection({ data, tickers, weights }) {
 
 // ── Valuation ───────────────────────────────────────────────────────────
 // Fundamentals (P/S, EV/EBITDA, risk flags, ...) are fetched by Valuation.jsx
-// itself, on that tab's own mount, into local component state — never
-// lifted into App.jsx/useAnalysis the way `data` or `sectorData` are — so
-// there is no in-memory copy this export can reach without a new request,
-// which the brief rules out. Always renders the explanatory text plus a
-// plain "not available" note, regardless of whether the tab was opened this
-// session.
+// itself, on that tab's own mount — valuationData is the lifted copy
+// Valuation.jsx reports up through onValuationLoaded (see App.jsx), null
+// until that tab has actually been opened and loaded for the current
+// portfolio.
 
-function buildValuationSection() {
+const fmtX = v => v != null ? `${v.toFixed(1)}x` : 'N/A'
+const fmtCap = v => {
+  if (!v) return 'N/A'
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`
+  return `$${(v / 1e6).toFixed(0)}M`
+}
+
+function buildValuationSection({ valuationData }) {
+  if (!valuationData) {
+    return `
+      <section class="fr-page fr-pagebreak">
+        ${pageHeader('Valuation')}
+        ${whyBox('Price tells you what the market thinks. Fundamentals tell you why — what each holding earns, how fast it is growing, and how much debt it is carrying, with risk flags and strengths surfaced automatically.')}
+        ${notRunBox('Open the Valuation tab before exporting to include fundamentals.')}
+      </section>
+    `
+  }
+
+  // Rows, not a fuller risk-flag/positives breakdown — api.py already
+  // returns the list ranked by Value/Growth score (lowest = best), same
+  // order Valuation.jsx itself renders with no client-side re-sort, so this
+  // doesn't re-derive the ranking either. Error/fund rows mirror that
+  // table's own handling (a fund has no per-company ratios, an error row
+  // shows the message instead of six empty cells).
+  const rows = valuationData.map(stock => {
+    const hasError = !!stock.error
+    const isFund = !hasError && stock.is_fund
+    const flagCount = stock.flags?.length || 0
+    const flagBadge = flagCount > 0 ? `<span class="fr-val-flag">${flagCount} flag${flagCount > 1 ? 's' : ''}</span>` : ''
+
+    if (hasError) {
+      return `<tr><td class="fr-val-ticker">${stock.ticker}</td><td colspan="6" style="text-align:left;color:var(--color-signal-negative);font-size:10px">${stock.error || 'Could not load data'}</td></tr>`
+    }
+    if (isFund) {
+      return `<tr><td class="fr-val-ticker">${stock.ticker}</td><td colspan="6" style="text-align:left;color:var(--doc-ink-muted);font-size:10px">Fund/ETF — valuation ratios don't apply</td></tr>`
+    }
+    const revGrowthColor = stock.rev_growth > 0.15 ? 'var(--color-accent-mint)' : stock.rev_growth < 0 ? 'var(--color-signal-negative)' : 'var(--doc-ink)'
+    const vgColor = stock.vg_score == null ? 'var(--doc-ink-muted)' : stock.vg_score < 0.15 ? 'var(--color-accent-mint)' : stock.vg_score < 0.4 ? 'var(--color-signal-warning)' : 'var(--color-signal-negative)'
+    return `
+      <tr>
+        <td class="fr-val-ticker">${stock.ticker}${flagBadge}</td>
+        <td>${fmtX(stock.ps_ratio)}</td>
+        <td>${fmtX(stock.ev_ebitda)}</td>
+        <td>${fmt(stock.gross_margin)}</td>
+        <td style="color:${revGrowthColor}">${stock.rev_growth != null ? `${stock.rev_growth > 0 ? '+' : ''}${(stock.rev_growth * 100).toFixed(1)}%` : 'N/A'}</td>
+        <td>${fmtCap(stock.market_cap)}</td>
+        <td style="font-weight:700;color:${vgColor}">${stock.vg_score != null ? stock.vg_score.toFixed(2) : 'N/A'}</td>
+      </tr>`
+  }).join('')
+
+  const table = `
+    <table class="fr-val-table">
+      <thead><tr><th>Ticker</th><th>P/S</th><th>EV/EBITDA</th><th>Gross Margin</th><th>Rev Growth</th><th>Mkt Cap</th><th>V/G Score</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+
   return `
     <section class="fr-page fr-pagebreak">
       ${pageHeader('Valuation')}
       ${whyBox('Price tells you what the market thinks. Fundamentals tell you why — what each holding earns, how fast it is growing, and how much debt it is carrying, with risk flags and strengths surfaced automatically.')}
-      ${notRunBox('Valuation figures are fetched on the Valuation tab itself and are not retained in memory after that, so they are not available to this export.')}
+      ${group(sectionLabel('Relative Valuation — ranked by Value/Growth score'), `<div class="fr-card" style="padding:0">${table}</div>`)}
     </section>
   `
 }
@@ -578,7 +665,7 @@ function buildClosingSection({ date }) {
 
 // ── Entry point ─────────────────────────────────────────────────────────
 
-export function runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison }) {
+export function runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison, stressTestData, valuationData }) {
   // openReportPopup (lib/pdfReportShared.js) — same pop-up-blocked handling
   // as the Summary report, checked before building this much larger HTML
   // string at all.
@@ -596,10 +683,10 @@ export function runExportFullReportPDF({ data, tickers, weights, portfolioValue,
   const sections = [
     buildCoverSection({ data, tickers, weights, portfolioValue, date }),
     buildDashboardSection({ data, sectorData }),
-    buildRiskSection({ data }),
+    buildRiskSection({ data, stressTestData, portfolioValue }),
     buildMonteCarloSection({ data }),
     buildFrontierSection({ data, tickers, weights }),
-    buildValuationSection(),
+    buildValuationSection({ valuationData }),
     buildCompareSection({ data, tickers, comparison }),
     buildBacktestSection({ data }),
     buildClosingSection({ date }),
@@ -679,6 +766,13 @@ export function runExportFullReportPDF({ data, tickers, weights, portfolioValue,
             .fr-years-table th:first-child { text-align: left; }
             .fr-years-table td { text-align: right; padding: 6px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); }
             .fr-years-table td:first-child { text-align: left; color: var(--doc-ink-secondary); }
+
+            .fr-val-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            .fr-val-table th { text-align: right; font-size: 9px; font-weight: 700; color: var(--doc-ink-muted); padding: 8px 10px; border-bottom: 1px solid var(--doc-hairline); text-transform: uppercase; letter-spacing: 0.04em; }
+            .fr-val-table th:first-child { text-align: left; }
+            .fr-val-table td { text-align: right; padding: 7px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); font-family: var(--doc-font-mono); color: var(--doc-ink); }
+            .fr-val-ticker { text-align: left; font-weight: 700; }
+            .fr-val-flag { font-size: 8px; font-weight: 700; padding: 1px 5px; background: rgba(224,85,90,0.15); color: var(--color-signal-negative); margin-left: 6px; font-family: var(--doc-font-primary); }
 
             .fr-compare-header { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 14px; font-size: 13px; }
             .fr-compare-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-family: var(--doc-font-mono); font-size: 13px; }

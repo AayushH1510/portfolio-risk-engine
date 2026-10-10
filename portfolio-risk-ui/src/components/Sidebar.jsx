@@ -40,7 +40,7 @@ export default function Sidebar({
   onRun, loading, onTickerClick,
   data, hasRun, drawerOpen, onCloseDrawer,
   user, authLoading, onSignOut, onShowAuth,
-  sectorData, comparison,
+  sectorData, comparison, stressTestData, valuationData,
 }) {
   const [logoHovered, setLogoHovered]     = useState(false)
   const [sidebarWidth, setSidebarWidth]   = useState(getInitialSidebarWidth)
@@ -489,7 +489,7 @@ export default function Sidebar({
             target at drawer width instead of three squeezed into one row. */}
         {hasRun && (
           <div className="sidebar-export-actions">
-            <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={portfolioValue} sectorData={sectorData} comparison={comparison} />
+            <ExportPDF data={data} tickers={tickers} weights={weights} portfolioValue={portfolioValue} sectorData={sectorData} comparison={comparison} stressTestData={stressTestData} valuationData={valuationData} />
             <ExportCSV data={data} tickers={tickers} weights={weights} />
           </div>
         )}

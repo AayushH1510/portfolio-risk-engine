@@ -12,7 +12,7 @@ import { runExportCSV } from './ExportCSV'
 // ExportPDF.jsx's own buttons use, not a second, statically-bundled copy —
 // CSV Data reuses runExportCSV directly since that one's cheap enough not
 // to need splitting out.
-export default function ExportMenu({ data, tickers, weights, portfolioValue, sectorData, comparison }) {
+export default function ExportMenu({ data, tickers, weights, portfolioValue, sectorData, comparison, stressTestData, valuationData }) {
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState(null)
   const wrapperRef = useRef(null)
@@ -99,7 +99,7 @@ export default function ExportMenu({ data, tickers, weights, portfolioValue, sec
 
   const runFullReportAndClose = async () => {
     const { runExportFullReportPDF } = await import('../lib/exportFullReportPdf')
-    runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison })
+    runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison, stressTestData, valuationData })
     setOpen(false)
     triggerRef.current?.focus()
   }

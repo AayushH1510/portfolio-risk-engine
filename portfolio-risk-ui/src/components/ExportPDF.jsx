@@ -14,7 +14,7 @@ import { useEffect } from 'react'
 // own button is new, so it gets one from the start rather than inheriting
 // whatever implicit height the original single "Export PDF" button happened
 // to have.
-export default function ExportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison }) {
+export default function ExportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison, stressTestData, valuationData }) {
   // Preloaded once a run's results are on screen — this component only ever
   // renders once hasRun is true (see Sidebar.jsx's hasRun-gated block, the
   // single mount point on phone and desktop alike), so by the time someone
@@ -35,7 +35,7 @@ export default function ExportPDF({ data, tickers, weights, portfolioValue, sect
 
   const handleFullReport = async () => {
     const { runExportFullReportPDF } = await import('../lib/exportFullReportPdf')
-    runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison })
+    runExportFullReportPDF({ data, tickers, weights, portfolioValue, sectorData, comparison, stressTestData, valuationData })
   }
 
   const btnStyle = {

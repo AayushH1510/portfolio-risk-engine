@@ -58,6 +58,21 @@ export default function App() {
   // state now checks the rows' own `kind` instead of an empty array.
   const [sectorData, setSectorData]     = useState(null)
   const [sectorLoading, setSectorLoading] = useState(false)
+  // Stress test (Risk Analysis tab) and Valuation fundamentals each live
+  // only in that tab's own component state by default — never fetched by
+  // App.jsx itself the way sectorData is — so there was previously no
+  // in-memory copy the Full report PDF export could read without a new
+  // request. These two are that copy: StressTest.jsx/Valuation.jsx report
+  // their own successful fetch up through onStressTestLoaded/
+  // onValuationLoaded (passed down below), purely additive — neither
+  // component's own state, fetching, or rendering changes. null here means
+  // "that tab hasn't been opened (and successfully loaded) since the
+  // current portfolio was run" — the export's own placeholder copy depends
+  // on telling that apart from "fetched but came back empty", which is why
+  // each callback is only ever invoked with the real array, never with an
+  // empty-on-error placeholder.
+  const [stressTestData, setStressTestData] = useState(null)
+  const [valuationData, setValuationData]   = useState(null)
   // Sector composition only depends on which tickers (and at what weights)
   // are in the portfolio — not on the analysis result itself. `data`
   // updates twice per run now (the fast summary, then the background full
@@ -228,6 +243,19 @@ export default function App() {
 
   const closeSidebarDrawer = () => setSidebarOpen(false)
 
+  // Stress test / valuation results belong to the portfolio that produced
+  // them — cleared the instant a new run starts, not when it resolves, so
+  // a report exported mid-run (or for a portfolio nobody re-opened either
+  // tab for) can never mix in a previous portfolio's figures. Unconditional
+  // on every Run Analysis click, including a re-run of the same tickers —
+  // simplest correct behaviour, and matches `data` itself, which also
+  // doesn't try to diff "did anything actually change" before refetching.
+  const handleRunAnalysis = (customDates) => {
+    setStressTestData(null)
+    setValuationData(null)
+    runAnalysis(customDates, () => { if (!tourActive) closeSidebarDrawer() })
+  }
+
   const handleLoadPortfolio = (p) => {
     analysis.setTickers(p.tickers)
     analysis.setWeightsAll(p.weights)
@@ -287,7 +315,7 @@ export default function App() {
       <Sidebar
         {...analysis}
         setWeightsAll={analysis.setWeightsAll}
-        onRun={(customDates) => runAnalysis(customDates, () => { if (!tourActive) closeSidebarDrawer() })}
+        onRun={handleRunAnalysis}
         loading={loading}
         portfolios={portfolios}
         onSavePortfolio={savePortfolio}
@@ -302,6 +330,8 @@ export default function App() {
         onCloseDrawer={closeSidebarDrawer}
         sectorData={sectorData}
         comparison={comparisonForExport}
+        stressTestData={stressTestData}
+        valuationData={valuationData}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
@@ -376,6 +406,8 @@ export default function App() {
                   portfolioValue={analysis.portfolioValue}
                   sectorData={sectorData}
                   comparison={comparisonForExport}
+                  stressTestData={stressTestData}
+                  valuationData={valuationData}
                 />
               </div>
             )}
@@ -515,10 +547,10 @@ export default function App() {
           {!loading && (hasRun || activeTab === 'learn' || activeTab === 'valuation') && (
             <div style={{ height: '100%' }} className="fade-up">
               {activeTab === 'dashboard'  && <Dashboard  data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} sectorData={sectorData} sectorLoading={sectorLoading} />}
-              {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} />}
+              {activeTab === 'risk'       && <RiskAnalysis data={data} tickers={tickers} weights={weights} portfolioValue={analysis.portfolioValue} onTickerClick={openDrawer} onStressTestLoaded={setStressTestData} />}
               {activeTab === 'montecarlo' && <MonteCarlo  data={data} heavyLoading={heavyLoading} heavyError={heavyError} heavyRateLimited={heavyRateLimited} onRetryHeavy={retryHeavy} />}
               {activeTab === 'frontier'   && <Frontier    data={data} tickers={tickers} weights={weights} heavyLoading={heavyLoading} heavyError={heavyError} heavyRateLimited={heavyRateLimited} onRetryHeavy={retryHeavy} />}
-              {activeTab === 'valuation'  && <Valuation   tickers={tickers} onTickerClick={openDrawer} />}
+              {activeTab === 'valuation'  && <Valuation   tickers={tickers} onTickerClick={openDrawer} onValuationLoaded={setValuationData} />}
               {activeTab === 'compare'    && (
                 <CompareWrapper
                   dataA={data} tickersA={tickers} nameA="Portfolio A"

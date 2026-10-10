@@ -121,7 +121,7 @@ function ScoreBar({ value, max, color }) {
   )
 }
 
-export default function Valuation({ tickers, onTickerClick }) {
+export default function Valuation({ tickers, onTickerClick, onValuationLoaded }) {
   const [data, setData]     = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState(null)
@@ -145,6 +145,13 @@ export default function Valuation({ tickers, onTickerClick }) {
         // N/A, so don't lead with one if a real stock is also in the mix.
         const firstWithData = list.find(d => !d.error && !d.is_fund)
         setSelected((firstWithData || list[0])?.ticker)
+        // Additive only — everything above is unchanged. Lifts a copy up to
+        // App.jsx the same way StressTest.jsx's own onStressTestLoaded
+        // does, purely for the Full report PDF export to read; see that
+        // component's comment for the full reasoning, including why
+        // App.jsx (not this effect) is what clears a stale copy on a new
+        // Run Analysis.
+        onValuationLoaded?.(list)
       })
       // Same neutral fallback as useAnalysis / useComparison — errorMessage()
       // still surfaces the backend's real `detail` when there is one; this

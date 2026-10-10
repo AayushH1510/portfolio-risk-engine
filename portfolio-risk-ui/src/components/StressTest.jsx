@@ -90,7 +90,7 @@ function ScenarioCard({ scenario, portfolioValue }) {
   )
 }
 
-export default function StressTest({ tickers, weights, portfolioValue }) {
+export default function StressTest({ tickers, weights, portfolioValue, onStressTestLoaded }) {
   const [scenarios, setScenarios] = useState(null)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(null)
@@ -104,7 +104,19 @@ export default function StressTest({ tickers, weights, portfolioValue }) {
     setError(null)
     setRateLimited(false)
     axios.post(`${API}/api/stress-test`, { tickers, weights, portfolio_value: portfolioValue })
-      .then(res => setScenarios(res.data.scenarios))
+      .then(res => {
+        setScenarios(res.data.scenarios)
+        // Additive only — this component's own state/behaviour above is
+        // unchanged either way. Lifts a copy up to App.jsx (ultimately for
+        // the Full report PDF export, which has no API access of its own)
+        // purely so that export can read a result this tab already fetched,
+        // without this component needing to know anything about exports.
+        // App.jsx clears its own copy on every new Run Analysis, so a stale
+        // result here can't outlive the portfolio that produced it even
+        // though this component's local `scenarios` state would (tab
+        // remounts only on tab-switch, not on Run Analysis).
+        onStressTestLoaded?.(res.data.scenarios)
+      })
       .catch(e => {
         setRateLimited(isRateLimitError(e))
         const msg = errorMessage(e, 'Failed to load stress test scenarios')

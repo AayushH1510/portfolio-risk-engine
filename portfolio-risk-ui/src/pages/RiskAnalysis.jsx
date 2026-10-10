@@ -188,7 +188,7 @@ function CorrMatrix({ corr, onTickerClick }) {
   )
 }
 
-export default function RiskAnalysis({ data, tickers, weights, portfolioValue, onTickerClick }) {
+export default function RiskAnalysis({ data, tickers, weights, portfolioValue, onTickerClick, onStressTestLoaded }) {
   // Same dual-axis "phone, either orientation" signal as Dashboard.jsx's own
   // isCompactViewport (lib/breakpoints.js's COMPACT_VIEWPORT_QUERY is the one
   // canonical JS-side definition) — live-tracked, not seeded once, because
@@ -484,7 +484,7 @@ export default function RiskAnalysis({ data, tickers, weights, portfolioValue, o
         text="Backtested returns show how your portfolio performs in normal conditions. Stress tests show what happens when markets panic, the scenario most investors are least prepared for."
         priority="secondary"
       />
-      <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} />
+      <StressTest tickers={tickers} weights={weights} portfolioValue={portfolioValue} onStressTestLoaded={onStressTestLoaded} />
 
     </div>
   )
